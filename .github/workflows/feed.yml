@@ -1,0 +1,30 @@
+name: Pinterest feed
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  feed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build feed.xml from the catalog
+        run: |
+          python3 - <<'PY'
+          import csv, io, urllib.request, html, re, datetime
+          CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/pub?gid=423383887&single=true&output=csv"
+          SITE = "https://gus1227.github.io/"
+          rows = list(csv.DictReader(io.StringIO(urllib.request.urlopen(CSV, timeout=60).read().decode("utf-8"))))
+          now = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
+          e = lambda s: html.escape(str(s or "").strip())
+          items = []
+          for r in rows:
+              name, price, img, link = r.get("Producto"), r.get("Precio"), r.get("Imagen_URL"), r.get("Enlace")
+              if not (name and img and link and link.startswith("https://")):
+                  continue
+              wid = re.sub(r"[^A-Za-z0-9_-]", "", link.rstrip("/").split("/")[-1])
+              brand = (r.get("Marca") or "").strip()
+              brand = "" if brand in ("", "Sin marca") else re.sub(r"([a-z])([A-Z])", r"\1 \2", brand)
+              tags = " ".join(t for t in (r.get("Categoria") or "%
