@@ -27,4 +27,19 @@ jobs:
               wid = re.sub(r"[^A-Za-z0-9_-]", "", link.rstrip("/").split("/")[-1])
               brand = (r.get("Marca") or "").strip()
               brand = "" if brand in ("", "Sin marca") else re.sub(r"([a-z])([A-Z])", r"\1 \2", brand)
-              tags = " ".join(t for t in (r.get("Categoria") or "%
+              tags = " ".join(t for t in (r.get("Categoria") or "").split() if t.startswith("#"))
+              desc = f"{name} for only {price}. Affordable watch deal from AliExpress. Tap to see the deal. {tags} #watchdeals #affordablewatches"
+              pic = img + "_800x800.jpg"
+              items.append(f"""<item><title>{e(name)} – {e(price)}</title><link>{SITE}?w={wid}</link><guid isPermaLink="false">{wid}</guid><description>{e(desc)}</description><enclosure url="{e(pic)}" type="image/jpeg" length="0"/><media:content url="{e(pic)}" medium="image"/></item>""")
+          xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+          <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>Kabuzio – Watch Deals</title><link>{SITE}</link><description>Curated affordable watches from AliExpress. New deals every day.</description><lastBuildDate>{now}</lastBuildDate>{"".join(items)}</channel></rss>
+          """
+          open("feed.xml", "w", encoding="utf-8").write("\n".join(l.strip() for l in xml.splitlines()))
+          print(len(items), "items")
+          PY
+      - name: Save feed.xml
+        run: |
+          git config user.name "kabuzio-bot"
+          git config user.email "kabuzio-bot@users.noreply.github.com"
+          git add feed.xml
+          git diff --cached --quiet || (git commit -m "Update Pinterest feed" && git push)
