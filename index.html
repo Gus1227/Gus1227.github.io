@@ -3,72 +3,99 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kabuzio Deal – Watch Deals</title>
-<meta name="description" content="Affordable automatic, chronograph and diver watches from AliExpress at the best price. New deals every day.">
+<title>Kabuzio — Watch Deals</title>
+<meta name="description" content="Curated automatic, chronograph and diver watches from AliExpress at the best price. New deals every day.">
+<meta property="og:title" content="Kabuzio — Watch Deals">
+<meta property="og:description" content="Curated affordable watches. New deals every day.">
+<meta name="color-scheme" content="light">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f8fb;--card:#fff;--text:#14213d;--muted:#5c6b80;--accent:#1f7ae0;--accent2:#22a06b;--line:#e3e8ef}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1520;--card:#182131;--text:#e9eef5;--muted:#9aa8bb;--line:#2a3547}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-header{background:var(--card);border-bottom:1px solid var(--line);padding:16px;text-align:center}
-h1{margin:0;font-size:24px}
-.sub{color:var(--muted);margin:4px 0 12px}
-.tg{display:inline-block;background:#229ED9;color:#fff;text-decoration:none;padding:10px 18px;border-radius:999px;font-weight:600}
-.bar{background:var(--bg);padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--line)}
-.bar input,.bar select{flex:1 1 150px;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);font-size:15px}
-.count{width:100%;color:var(--muted);font-size:13px}
-main{max-width:1100px;margin:0 auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
-.card img{width:100%;aspect-ratio:1;object-fit:cover;background:#fff}
-.info{padding:10px;display:flex;flex-direction:column;gap:6px;flex:1}
-.name{font-size:14px;line-height:1.3;margin:0}
-.brand{font-size:12px;color:var(--muted)}
-.price{font-size:18px;font-weight:700;color:var(--accent2)}
-.btn{margin-top:auto;text-align:center;background:var(--accent);color:#fff;text-decoration:none;padding:9px;border-radius:10px;font-weight:600;font-size:14px}
-footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 16px 40px}
-.msg{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px}
+:root{--ink:#111;--muted:#737373;--line:#ececec;--soft:#f5f5f4;--bg:#fff}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.nav{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav-in{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-weight:700;letter-spacing:.18em;font-size:15px}
+.tg{font-size:13px;font-weight:500;border:1px solid var(--ink);padding:8px 14px;border-radius:999px;transition:.2s}
+.tg:hover{background:var(--ink);color:#fff}
+.hero{max-width:1200px;margin:0 auto;padding:48px 20px 24px}
+.hero h1{font-size:clamp(28px,5vw,44px);font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.hero p{color:var(--muted);margin-top:10px;font-size:15px}
+.tools{max-width:1200px;margin:0 auto;padding:0 20px}
+.search{width:100%;border:none;border-bottom:1px solid var(--line);padding:14px 0;font:inherit;font-size:16px;outline:none;background:transparent}
+.search:focus{border-color:var(--ink)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:16px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:#fff;padding:8px 14px;border-radius:999px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink);transition:.15s}
+.chip:hover{border-color:#bbb}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0 6px;flex-wrap:wrap}
+.count{font-size:13px;color:var(--muted)}
+.selects{display:flex;gap:16px}
+select{border:none;background:transparent;font:inherit;font-size:13px;color:var(--ink);cursor:pointer;padding:4px 0;max-width:150px}
+.grid{max-width:1200px;margin:0 auto;padding:12px 20px 60px;display:grid;grid-template-columns:repeat(2,1fr);gap:28px 14px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr);gap:40px 20px}}
+@media(min-width:1000px){.grid{grid-template-columns:repeat(4,1fr)}}
+.card{display:block}
+.ph{position:relative;aspect-ratio:1;background:var(--soft);border-radius:6px;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+.card:hover .ph img{transform:scale(1.04)}
+.badge{position:absolute;top:10px;left:10px;background:#fff;font-size:10px;font-weight:600;letter-spacing:.08em;padding:4px 8px;border-radius:999px}
+.brand{margin-top:12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.name{margin-top:4px;font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.price{margin-top:6px;font-weight:600;font-size:15px}
+.cta{display:inline-block;margin-top:8px;font-size:12px;font-weight:500;border-bottom:1px solid var(--ink);padding-bottom:1px}
+.sk .ph{animation:p 1.2s infinite ease-in-out}
+@keyframes p{50%{opacity:.5}}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 0}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center;padding:28px 20px 40px;line-height:1.6}
+footer a{color:var(--ink);font-weight:500}
 </style>
 </head>
 <body>
-<header>
-  <h1>⌚ Kabuzio Deal</h1>
-  <p class="sub">Affordable watches from AliExpress at the best price</p>
-  <a class="tg" href="https://t.me/KabuzioDeal" target="_blank" rel="noopener">🔔 New deals every day on Telegram</a>
-</header>
-<div class="bar">
-  <input id="q" type="search" placeholder="🔍 Search watches…">
-  <select id="price"><option value="">💰 Any price</option><option value="0-50">Under $50</option><option value="50-100">$50 – $100</option><option value="100-99999">Over $100</option></select>
-  <select id="type"><option value="">⌚ Any type</option></select>
-  <select id="brand"><option value="">🏷 Any brand</option></select>
-  <select id="sort"><option value="new">Newest</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option></select>
-  <div class="count" id="count"></div>
+<nav class="nav"><div class="nav-in"><a class="logo" href="#">KABUZIO</a><a class="tg" href="https://t.me/KabuzioDeal" target="_blank" rel="noopener">Daily deals on Telegram</a></div></nav>
+<section class="hero"><h1>Watches that look<br>way above their price.</h1><p>Curated automatic, chronograph and diver watches. Updated every day.</p></section>
+<div class="tools">
+  <input class="search" id="q" type="search" placeholder="Search watches or brands">
+  <div class="chips" id="types"></div>
+  <div class="chips" id="prices"></div>
+  <div class="row"><span class="count" id="count"></span><div class="selects"><select id="brand" aria-label="Brand"><option value="">All brands</option></select><select id="sort" aria-label="Sort"><option value="new">Newest</option><option value="low">Price ↑</option><option value="high">Price ↓</option></select></div></div>
 </div>
-<main id="grid"><div class="msg">Loading deals…</div></main>
-<footer>Ad · We earn a commission from purchases made through these links, at no extra cost to you. Prices may change on AliExpress.</footer>
+<main class="grid" id="grid"></main>
+<footer>Ad · As an affiliate we earn a commission on purchases, at no extra cost to you.<br>Prices may change on AliExpress. · <a href="https://t.me/KabuzioDeal" target="_blank" rel="noopener">@KabuzioDeal</a></footer>
 <script>
 const CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/pub?gid=423383887&single=true&output=csv";
 const TYPES=[["chronograph","Chronograph"],["dive","Diver"],["smart","Smartwatch"],["automatic","Automatic"],["mechanical","Automatic"],["tourbillon","Automatic"],["skeleton","Automatic"],["quartz","Quartz"]];
-let items=[];
+const PRICES=[["","Any price"],["0-50","Under $50"],["50-100","$50–100"],["100-99999","$100+"]];
+let items=[],st={type:"",price:""};
 const $=id=>document.getElementById(id);
 const num=s=>parseFloat(String(s||"").replace(/[^0-9.]/g,""))||0;
 const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-function typeOf(n){n=n.toLowerCase();for(const[k,v]of TYPES)if(n.includes(k))return v;return "Other"}
-function pick(r,names,i){for(const n of names)if(r[n]!==undefined)return r[n];return Object.values(r)[i]}
-function fill(sel,vals){[...new Set(vals)].filter(Boolean).sort().forEach(v=>{const o=document.createElement("option");o.value=o.textContent=v;sel.appendChild(o)})}
-function render(){
-  const q=$("q").value.toLowerCase().trim(),[lo,hi]=($("price").value||"0-999999").split("-").map(Number),t=$("type").value,b=$("brand").value,s=$("sort").value;
-  let list=items.filter(x=>(!q||(x.name+" "+x.brand+" "+x.tags).toLowerCase().includes(q))&&x.price>=lo&&x.price<hi&&(!t||x.type===t)&&(!b||x.brand===b));
-  if(s==="low")list.sort((a,b)=>a.price-b.price);else if(s==="high")list.sort((a,b)=>b.price-a.price);else list.sort((a,b)=>b.i-a.i);
-  $("count").textContent=list.length+" deals";
-  $("grid").innerHTML=list.length?list.map(x=>`<div class="card"><img loading="lazy" src="${esc(x.img)}_480x480.jpg" onerror="this.onerror=null;this.src='${esc(x.img)}'" alt="${esc(x.name)}"><div class="info"><p class="name">${esc(x.name)}</p><span class="brand">${esc(x.brand)} · ${esc(x.type)}</span><span class="price">${esc(x.priceText)}</span><a class="btn" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener">See deal 👉</a></div></div>`).join(""):'<div class="msg">No deals found. Try another filter.</div>';
-}
+const typeOf=n=>{n=n.toLowerCase();for(const[k,v]of TYPES)if(n.includes(k))return v;return "Other"};
+const pick=(r,n,i)=>r[n]!==undefined?r[n]:Object.values(r)[i];
+const nice=b=>b.replace(/([a-z])([A-Z])/g,"$1 $2");
 function parseCSV(t){const rows=[];let row=[],f="",q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}else if(c=='"')q=true;else if(c==','){row.push(f);f=""}else if(c=='\n'){row.push(f);rows.push(row);row=[];f=""}else if(c!='\r')f+=c}if(f||row.length){row.push(f);rows.push(row)}const h=rows.shift()||[];return rows.filter(r=>r.some(Boolean)).map(r=>Object.fromEntries(h.map((k,i)=>[k.trim(),r[i]])))}
+function chips(el,list,key){el.innerHTML=list.map(([v,l])=>`<button class="chip${st[key]===v?" on":""}" data-v="${esc(v)}">${esc(l)}</button>`).join("");el.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{st[key]=b.dataset.v;chips(el,list,key);render()})}
+function render(){
+  const q=$("q").value.toLowerCase().trim(),[lo,hi]=(st.price||"0-999999").split("-").map(Number),b=$("brand").value,s=$("sort").value;
+  let l=items.filter(x=>(!q||(x.name+" "+x.brand).toLowerCase().includes(q))&&x.price>=lo&&x.price<hi&&(!st.type||x.type===st.type)&&(!b||x.brand===b));
+  l.sort(s==="low"?(a,b)=>a.price-b.price:s==="high"?(a,b)=>b.price-a.price:(a,b)=>b.i-a.i);
+  $("count").textContent=l.length+(l.length===1?" watch":" watches");
+  const newest=items.length-6;
+  $("grid").innerHTML=l.length?l.map(x=>`<a class="card" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener"><div class="ph">${x.i>=newest?'<span class="badge">NEW</span>':""}<img loading="lazy" src="${esc(x.img)}_480x480.jpg" onerror="this.onerror=null;this.src='${esc(x.img)}'" alt="${esc(x.name)}"></div><div class="brand">${esc(x.brand)}</div><div class="name">${esc(x.name)}</div><div class="price">${esc(x.priceText)}</div><span class="cta">View deal</span></a>`).join(""):'<div class="empty">No watches match. Try another filter.</div>';
+}
+$("grid").innerHTML=Array(8).fill('<div class="card sk"><div class="ph"></div></div>').join("");
 fetch(CSV).then(r=>r.text()).then(t=>{
-  items=parseCSV(t).map((r,i)=>{const name=pick(r,["Producto"],0),brand=pick(r,["Marca"],5);return{i,name,priceText:pick(r,["Precio"],1),price:num(pick(r,["Precio"],1)),img:pick(r,["Imagen_URL"],2),link:pick(r,["Enlace"],3),tags:pick(r,["Categoria"],4)||"",brand:(!brand||brand==="Sin marca")?"Other":brand,type:typeOf(name||"")}}).filter(x=>x.name&&x.link&&/^https:\/\//.test(x.link));
-  fill($("type"),items.map(x=>x.type));fill($("brand"),items.map(x=>x.brand));render();
-}).catch(()=>{$("grid").innerHTML='<div class="msg">Could not load deals. Please refresh.</div>'});
-["q","price","type","brand","sort"].forEach(id=>$(id).addEventListener("input",render));
+  items=parseCSV(t).map((r,i)=>{const name=pick(r,"Producto",0)||"",br=pick(r,"Marca",5);return{i,name,priceText:pick(r,"Precio",1),price:num(pick(r,"Precio",1)),img:pick(r,"Imagen_URL",2),link:pick(r,"Enlace",3),brand:(!br||br==="Sin marca")?"Kabuzio Pick":nice(br),type:typeOf(name)}}).filter(x=>x.name&&/^https:\/\//.test(x.link||""));
+  const ts=[...new Set(items.map(x=>x.type))].filter(t=>t!=="Other").sort();
+  chips($("types"),[["","All"],...ts.map(t=>[t,t])],"type");chips($("prices"),PRICES,"price");
+  [...new Set(items.map(x=>x.brand))].sort().forEach(v=>{const o=document.createElement("option");o.value=o.textContent=v;$("brand").appendChild(o)});
+  render();
+}).catch(()=>{$("grid").innerHTML='<div class="empty">Could not load deals. Please refresh.</div>'});
+["q","brand","sort"].forEach(id=>$(id).addEventListener("input",render));
 </script>
 </body>
 </html>
