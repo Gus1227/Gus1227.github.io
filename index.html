@@ -56,6 +56,10 @@ select{border:none;background:transparent;font:inherit;font-size:13px;color:var(
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center;padding:28px 20px 40px;line-height:1.6}
 footer a{color:var(--ink);font-weight:500}
 .more{position:absolute;right:10px;bottom:10px;background:rgba(255,255,255,.95);font-size:11px;font-weight:600;padding:6px 10px;border-radius:999px;cursor:pointer;border:1px solid var(--line)}
+.ths{display:flex;gap:4px;margin-top:6px}
+.ths>*{flex:1;aspect-ratio:1;min-width:0;border-radius:4px;overflow:hidden;background:var(--soft);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;object-fit:cover;width:100%}
+.ths>.tv{background:var(--ink);color:#fff}
+.ths>*:hover{outline:1px solid var(--ink)}
 .more:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 .lb{position:fixed;inset:0;z-index:50;background:#fff;display:none;flex-direction:column}
 .lb.on{display:flex}
@@ -110,7 +114,7 @@ function render(){
   l.sort(s==="low"?(a,b)=>a.price-b.price:s==="high"?(a,b)=>b.price-a.price:(a,b)=>b.i-a.i);
   $("count").textContent=l.length+(l.length===1?" watch":" watches");
   const newest=items.length-6;
-  $("grid").innerHTML=l.length?l.map(x=>`<a class="card${x.wid===W?" hit":""}" id="w-${esc(x.wid)}" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener"><div class="ph">${x.o>=newest?'<span class="badge">NEW</span>':""}<img loading="lazy" referrerpolicy="no-referrer" src="${esc(x.img)}_480x480.jpg" onerror="this.onerror=null;this.src='${esc(x.img)}'" alt="${esc(x.name)}">${x.photos.length>1||x.video?`<span class="more" role="button" data-o="${x.o}">${x.video?"▶ ":""}${x.photos.length} photo${x.photos.length>1?"s":""}</span>`:""}</div><div class="brand">${esc(x.brand)}</div><div class="name">${esc(x.name)}</div><div class="price">${esc(x.priceText)}</div><span class="cta">View deal</span></a>`).join(""):'<div class="empty">No watches match. Try another filter.</div>';
+  $("grid").innerHTML=l.length?l.map(x=>`<a class="card${x.wid===W?" hit":""}" id="w-${esc(x.wid)}" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener"><div class="ph">${x.o>=newest?'<span class="badge">NEW</span>':""}<img loading="lazy" referrerpolicy="no-referrer" src="${esc(x.img)}_480x480.jpg" onerror="this.onerror=null;this.src='${esc(x.img)}'" alt="${esc(x.name)}">${x.photos.length>1||x.video?`<span class="more" role="button" data-o="${x.o}" data-j="0">${x.video?"▶ ":""}${x.photos.length} photo${x.photos.length>1?"s":""}</span>`:""}</div>${thumbs(x)}<div class="brand">${esc(x.brand)}</div><div class="name">${esc(x.name)}</div><div class="price">${esc(x.priceText)}</div><span class="cta">View deal</span></a>`).join(""):'<div class="empty">No watches match. Try another filter.</div>';
 }
 $("grid").innerHTML=Array(8).fill('<div class="card sk"><div class="ph"></div></div>').join("");
 fetch(CSV).then(r=>r.text()).then(t=>{
@@ -125,14 +129,15 @@ fetch(CSV).then(r=>r.text()).then(t=>{
 ["q","brand","sort"].forEach(id=>$(id).addEventListener("input",render));
 let lb={x:null,k:0};
 const big=u=>u+"_800x800.jpg";
+const thumbs=x=>{const m=media(x);if(m.length<2)return"";const n=4,sh=m.slice(0,n);return`<div class="ths">${sh.map((it,j)=>j===n-1&&m.length>n?`<span class="more2" data-o="${x.o}" data-j="${j}">+${m.length-n+1}</span>`:it.t==="v"?`<span class="tv more2" data-o="${x.o}" data-j="${j}">▶</span>`:`<img class="more2" data-o="${x.o}" data-j="${j}" referrerpolicy="no-referrer" loading="lazy" src="${esc(it.u)}_220x220.jpg" onerror="this.onerror=null;this.src='${esc(it.u)}'" alt="">`).join("")}</div>`};
 const media=x=>{const p=x.photos.map(u=>({t:"i",u}));if(x.video)p.splice(1,0,{t:"v",u:x.video});return p};
 function show(k){const m=lb.m;lb.k=(k+m.length)%m.length;const it=m[lb.k],i=$("lbi"),v=$("lbv");
   if(it.t==="v"){i.style.display="none";v.style.display="";if(v.src!==it.u)v.src=it.u;v.play().catch(()=>{})}
   else{v.pause();v.style.display="none";i.style.display="";i.onerror=function(){this.onerror=null;this.src=it.u};i.src=big(it.u)}
   $("lbc").textContent=(lb.k+1)+" / "+m.length;$("lbth").querySelectorAll("[data-j]").forEach((t,j)=>t.classList.toggle("on",j===lb.k))}
-function openLb(x){lb.x=x;lb.m=media(x);$("lbt").textContent=x.name;$("lbpr").textContent=x.priceText||"";$("lbgo").href=x.link;$("lbth").innerHTML=lb.m.map((it,j)=>it.t==="v"?`<span class="lb-tv" data-j="${j}">▶</span>`:`<img referrerpolicy="no-referrer" loading="lazy" src="${esc(it.u)}_480x480.jpg" data-j="${j}" alt="">`).join("");$("lbth").querySelectorAll("[data-j]").forEach(t=>t.onclick=()=>show(+t.dataset.j));const one=lb.m.length<2;$("lbp").style.display=$("lbn").style.display=one?"none":"";$("lb").classList.add("on");document.body.style.overflow="hidden";show(0)}
+function openLb(x,k0){lb.x=x;lb.m=media(x);$("lbt").textContent=x.name;$("lbpr").textContent=x.priceText||"";$("lbgo").href=x.link;$("lbth").innerHTML=lb.m.map((it,j)=>it.t==="v"?`<span class="lb-tv" data-j="${j}">▶</span>`:`<img referrerpolicy="no-referrer" loading="lazy" src="${esc(it.u)}_480x480.jpg" data-j="${j}" alt="">`).join("");$("lbth").querySelectorAll("[data-j]").forEach(t=>t.onclick=()=>show(+t.dataset.j));const one=lb.m.length<2;$("lbp").style.display=$("lbn").style.display=one?"none":"";$("lb").classList.add("on");document.body.style.overflow="hidden";show(k0||0)}
 function closeLb(){$("lbv").pause();$("lb").classList.remove("on");document.body.style.overflow=""}
-$("grid").addEventListener("click",e=>{const m=e.target.closest(".more");if(!m)return;e.preventDefault();e.stopPropagation();const x=items.find(y=>y.o==m.dataset.o);if(x)openLb(x)});
+$("grid").addEventListener("click",e=>{let m=e.target.closest(".more,.more2"),k=m?+m.dataset.j:0;if(!m){const ph=e.target.closest(".ph");m=ph&&ph.querySelector(".more");k=0}if(!m)return;e.preventDefault();e.stopPropagation();const x=items.find(y=>y.o==m.dataset.o);if(x)openLb(x,k)});
 $("lbx").onclick=closeLb;$("lbp").onclick=()=>show(lb.k-1);$("lbn").onclick=()=>show(lb.k+1);
 document.addEventListener("keydown",e=>{if(!$("lb").classList.contains("on"))return;if(e.key==="Escape")closeLb();if(e.key==="ArrowLeft")show(lb.k-1);if(e.key==="ArrowRight")show(lb.k+1)});
 let sx=null;$("lbi").addEventListener("touchstart",e=>{sx=e.touches[0].clientX},{passive:true});$("lbi").addEventListener("touchend",e=>{if(sx===null)return;const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>40)show(lb.k+(d<0?1:-1));sx=null});
