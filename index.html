@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kabuzio — Watch Deals</title>
-<meta name="description" content="Curated automatic, chronograph and diver watches from AliExpress at the best price. New deals every day.">
+<meta name="description" content="Top-rated automatic, chronograph and diver watches. Buy directly on AliExpress with Buyer Protection, refunds and worldwide shipping.">
 <meta property="og:title" content="Kabuzio — Watch Deals">
-<meta property="og:description" content="Curated affordable watches. New deals every day.">
+<meta property="og:description" content="Top-rated watches. Buy directly on AliExpress with Buyer Protection and worldwide shipping.">
 <meta name="color-scheme" content="light">
 <meta name="p:domain_verify" content="5a01f461088700217cf676abdaded7c9"/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌚</text></svg>">
@@ -28,11 +28,18 @@ a{color:inherit;text-decoration:none}
 .tools{max-width:1200px;margin:0 auto;padding:0 20px}
 .search{width:100%;border:none;border-bottom:1px solid var(--line);padding:14px 0;font:inherit;font-size:16px;outline:none;background:transparent}
 .search:focus{border-color:var(--ink)}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:16px 0 4px;scrollbar-width:none}
+.trust{list-style:none;padding:0;margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+.trust li{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:500}
+.trust b{font-weight:400}
+.fl{display:flex;align-items:center;gap:12px;padding-top:14px}
+.fl-l{flex:none;width:44px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;min-width:0}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:none;border:1px solid var(--line);background:#fff;padding:8px 14px;border-radius:999px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink);transition:.15s}
+.chip{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;padding:9px 16px;border-radius:999px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink);transition:.15s}
+.chip i{font-style:normal;font-size:11px;color:var(--muted);font-weight:400}
+.chip.on i{color:#bbb}
 .chip:hover{border-color:#bbb}
-.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0 6px;flex-wrap:wrap}
 .count{font-size:13px;color:var(--muted)}
 .selects{display:flex;gap:16px}
@@ -85,11 +92,11 @@ footer a{color:var(--ink);font-weight:500}
 </head>
 <body>
 <nav class="nav"><div class="nav-in"><a class="logo" href="#">KABUZIO</a><a class="tg" href="https://t.me/KabuzioDeal" target="_blank" rel="noopener">Daily deals on Telegram</a></div></nav>
-<section class="hero"><h1>Watches that look<br>way above their price.</h1><p>Curated automatic, chronograph and diver watches. Updated every day.</p></section>
+<section class="hero"><h1>The best-rated watches,<br>straight from AliExpress.</h1><p>Buy directly on AliExpress. Every order is covered by AliExpress Buyer Protection: a full refund if it doesn't arrive or isn't as described.</p><ul class="trust"><li><b>🛡️</b><span>AliExpress Buyer Protection</span></li><li><b>↩︎</b><span>Easy refunds</span></li><li><b>🌍</b><span>Ships worldwide</span></li><li><b>⭐</b><span>Top-rated sellers</span></li></ul></section>
 <div class="tools">
   <input class="search" id="q" type="search" placeholder="Search watches or brands">
-  <div class="chips" id="types"></div>
-  <div class="chips" id="prices"></div>
+  <div class="fl"><span class="fl-l">Style</span><div class="chips" id="types"></div></div>
+  <div class="fl"><span class="fl-l">Price</span><div class="chips" id="prices"></div></div>
   <div class="row"><span class="count" id="count"></span><div class="selects"><select id="brand" aria-label="Brand"><option value="">All brands</option></select><select id="sort" aria-label="Sort"><option value="new">Newest</option><option value="low">Price ↑</option><option value="high">Price ↓</option></select></div></div>
 </div>
 <main class="grid" id="grid"></main>
@@ -98,7 +105,7 @@ footer a{color:var(--ink);font-weight:500}
 <script>
 const CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/pub?gid=596242979&single=true&output=csv";
 const TYPES=[["chronograph","Chronograph"],["dive","Diver"],["smart","Smartwatch"],["automatic","Automatic"],["mechanical","Automatic"],["tourbillon","Automatic"],["skeleton","Automatic"],["quartz","Quartz"]];
-const PRICES=[["","Any price"],["0-50","Under $50"],["50-100","$50–100"],["100-99999","$100+"]];
+const PRICES=[["","All prices"],["0-100","$40–100"],["100-200","$100–200"],["200-99999","$200+"]];
 let items=[],st={type:"",price:""};const W=new URLSearchParams(location.search).get("w")||"";
 const $=id=>document.getElementById(id);
 const num=s=>parseFloat(String(s||"").replace(/[^0-9.]/g,""))||0;
@@ -107,7 +114,8 @@ const typeOf=n=>{n=n.toLowerCase();for(const[k,v]of TYPES)if(n.includes(k))retur
 const pick=(r,n,i)=>r[n]!==undefined?r[n]:Object.values(r)[i];
 const nice=b=>b.replace(/([a-z])([A-Z])/g,"$1 $2");
 function parseCSV(t){const rows=[];let row=[],f="",q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}else if(c=='"')q=true;else if(c==','){row.push(f);f=""}else if(c=='\n'){row.push(f);rows.push(row);row=[];f=""}else if(c!='\r')f+=c}if(f||row.length){row.push(f);rows.push(row)}const h=rows.shift()||[];return rows.filter(r=>r.some(Boolean)).map(r=>Object.fromEntries(h.map((k,i)=>[k.trim(),r[i]])))}
-function chips(el,list,key){el.innerHTML=list.map(([v,l])=>`<button class="chip${st[key]===v?" on":""}" data-v="${esc(v)}">${esc(l)}</button>`).join("");el.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{st[key]=b.dataset.v;chips(el,list,key);render()})}
+function cnt(key,v){if(!v)return items.length;return items.filter(x=>{if(key==="type")return x.type===v;const[lo,hi]=v.split("-").map(Number);return x.price>=lo&&x.price<hi}).length}
+function chips(el,list,key){el.innerHTML=list.filter(([v])=>cnt(key,v)>0).map(([v,l])=>`<button class="chip${st[key]===v?" on":""}" data-v="${esc(v)}">${esc(l)}<i>${cnt(key,v)}</i></button>`).join("");el.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{st[key]=b.dataset.v;chips(el,list,key);render()})}
 function render(){
   const q=$("q").value.toLowerCase().trim(),[lo,hi]=(st.price||"0-999999").split("-").map(Number),b=$("brand").value,s=$("sort").value;
   let l=items.filter(x=>(!q||(x.name+" "+x.brand).toLowerCase().includes(q))&&x.price>=lo&&x.price<hi&&(!st.type||x.type===st.type)&&(!b||x.brand===b));
