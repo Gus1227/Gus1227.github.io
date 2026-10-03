@@ -55,6 +55,26 @@ select{border:none;background:transparent;font:inherit;font-size:13px;color:var(
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 0}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center;padding:28px 20px 40px;line-height:1.6}
 footer a{color:var(--ink);font-weight:500}
+.more{position:absolute;right:10px;bottom:10px;background:rgba(255,255,255,.95);font-size:11px;font-weight:600;padding:6px 10px;border-radius:999px;cursor:pointer;border:1px solid var(--line)}
+.more:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.lb{position:fixed;inset:0;z-index:50;background:#fff;display:none;flex-direction:column}
+.lb.on{display:flex}
+.lb-top{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);gap:12px}
+.lb-t{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-x{border:none;background:none;font-size:26px;line-height:1;cursor:pointer;color:var(--ink)}
+.lb-main{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;padding:12px 56px}
+.lb-main img{max-width:100%;max-height:100%;object-fit:contain}
+.lb-a{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:20px;cursor:pointer;color:var(--ink)}
+.lb-a:hover{background:var(--ink);color:#fff}
+.lb-p{left:10px}.lb-n{right:10px}
+.lb-n0{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--muted)}
+.lb-th{display:flex;gap:8px;overflow-x:auto;padding:12px 20px;justify-content:center;scrollbar-width:none}
+.lb-th img{width:56px;height:56px;object-fit:cover;border-radius:4px;cursor:pointer;opacity:.45;flex:none;border:1px solid var(--line)}
+.lb-th img.on{opacity:1;border-color:var(--ink)}
+.lb-bot{display:flex;justify-content:space-between;align-items:center;padding:12px 20px 20px;border-top:1px solid var(--line)}
+.lb-pr{font-weight:600}
+.lb-go{background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:500}
+@media(max-width:600px){.lb-main{padding:12px 8px}.lb-a{width:34px;height:34px}}
 </style>
 </head>
 <body>
@@ -67,6 +87,7 @@ footer a{color:var(--ink);font-weight:500}
   <div class="row"><span class="count" id="count"></span><div class="selects"><select id="brand" aria-label="Brand"><option value="">All brands</option></select><select id="sort" aria-label="Sort"><option value="new">Newest</option><option value="low">Price ↑</option><option value="high">Price ↓</option></select></div></div>
 </div>
 <main class="grid" id="grid"></main>
+<div class="lb" id="lb"><div class="lb-top"><span class="lb-t" id="lbt"></span><button class="lb-x" id="lbx" aria-label="Close">×</button></div><div class="lb-main"><button class="lb-a lb-p" id="lbp" aria-label="Previous">‹</button><img id="lbi" referrerpolicy="no-referrer" alt=""><button class="lb-a lb-n" id="lbn" aria-label="Next">›</button><span class="lb-n0" id="lbc"></span></div><div class="lb-th" id="lbth"></div><div class="lb-bot"><span class="lb-pr" id="lbpr"></span><a class="lb-go" id="lbgo" target="_blank" rel="nofollow sponsored noopener">View deal</a></div></div>
 <footer>Ad · As an affiliate we earn a commission on purchases, at no extra cost to you.<br>Prices may change on AliExpress. · <a href="https://t.me/KabuzioDeal" target="_blank" rel="noopener">@KabuzioDeal</a></footer>
 <script>
 const CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/pub?gid=596242979&single=true&output=csv";
@@ -87,11 +108,11 @@ function render(){
   l.sort(s==="low"?(a,b)=>a.price-b.price:s==="high"?(a,b)=>b.price-a.price:(a,b)=>b.i-a.i);
   $("count").textContent=l.length+(l.length===1?" watch":" watches");
   const newest=items.length-6;
-  $("grid").innerHTML=l.length?l.map(x=>`<a class="card${x.wid===W?" hit":""}" id="w-${esc(x.wid)}" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener"><div class="ph">${x.o>=newest?'<span class="badge">NEW</span>':""}<img loading="lazy" referrerpolicy="no-referrer" src="${esc(x.img)}_480x480.jpg" onerror="this.onerror=null;this.src='${esc(x.img)}'" alt="${esc(x.name)}"></div><div class="brand">${esc(x.brand)}</div><div class="name">${esc(x.name)}</div><div class="price">${esc(x.priceText)}</div><span class="cta">View deal</span></a>`).join(""):'<div class="empty">No watches match. Try another filter.</div>';
+  $("grid").innerHTML=l.length?l.map(x=>`<a class="card${x.wid===W?" hit":""}" id="w-${esc(x.wid)}" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener"><div class="ph">${x.o>=newest?'<span class="badge">NEW</span>':""}<img loading="lazy" referrerpolicy="no-referrer" src="${esc(x.img)}_480x480.jpg" onerror="this.onerror=null;this.src='${esc(x.img)}'" alt="${esc(x.name)}">${x.photos.length>1?`<span class="more" role="button" data-o="${x.o}">${x.photos.length} photos</span>`:""}</div><div class="brand">${esc(x.brand)}</div><div class="name">${esc(x.name)}</div><div class="price">${esc(x.priceText)}</div><span class="cta">View deal</span></a>`).join(""):'<div class="empty">No watches match. Try another filter.</div>';
 }
 $("grid").innerHTML=Array(8).fill('<div class="card sk"><div class="ph"></div></div>').join("");
 fetch(CSV).then(r=>r.text()).then(t=>{
-  items=parseCSV(t).map((r,i)=>{const name=String(pick(r,"Producto",0)||"").replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/&amp;/g,"&"),br=pick(r,"Marca",5);return{i,o:i,wid:String(pick(r,"Enlace",3)||"").replace(/\/+$/,"").split("/").pop().replace(/[^A-Za-z0-9_-]/g,""),name,priceText:pick(r,"Precio",1),price:num(pick(r,"Precio",1)),img:pick(r,"Imagen_URL",2),link:pick(r,"Enlace",3),brand:(!br||br==="Sin marca")?"Kabuzio Pick":nice(br),type:typeOf(name)}}).filter(x=>x.name&&/^https:\/\//.test(x.link||""));
+  items=parseCSV(t).map((r,i)=>{const name=String(pick(r,"Producto",0)||"").replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/&amp;/g,"&"),br=pick(r,"Marca",5);return{i,o:i,wid:String(pick(r,"Enlace",3)||"").replace(/\/+$/,"").split("/").pop().replace(/[^A-Za-z0-9_-]/g,""),name,priceText:pick(r,"Precio",1),price:num(pick(r,"Precio",1)),img:pick(r,"Imagen_URL",2),photos:[...new Set([pick(r,"Imagen_URL",2),...String(pick(r,"Fotos_extra",6)||"").split(/\s+/)])].filter(u=>/^https:\/\//.test(u||"")),link:pick(r,"Enlace",3),brand:(!br||br==="Sin marca")?"Kabuzio Pick":nice(br),type:typeOf(name)}}).filter(x=>x.name&&/^https:\/\//.test(x.link||""));
   const ts=[...new Set(items.map(x=>x.type))].filter(t=>t!=="Other").sort();
   chips($("types"),[["","All"],...ts.map(t=>[t,t])],"type");chips($("prices"),PRICES,"price");
   [...new Set(items.map(x=>x.brand))].sort().forEach(v=>{const o=document.createElement("option");o.value=o.textContent=v;$("brand").appendChild(o)});
@@ -100,6 +121,15 @@ fetch(CSV).then(r=>r.text()).then(t=>{
   if(W){const el=document.getElementById("w-"+W);if(el)el.scrollIntoView({block:"center"})}
 }).catch(()=>{$("grid").innerHTML='<div class="empty">Could not load deals. Please refresh.</div>'});
 ["q","brand","sort"].forEach(id=>$(id).addEventListener("input",render));
+let lb={x:null,k:0};
+const big=u=>u+"_800x800.jpg";
+function show(k){const p=lb.x.photos;lb.k=(k+p.length)%p.length;const i=$("lbi");i.onerror=function(){this.onerror=null;this.src=p[lb.k]};i.src=big(p[lb.k]);$("lbc").textContent=(lb.k+1)+" / "+p.length;$("lbth").querySelectorAll("img").forEach((t,j)=>t.classList.toggle("on",j===lb.k))}
+function openLb(x){lb.x=x;$("lbt").textContent=x.name;$("lbpr").textContent=x.priceText||"";$("lbgo").href=x.link;$("lbth").innerHTML=x.photos.map((u,j)=>`<img referrerpolicy="no-referrer" loading="lazy" src="${esc(u)}_480x480.jpg" data-j="${j}" alt="">`).join("");$("lbth").querySelectorAll("img").forEach(t=>t.onclick=()=>show(+t.dataset.j));const one=x.photos.length<2;$("lbp").style.display=$("lbn").style.display=one?"none":"";$("lb").classList.add("on");document.body.style.overflow="hidden";show(0)}
+function closeLb(){$("lb").classList.remove("on");document.body.style.overflow=""}
+$("grid").addEventListener("click",e=>{const m=e.target.closest(".more");if(!m)return;e.preventDefault();e.stopPropagation();const x=items.find(y=>y.o==m.dataset.o);if(x)openLb(x)});
+$("lbx").onclick=closeLb;$("lbp").onclick=()=>show(lb.k-1);$("lbn").onclick=()=>show(lb.k+1);
+document.addEventListener("keydown",e=>{if(!$("lb").classList.contains("on"))return;if(e.key==="Escape")closeLb();if(e.key==="ArrowLeft")show(lb.k-1);if(e.key==="ArrowRight")show(lb.k+1)});
+let sx=null;$("lbi").addEventListener("touchstart",e=>{sx=e.touches[0].clientX},{passive:true});$("lbi").addEventListener("touchend",e=>{if(sx===null)return;const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>40)show(lb.k+(d<0?1:-1));sx=null});
 </script>
 </body>
 </html>
