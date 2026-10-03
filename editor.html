@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Kabuzio — Editor</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✏️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111;--muted:#737373;--line:#e5e5e5;--soft:#f5f5f4;--bg:#fff;--ok:#15803d;--warn:#b45309}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:90px}
+button{font:inherit;cursor:pointer;color:var(--ink)}
+.top{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.logo{font-weight:700;letter-spacing:.14em;font-size:14px;margin-right:auto}
+.btn{border:1px solid var(--ink);background:#fff;padding:9px 14px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn.dark{background:var(--ink);color:#fff}
+.btn:disabled{opacity:.35;cursor:default}
+.bar{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar input[type=search]{flex:1;min-width:180px;border:none;border-bottom:1px solid var(--line);padding:10px 0;font:inherit;font-size:15px;outline:none}
+.bar label{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.tip{max-width:1200px;margin:0 auto;padding:0 16px 6px;font-size:12px;color:var(--muted);line-height:1.5}
+.grid{max-width:1200px;margin:0 auto;padding:8px 16px 40px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px 12px}
+@media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1000px){.grid{grid-template-columns:repeat(5,1fr)}}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;position:relative;touch-action:manipulation}
+.card.off{opacity:.45}
+.card.chg{border-color:var(--warn)}
+.ph{aspect-ratio:1;background:var(--soft);position:relative;cursor:grab}
+.ph img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.pos{position:absolute;top:8px;left:8px;background:var(--ink);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px}
+.hid{position:absolute;top:8px;right:8px;background:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid var(--line)}
+.inf{padding:8px 10px 4px}
+.br{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.nm{font-size:12.5px;line-height:1.3;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:32px}
+.pr{font-size:12px;font-weight:600;margin-top:3px}
+.acts{display:flex;border-top:1px solid var(--line);margin-top:6px}
+.acts button{flex:1;border:none;background:none;padding:9px 0;font-size:14px}
+.acts button+button{border-left:1px solid var(--line)}
+.acts button:hover{background:var(--soft)}
+.ghost{opacity:.3}
+.sel{outline:2px solid var(--ink)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;z-index:60;display:none;max-width:92vw;text-align:center}
+.toast.on{display:block}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 0}
+.md{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center}
+.md.on{display:flex}
+@media(min-width:700px){.md{align-items:center}}
+.box{background:#fff;width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:14px 14px 0 0;padding:18px 16px 22px}
+@media(min-width:700px){.box{border-radius:14px}}
+.box h2{font-size:16px;font-weight:600;margin-bottom:12px;display:flex;justify-content:space-between;gap:10px}
+.box h2 button{border:none;background:none;font-size:24px;line-height:1}
+.f{margin-top:12px}
+.f>span{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.f input,.f select{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:14px}
+.f small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.ph-list{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(min-width:500px){.ph-list{grid-template-columns:repeat(5,1fr)}}
+.pt{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--soft);border:1px solid var(--line);cursor:grab}
+.pt img{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.pt.vid{background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px}
+.pt.no{opacity:.25}
+.pt b{position:absolute;left:4px;top:4px;background:#fff;color:var(--ink);font-size:10px;padding:1px 6px;border-radius:999px}
+.pt button{position:absolute;right:3px;bottom:3px;border:none;background:#fff;border-radius:999px;font-size:11px;padding:2px 6px}
+.row2{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.login{max-width:380px;margin:80px auto;padding:0 16px;text-align:center}
+.login input{width:100%;border:1px solid var(--line);border-radius:8px;padding:12px;font:inherit;margin:14px 0}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="md" id="md"><div class="box" id="box"></div></div>
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script>
+const HOOK="https://hook.eu1.make.com/46no31m2nwxq5f402nth2bha656qs7ko";
+const STYLES=["Chronograph","Diver","Smartwatch","Automatic","Quartz","Other"];
+const TYPES=[["chronograph","Chronograph"],["dive","Diver"],["smart","Smartwatch"],["automatic","Automatic"],["mechanical","Automatic"],["tourbillon","Automatic"],["skeleton","Automatic"],["quartz","Quartz"]];
+const C={name:0,price:1,img:3,estado:7,marca:12,ventas:13,video:21,fotos:22,pid:23,orden:27,oculto:28,fotosweb:29,estilo:30,nombre:31};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const typeOf=n=>{n=n.toLowerCase();for(const[k,v]of TYPES)if(n.includes(k))return v;return "Other"};
+const nice=b=>String(b||"").replace(/([a-z])([A-Z])/g,"$1 $2");
+let KEY="",items=[],orderChanged=false,busy=false;
+try{const h=new URLSearchParams(location.hash.slice(1)).get("k");if(h){localStorage.setItem("kz_key",h);history.replaceState(null,"",location.pathname)}KEY=localStorage.getItem("kz_key")||""}catch(e){KEY=new URLSearchParams(location.hash.slice(1)).get("k")||""}
+
+function toast(t,ms){const el=$("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);if(ms!==0)toast.t=setTimeout(()=>el.classList.remove("on"),ms||3000)}
+async function call(a,p){const b=new URLSearchParams({k:KEY,a});if(p)b.set("p",JSON.stringify(p));const r=await fetch(HOOK,{method:"POST",body:b});const t=await r.text();let j;try{j=JSON.parse(t)}catch(e){throw new Error("Make no respondió bien ("+r.status+")")}if(r.status===403)throw new Error("clave");return j}
+
+function defMedia(photos,video){const m=photos.slice();if(video)m.splice(1,0,"video");return m}
+function rowToItem(r,i){
+  const g=k=>String(r[C[k]]??"").trim();
+  const photos=[...new Set([g("img"),...g("fotos").split(/\s+/)])].filter(u=>/^https:\/\//.test(u));
+  const video=/^https:\/\//.test(g("video"))?g("video"):"";
+  const all=defMedia(photos,video);
+  const fw=g("fotosweb").split(/\s+/).filter(t=>t==="video"?!!video:all.includes(t));
+  const o=parseFloat(g("orden"));
+  const it={row:i+1,name:g("name"),price:g("price"),estado:g("estado"),pid:g("pid"),sales:+g("ventas").replace(/\D/g,"")||0,video,all,
+    marca:g("marca"),orden:isFinite(o)?o:null,oculto:/^s[ií]/i.test(g("oculto")),media:fw.length?fw:all.slice(),estilo:g("estilo"),nombre:g("nombre")};
+  it.orig=snap(it);return it}
+function snap(it){return JSON.stringify([it.marca,it.orden,it.oculto,it.media.join(" "),it.estilo,it.nombre])}
+function fwOut(it){const d=it.all.join(" "),m=it.media.join(" ");return m===d?"":m}
+function sortItems(){items.sort((a,b)=>(a.orden??1e9)-(b.orden??1e9)||b.sales-a.sales||b.row-a.row)}
+const firstImg=it=>it.media.find(t=>t!=="video")||it.all.find(t=>t!=="video")||"";
+const dirty=()=>orderChanged||items.some(it=>snap(it)!==it.orig);
+
+function login(msg){
+  $("app").innerHTML=`<div class="login"><h2 style="font-size:20px">Editor de la web</h2><p style="color:var(--muted);font-size:14px;margin-top:8px">${esc(msg||"Escribe tu clave del editor.")}</p><input id="kin" type="password" placeholder="Clave"><button class="btn dark" id="kgo">Entrar</button></div>`;
+  $("kgo").onclick=()=>{KEY=$("kin").value.trim();try{localStorage.setItem("kz_key",KEY)}catch(e){}load()}}
+
+async function load(){
+  if(!KEY)return login();
+  $("app").innerHTML='<div class="login"><p style="color:var(--muted)">Cargando relojes…</p></div>';
+  try{const rows=await call("load");items=rows.slice(1).map(rowToItem).filter(it=>it.name&&/^(Publicado|Pendiente)$/i.test(it.estado));orderChanged=false;sortItems();shell();render()}
+  catch(e){if(e.message==="clave")return login("Clave incorrecta. Prueba otra vez.");$("app").innerHTML=`<div class="login"><p>No se pudo cargar: ${esc(e.message)}</p><button class="btn" onclick="load()">Reintentar</button></div>`}}
+
+function shell(){
+  $("app").innerHTML=`<div class="top"><div class="top-in"><span class="logo">KABUZIO · EDITOR</span><a class="btn" href="./" target="_blank">Ver web</a><button class="btn dark" id="save" disabled>Guardar cambios</button></div></div>
+  <div class="bar"><input type="search" id="q" placeholder="Buscar reloj o marca"><label><input type="checkbox" id="showoff" checked> Mostrar ocultos</label><button class="btn" id="reset">Orden por más vendidos</button></div>
+  <p class="tip">Arrastra la foto para mover un reloj. ⬆ lo pone primero. 👁 lo oculta o lo muestra. ✏️ cambia fotos, nombre, marca y estilo. Al terminar, toca <b>Guardar cambios</b>. La web se actualiza sola en unos 5 minutos. Los relojes nuevos salen detrás de los que ordenaste.</p>
+  <main class="grid" id="grid"></main>`;
+  $("q").oninput=render;$("showoff").onchange=render;
+  $("save").onclick=save;
+  $("reset").onclick=()=>{if(!confirm("¿Quitar el orden manual y ordenar por más vendidos?"))return;items.forEach(it=>it.orden=null);orderChanged=false;sortItems();render()};
+  Sortable.create($("grid"),{animation:150,handle:".ph",delay:180,delayOnTouchOnly:true,ghostClass:"ghost",filter:".empty",
+    onEnd:e=>{if(e.oldIndex===e.newIndex)return;const vis=visible(),a=vis[e.oldIndex],b=vis[e.newIndex];items.splice(items.indexOf(a),1);items.splice(items.indexOf(b)+(e.newIndex>e.oldIndex?1:0),0,a);orderChanged=true;render()}});
+  window.onbeforeunload=()=>dirty()?"":undefined}
+
+function visible(){const q=($("q")||{}).value?.toLowerCase().trim()||"",so=$("showoff")?.checked;return items.filter(it=>(so||!it.oculto)&&(!q||(it.name+" "+it.nombre+" "+it.marca).toLowerCase().includes(q)))}
+function move(it,to){const from=items.indexOf(it);items.splice(from,1);items.splice(Math.max(0,Math.min(to,items.length)),0,it);orderChanged=true;render()}
+
+function render(){
+  const vis=visible();
+  $("grid").innerHTML=vis.length?vis.map(it=>{const n=items.indexOf(it)+1,im=firstImg(it);return `<div class="card${it.oculto?" off":""}${snap(it)!==it.orig?" chg":""}" data-row="${it.row}">
+   <div class="ph"><img loading="lazy" referrerpolicy="no-referrer" src="${esc(im)}_220x220.jpg" onerror="this.onerror=null;this.src='${esc(im)}'" alt=""><span class="pos">${n}</span>${it.oculto?'<span class="hid">Oculto</span>':""}</div>
+   <div class="inf"><div class="br">${esc(nice(it.marca)||"Sin marca")}${it.estilo?" · "+esc(it.estilo):""}</div><div class="nm">${esc(it.nombre||it.name)}</div><div class="pr">${esc(it.price)} · ${it.media.length} ${it.media.length===1?"foto":"fotos"}</div></div>
+   <div class="acts"><button data-a="top" title="Poner primero">⬆</button><button data-a="up" title="Subir uno">↑</button><button data-a="down" title="Bajar uno">↓</button><button data-a="hide" title="Ocultar o mostrar">👁</button><button data-a="edit" title="Editar">✏️</button></div></div>`}).join(""):'<div class="empty">No hay relojes con esa búsqueda.</div>';
+  $("grid").querySelectorAll(".acts button").forEach(b=>b.onclick=()=>{const it=items.find(x=>x.row==b.closest(".card").dataset.row),i=items.indexOf(it);
+    if(b.dataset.a==="top")move(it,0);if(b.dataset.a==="up")move(it,i-1);if(b.dataset.a==="down")move(it,i+1);
+    if(b.dataset.a==="hide"){it.oculto=!it.oculto;render()}if(b.dataset.a==="edit")edit(it)});
+  const s=$("save");s.disabled=!dirty()||busy;s.textContent=busy?"Guardando…":"Guardar cambios"}
+
+function edit(it){
+  const brands=[...new Set(items.map(x=>x.marca).filter(Boolean))].sort();
+  let media=it.media.slice(),off=it.all.filter(t=>!media.includes(t));
+  const draw=()=>{const list=[...media.map(t=>({t,on:1})),...off.map(t=>({t,on:0}))];
+    $("pl").innerHTML=list.map(({t,on},j)=>`<div class="pt${t==="video"?" vid":""}${on?"":" no"}" data-t="${esc(t)}">${t==="video"?"▶":`<img referrerpolicy="no-referrer" src="${esc(t)}_220x220.jpg" onerror="this.onerror=null;this.src='${esc(t)}'" alt="">`}${on?`<b>${j+1}</b>`:""}<button data-t="${esc(t)}">${on?"Quitar":"Poner"}</button></div>`).join("");
+    $("pl").querySelectorAll("button").forEach(b=>b.onclick=e=>{e.stopPropagation();const t=b.dataset.t;if(media.includes(t)){if(media.length<2)return toast("Debe quedar al menos 1 foto");media=media.filter(x=>x!==t);off.push(t)}else{off=off.filter(x=>x!==t);media.push(t)}draw()})};
+  $("box").innerHTML=`<h2><span>Editar reloj</span><button id="mx" aria-label="Cerrar">×</button></h2>
+   <div class="f"><span>Fotos</span><div class="ph-list" id="pl"></div><small>Arrastra para cambiar el orden. La 1ª es la portada. «Quitar» la esconde solo en la web.</small></div>
+   <div class="f"><span>Nombre en la web</span><input id="en" value="${esc(it.nombre)}" placeholder="${esc(it.name)}"><small>Vacío = nombre original de AliExpress.</small></div>
+   <div class="f"><span>Marca</span><input id="eb" list="bl" value="${esc(nice(it.marca))}"><datalist id="bl">${brands.map(b=>`<option value="${esc(nice(b))}">`).join("")}</datalist><small>Cambia también los hashtags de los posts.</small></div>
+   <div class="f"><span>Estilo (filtro de la web)</span><select id="es"><option value="">Automático (${esc(typeOf(it.name))})</option>${STYLES.map(s=>`<option${s===it.estilo?" selected":""}>${s}</option>`).join("")}</select></div>
+   <div class="row2"><button class="btn dark" id="ok">Listo</button><button class="btn" id="cn">Cancelar</button><button class="btn" id="rf" style="margin-left:auto">Fotos como al principio</button></div>`;
+  draw();
+  Sortable.create($("pl"),{animation:150,delay:150,delayOnTouchOnly:true,ghostClass:"ghost",onEnd:()=>{const ts=[...$("pl").children].map(d=>d.dataset.t);media=ts.filter(t=>media.includes(t));off=ts.filter(t=>off.includes(t));draw()}});
+  const close=()=>$("md").classList.remove("on");
+  $("mx").onclick=$("cn").onclick=close;$("md").onclick=e=>{if(e.target.id==="md")close()};
+  $("rf").onclick=()=>{media=it.all.slice();off=[];draw()};
+  $("ok").onclick=()=>{it.media=media;it.nombre=$("en").value.trim();const b=$("eb").value.trim().replace(/\s+/g,"");if(b)it.marca=b;it.estilo=$("es").value;close();render()};
+  $("md").classList.add("on")}
+
+async function save(){
+  if(busy)return;busy=true;render();toast("Guardando…",0);
+  try{
+    const fresh=(await call("load")).slice(1);
+    const where=it=>{const r=fresh[it.row-1];const same=r=>r&&(it.pid?String(r[C.pid]||"").trim()===it.pid:String(r[C.name]||"").trim()===it.name);if(same(r))return it.row;const i=fresh.findIndex(same);return i<0?0:i+1};
+    const data=[];let lost=0;
+    items.forEach((it,i)=>{const o=JSON.parse(it.orig),ord=orderChanged?i+1:it.orden;
+      const ch=it.marca!==o[0]||ord!==o[1]||it.oculto!==o[2]||it.media.join(" ")!==o[3]||it.estilo!==o[4]||it.nombre!==o[5];if(!ch)return;
+      const r=where(it);if(!r){lost++;return}
+      if(it.marca!==o[0])data.push({range:"Ofertas!M"+(r+1),values:[[it.marca]]});
+      data.push({range:`Ofertas!AB${r+1}:AF${r+1}`,values:[[ord??"",it.oculto?"Sí":"",fwOut(it),it.estilo,it.nombre]]})});
+    if(data.length){const res=await call("save",{valueInputOption:"RAW",data});if(!res.totalUpdatedCells&&res.totalUpdatedCells!==0)throw new Error((res.error&&res.error.message)||"la hoja no confirmó")}
+    busy=false;toast(lost?`Guardado ✓ (${lost} no encontrados en la hoja)`:"Guardado ✓ La web cambia en unos 5 minutos",5000);
+    window.onbeforeunload=null;await load();
+  }catch(e){busy=false;render();toast(e.message==="clave"?"Clave incorrecta":"No se guardó: "+e.message,6000)}}
+
+load();
+</script>
+</body>
+</html>

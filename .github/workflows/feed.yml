@@ -24,6 +24,8 @@ jobs:
               name, price, img, link = r.get("Producto"), r.get("Precio"), r.get("Imagen_URL"), r.get("Enlace")
               if not (name and img and link and link.startswith("https://")):
                   continue
+              if (r.get("Oculto_web") or "").strip().lower().startswith("s"):
+                  continue
               wid = re.sub(r"[^A-Za-z0-9_-]", "", link.rstrip("/").split("/")[-1])
               brand = (r.get("Marca") or "").strip()
               brand = "" if brand in ("", "Sin marca") else re.sub(r"([a-z])([A-Z])", r"\1 \2", brand)
