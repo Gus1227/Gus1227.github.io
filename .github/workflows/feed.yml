@@ -83,6 +83,14 @@ jobs:
                   "platforms": [{"platform": "pinterest", "accountId": "6ac2543ed3257a1645992aa0",
                   "platformSpecificData": {"title": q["t"], "boardId": "1089026822335308630", "link": q["l"]}}]}, ensure_ascii=False)
           json.dump(queue, open("pins/queue.json", "w"), ensure_ascii=False, indent=0)
+          # one small file per turn: Make only downloads pins/q/<n>.json (fewer credits)
+          os.makedirs("pins/q", exist_ok=True)
+          for i, q in enumerate(queue):
+              f = f"pins/q/{i}.json"
+              if q["off"]:
+                  if os.path.exists(f): os.remove(f)
+              else:
+                  open(f, "w", encoding="utf-8").write(q["b"])
           print(len(queue), "in queue")
           print(len(items), "items")
           PY
