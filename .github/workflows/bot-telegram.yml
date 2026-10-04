@@ -68,6 +68,8 @@ jobs:
             huecos) python3 bot/huecos.py ;;
             poner-links) python3 bot/poner_links.py ;;
             stats) DEBUG=1 python3 bot/stats.py && git add stats.json && git commit -qm "bot: seguidores" && git pull -q --rebase origin main && git push -q origin HEAD:main ;;
+            marcas) python3 bot/marcas.py ;;
+            marcas-si) MARCAS=si python3 bot/marcas.py ;;
             revisar) python3 bot/revisar.py ;;
             revisar-si) REVISAR=si python3 bot/revisar.py ;;
             ali-*) ALI_HACER="${FILA#ali-}" python3 bot/ali.py ;;
