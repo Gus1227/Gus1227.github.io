@@ -10,6 +10,10 @@ on:
         type: choice
         options: ["no", "si"]
         default: "no"
+      fila:
+        description: "Solo revisar esta fila (número), sin publicar"
+        required: false
+        default: ""
 concurrency: bot-telegram
 jobs:
   post:
@@ -23,3 +27,10 @@ jobs:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           PUBLICAR: ${{ github.event_name == 'schedule' && 'si' || inputs.publicar }}
         run: python3 bot/telegram.py
+        if: ${{ !inputs.fila }}
+      - name: Revisar una fila
+        if: ${{ inputs.fila }}
+        env:
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+          FILA: ${{ inputs.fila }}
+        run: python3 bot/revisar_fila.py
