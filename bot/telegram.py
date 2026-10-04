@@ -45,15 +45,28 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def item_of(url):
-    """AliExpress item number a link opens (first redirect), or '' if unknown."""
-    try:
-        urllib.request.build_opener(_NoRedirect).open(
-            urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}), timeout=20)
-    except urllib.error.HTTPError as e:
-        m = re.search(r"/item/(\d+)", e.headers.get("Location") or "")
-        return m.group(1) if m else ""
-    except Exception:
-        return ""
+    """AliExpress item number a link opens (follows a few redirects), or '' if unknown."""
+    opener = urllib.request.build_opener(_NoRedirect)
+    for attempt in range(3):
+        u = url
+        for _ in range(5):
+            m = re.search(r"/item/(\d+)", u)
+            if m and u is not url:
+                return m.group(1)
+            try:
+                r = opener.open(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=20)
+                m = re.search(r"aliexpress\.[a-z.]+/item/(\d+)", r.read(200000).decode("utf-8", "ignore"))
+                if m:
+                    return m.group(1)
+                break
+            except urllib.error.HTTPError as e:
+                loc = e.headers.get("Location")
+                if not loc:
+                    break
+                u = urllib.parse.urljoin(u, loc)
+            except Exception:
+                break
+        time.sleep(1 + attempt * 2)
     return ""
 
 

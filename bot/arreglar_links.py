@@ -13,10 +13,11 @@ g = lambda r, i: (r[i] if i < len(r) else "").strip()
 
 urls = set()
 for r in rows:
-    urls.add(g(r, 4))
+    if not g(r, 23).isdigit():
+        urls.add(g(r, 4))
     urls.update(g(r, c) for c in range(32, 38))
 urls.discard("")
-with ThreadPoolExecutor(12) as ex:
+with ThreadPoolExecutor(4) as ex:
     item = dict(zip(urls, ex.map(item_of, urls)))
 
 by_item = [{} for _ in range(6)]  # per column: item -> link
@@ -31,7 +32,8 @@ for n, r in enumerate(rows, start=2):
     e = g(r, 4)
     if not any(g(r, 32 + k) for k in range(6)):
         continue
-    want = item.get(e, "")
+    x = g(r, 23)
+    want = x if x.isdigit() else item.get(e, "")
     new = []
     for k in range(6):
         u = by_item[k].get(want) if want else None
@@ -47,6 +49,7 @@ for n, r in enumerate(rows, start=2):
     data.append({"range": f"{TAB}!AG{n}:AL{n}", "values": [new]})
     print(f"fila {n:3} reloj {want or '?':17} {'arreglada' if want else 'sin número: uso Enlace'}")
 
+print(f"Links sin número: {sum(1 for v in item.values() if not v)} de {len(item)}")
 print(f"\nYa bien: {ok}. Para arreglar: {fixed}. Huecos que usan Enlace: {fallback}.")
 if WRITE and data:
     sheets(token, "values:batchUpdate", {"valueInputOption": "RAW", "data": data}, method="POST")
