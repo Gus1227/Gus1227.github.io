@@ -55,6 +55,7 @@ def turn(slot):
     run("ali.py", ALI_HACER="completar links ventas")
     run("telegram.py")
     run("revisar.py", REVISAR="si")
+    run("marcas.py", MARCAS="si")  # new rows take the first word of the title as brand: tidy it before posting
     if run("zernio.py", REDES="pinterest", PIN=str(st["pin"])):
         st["pin"] += 1
     run("stats.py")

@@ -18,9 +18,10 @@ KNOWN = [(r"pagani\s*design|pagani", "PaganiDesign"), (r"tsar\s*bomba|tsar", "Ts
          (r"forsining", "Forsining"), (r"winner", "Winner"), (r"megir", "Megir"), (r"reef\s*tiger", "ReefTiger"),
          (r"ochstin", "Ochstin"), (r"bulova", "Bulova"), (r"guanqin", "Guanqin"), (r"tevise", "Tevise"),
          (r"hruodland", "Hruodland"), (r"escapement\s*time", "EscapementTime"), (r"thorn", "Thorn"),
-         (r"ripple", "Ripple"), (r"red\s*star", "RedStar")]
+         (r"ripple", "Ripple"), (r"red\s*star", "RedStar"), (r"seakoss", "Seakoss"), (r"ailang", "Ailang"),
+         (r"ix\s*&\s*dao|ixdao", "IXDAO"), (r"jacques\s*genry", "JacquesGenry"), (r"farasute", "Farasute"), (r"hanboro", "Hanboro")]
 NOT_BRAND = re.compile(r"^(\d+|new|men|mens|man|women|top|luxury|hot|original|automatic|mechanical|quartz|watch|watches|"
-                       r"fashion|sport|sports|business|classic|brand|official|the|sin\s*marca|)$", re.I)
+                       r"fashion|sport|sports|business|classic|brand|official|the|titanium|shanghai|skeleton|sin\s*marca|)$", re.I)
 
 
 def brand_of(text):
