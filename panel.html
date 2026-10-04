@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Kabuzio — Panel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌚</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<style>
+:root{--bg:#0e0d0b;--s1:#161513;--s2:#1e1c19;--line:#2b2925;--ink:#ece7de;--muted:#8d877c;--gold:#c9b37e;--ok:#7fb48a;--warn:#d8a657;--bad:#d57a6a;--blue:#8fa9c9}
+*{box-sizing:border-box;margin:0}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;letter-spacing:.01em}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+header{position:sticky;top:0;z-index:20;background:rgba(14,13,11,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;gap:14px;padding:14px 0;flex-wrap:wrap}
+.logo{font-family:"Cormorant Garamond",serif;font-size:22px;letter-spacing:.18em;margin-right:auto}
+.logo span{color:var(--gold)}
+nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav button{background:none;border:none;color:var(--muted);padding:8px 12px;border-radius:999px;white-space:nowrap;font-size:13px}
+nav button.on{background:var(--s2);color:var(--ink)}
+.upd{font-size:11px;color:var(--muted)}
+main{padding:22px 0 80px}
+.sec-t{display:flex;align-items:baseline;gap:12px;margin:26px 0 12px;flex-wrap:wrap}
+.sec-t h2{font-size:24px}
+.sec-t p{color:var(--muted);font-size:12.5px}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:800px){.kpis{grid-template-columns:repeat(5,1fr)}}
+.kpi{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:16px}
+.kpi .l{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:"Cormorant Garamond",serif;font-size:36px;line-height:1.1;margin-top:6px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.chans{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:800px){.chans{grid-template-columns:repeat(5,1fr)}}
+.ch{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:14px}
+.ch .n{display:flex;justify-content:space-between;align-items:center;font-weight:500}
+.ch .big{font-family:"Cormorant Garamond",serif;font-size:30px;margin-top:8px}
+.ch .s{font-size:12px;color:var(--muted);line-height:1.5}
+.grid2{display:grid;gap:12px}
+@media(min-width:800px){.grid2{grid-template-columns:1fr 1fr}}
+.box{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:16px}
+.box h3{font-size:19px;margin-bottom:10px}
+.bars .r{display:grid;grid-template-columns:110px 1fr 34px;gap:10px;align-items:center;font-size:12.5px;margin:7px 0}
+.bars .b{height:6px;background:var(--s2);border-radius:9px;overflow:hidden}
+.bars .b i{display:block;height:100%;background:var(--gold);border-radius:9px}
+.bars .r span:last-child{text-align:right;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.chip.ok{color:var(--ok);border-color:rgba(127,180,138,.35)}
+.chip.prog{color:var(--blue);border-color:rgba(143,169,201,.35)}
+.chip.draft{color:var(--muted)}
+.chip.err{color:var(--bad);border-color:rgba(213,122,106,.4)}
+.chip.warn{color:var(--warn);border-color:rgba(216,166,87,.4)}
+.btn{background:var(--s2);border:1px solid var(--line);border-radius:999px;padding:9px 15px;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.gold{background:var(--gold);color:#17140e;border-color:var(--gold);font-weight:600}
+.btn.sm{padding:6px 11px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:default}
+.day{margin-top:18px}
+.day h3{font-size:18px;color:var(--gold);margin-bottom:8px}
+.slot{display:grid;grid-template-columns:62px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.slot .t{font-weight:600;font-size:15px;padding-top:6px}
+.slot .t small{display:block;font-weight:400;font-size:10.5px;color:var(--muted)}
+.items{display:flex;flex-direction:column;gap:6px}
+.it{display:flex;gap:10px;align-items:center;background:var(--s1);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.it img{width:38px;height:38px;border-radius:7px;object-fit:cover;background:var(--s2);flex:none}
+.it .x{flex:1;min-width:0}
+.it .nm{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .mt{font-size:11.5px;color:var(--muted)}
+.net{font-size:11px;font-weight:600;letter-spacing:.04em;width:78px;flex:none}
+.q{display:flex;flex-direction:column;gap:6px}
+.qi{display:flex;gap:10px;align-items:center;background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:8px}
+.qi .h{cursor:grab;color:var(--muted);font-size:18px;padding:0 4px;touch-action:none}
+.qi .p{font-family:"Cormorant Garamond",serif;font-size:20px;width:30px;text-align:center;color:var(--gold)}
+.qi img{width:46px;height:46px;border-radius:8px;object-fit:cover;background:var(--s2)}
+.qi .x{flex:1;min-width:0}
+.qi .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qi .mt{font-size:12px;color:var(--muted)}
+.qi .a{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ghost{opacity:.35}
+@media(max-width:640px){.qi{flex-wrap:wrap}.qi .x{flex-basis:calc(100% - 140px)}.qi .a{flex-basis:100%;justify-content:flex-start}.hd{gap:8px}.logo{font-size:18px}nav{order:3;width:100%}}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.bar input,.bar select{background:var(--s1);border:1px solid var(--line);border-radius:999px;padding:9px 14px;outline:none}
+.bar input{flex:1;min-width:180px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:700px){.cards{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1000px){.cards{grid-template-columns:repeat(5,1fr)}}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer}
+.card:hover{border-color:var(--muted)}
+.card .ph{aspect-ratio:1;background:var(--s2);position:relative}
+.card .ph img{width:100%;height:100%;object-fit:cover}
+.card .ph .chip{position:absolute;top:8px;left:8px;background:rgba(14,13,11,.8)}
+.card .in{padding:9px 10px 11px}
+.card .br{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.card .nm{font-size:12.5px;line-height:1.35;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
+.card .pr{margin-top:5px;font-weight:600}
+.card .nets{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.dot{font-size:10px;padding:2px 6px;border-radius:999px;background:var(--s2);color:var(--muted)}
+.dot.ok{color:var(--ok)}.dot.err{color:var(--bad)}
+.form{display:grid;gap:12px}
+@media(min-width:700px){.form{grid-template-columns:1fr 1fr}}
+.form .full{grid-column:1/-1}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+label.f input,label.f select,label.f textarea{background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink);outline:none;font-size:14px}
+label.f textarea{min-height:70px;resize:vertical}
+label.f input:focus,label.f textarea:focus,label.f select:focus{border-color:var(--gold)}
+.warnbox{font-size:12.5px;color:var(--warn);line-height:1.5}
+.prev{display:flex;gap:6px;flex-wrap:wrap}
+.prev img{width:64px;height:64px;border-radius:8px;object-fit:cover;background:var(--s2)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:30px 12px}
+.modal.on{display:flex}
+.mbox{background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:20px;width:100%;max-width:720px}
+.mbox .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
+.mbox h2{font-size:24px}
+.acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#111;padding:11px 18px;border-radius:999px;font-size:13.5px;z-index:70;display:none;max-width:92vw;text-align:center}
+.login{max-width:340px;margin:16vh auto 0;text-align:center;padding:0 16px}
+.login h1{font-size:34px;letter-spacing:.16em}
+.login p{color:var(--muted);margin:10px 0 20px}
+.login input{width:100%;background:var(--s1);border:1px solid var(--line);border-radius:999px;padding:12px 16px;text-align:center;outline:none;margin-bottom:10px}
+.empty{color:var(--muted);padding:20px 0}
+.menu{position:absolute;background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:6px;z-index:60;display:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:9px 14px;border-radius:8px;font-size:13px}
+.menu button:hover{background:var(--s1)}
+.rp{border-top:1px solid var(--line);padding:12px 0;font-size:13px;line-height:1.5}
+.rp.done{opacity:.45}
+table.mini{width:100%;border-collapse:collapse;font-size:12.5px}
+table.mini td{padding:6px 0;border-top:1px solid var(--line)}
+table.mini td:last-child{text-align:right;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
+<div class="menu" id="menu"></div>
+<div class="toast" id="toast"></div>
+<script>
+// ===== configuración =====
+const API = "PEGA_AQUI_LA_URL_DEL_APPS_SCRIPT"; // URL de la app web de Apps Script (termina en /exec)
+const C = {A:0,B:1,C:2,D:3,E:4,F:5,G:6,H:7,I:8,J:9,M:12,N:13,O:14,Q:16,R:17,S:18,T:19,U:20,V:21,W:22,X:23,AB:27,AC:28,AF:31,AM:38,AN:39};
+const FAMOSAS = ["rolex","omega","invicta","casio","seiko","tag heuer","cartier","patek","audemars","hublot","breitling","tissot","citizen","longines"];
+const NETS = {telegram:"✈️ Telegram",tiktok:"🎵 TikTok",pinterest:"📌 Pinterest",instagram:"📸 Instagram",facebook:"📘 Facebook"};
+
+let K = "", D = null, ST = {}, EST = {}, PINS = [], tab = "resumen", qOrder = null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const g = (r, c) => (r[C[c]] ?? "").toString().trim();
+const num = s => parseFloat(String(s || "").replace(/[^0-9.]/g, "")) || 0;
+const img = (u, size) => u ? (/\.(jpg|jpeg|png|webp)$/i.test(u) && !/aliexpress|alicdn/.test(u) ? u : u + "_" + (size || 350) + "x" + (size || 350) + ".jpg") : "";
+function toast(t, ms) { const e = $("toast"); e.textContent = t; e.style.display = "block"; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = "none", ms || 3200); }
+try { K = localStorage.getItem("kz_panel") || ""; } catch (e) {}
+
+async function api(a, d) {
+  const b = new URLSearchParams({k: K, a});
+  if (d) b.set("d", JSON.stringify(d));
+  const r = await fetch(API, {method: "POST", body: b});
+  const j = await r.json();
+  if (j.error === "clave") throw new Error("clave");
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+async function pub(path) { try { const r = await fetch(path + "?t=" + Date.now()); return r.ok ? r.json() : null; } catch (e) { return null; } }
+
+// ===== entrar =====
+function login(msg) {
+  $("app").innerHTML = `<div class="login"><h1>KABUZIO</h1><p>${esc(msg || "Panel de control")}</p>
+  <input id="kin" type="password" placeholder="Clave" autofocus><button class="btn gold" id="kgo" style="width:100%">Entrar</button></div>`;
+  const go = () => { K = $("kin").value.trim(); try { localStorage.setItem("kz_panel", K); } catch (e) {} load(); };
+  $("kgo").onclick = go; $("kin").onkeydown = e => { if (e.key === "Enter") go(); };
+}
+
+async function load(silent) {
+  if (!K) return login();
+  if (API.startsWith("PEGA")) return login("Falta conectar el panel con la hoja (Apps Script).");
+  if (!silent) $("app").innerHTML = `<div class="login"><h1>KABUZIO</h1><p>Cargando…</p></div>`;
+  try {
+    const [d, st, est, pins] = await Promise.all([api("load"), pub("stats.json"), pub("bot/estado.json"), pub("pins/queue.json")]);
+    D = d; ST = st || {}; EST = est || {}; PINS = pins || []; qOrder = null;
+    render();
+  } catch (e) {
+    if (e.message === "clave") return login("Clave incorrecta. Prueba otra vez.");
+    $("app").innerHTML = `<div class="login"><h1>KABUZIO</h1><p>No se pudo cargar: ${esc(e.message)}</p><button class="btn" onclick="load()">Reintentar</button></div>`;
+  }
+}
+
+// ===== datos =====
+function rows() { return D.rows.slice(1).map((r, i) => ({r, f: i + 2, t: D.fechas[i + 1]})).filter(x => g(x.r, "A")); }
+function pending() {
+  if (qOrder) return qOrder.map(f => rows().find(x => x.f === f)).filter(Boolean);
+  return rows().filter(x => g(x.r, "H") === "Pendiente")
+    .sort((a, b) => (num(g(a.r, "AM")) || 1e9) - (num(g(b.r, "AM")) || 1e9) || a.f - b.f);
+}
+function state(x) {
+  const h = g(x.r, "H");
+  if (h === "Publicado") return ["Publicado", "ok"];
+  if (h === "Pendiente") return ["Programado", "prog"];
+  if (h === "Borrador") return ["Borrador", "draft"];
+  if (/revisar|error/i.test(h)) return [h, "err"];
+  return [h || "Sin estado", "draft"];
+}
+function netState(x, c) { const v = g(x.r, c); return /^s[ií]$/i.test(v) ? "ok" : /revisar|error/i.test(v) ? "err" : ""; }
+const nameOf = x => g(x.r, "AF") || g(x.r, "A");
+
+// turnos del bot: cada 2 h a la hora par UTC, minuto 5
+function slots(n) {
+  const now = Date.now(), d = new Date();
+  d.setUTCMinutes(5, 0, 0); d.setUTCHours(d.getUTCHours() - d.getUTCHours() % 2);
+  let t = d.getTime();
+  if (t > now) t -= 7200000;                        // start of the current turn
+  const key = new Date(t).toISOString().slice(0, 13);
+  if (!(now - t < 100 * 60000 && EST.hecho !== key)) t += 7200000; // already done (or too late): next turn
+  return Array.from({length: n}, (_, i) => t + i * 7200000);
+}
+function schedule(n) {
+  const S = slots(n), q = pending(), list = [];
+  let pi = EST.pin || 0, lastTg = rows().filter(x => g(x.r, "H") === "Publicado").sort((a, b) => (b.t || 0) - (a.t || 0))[0];
+  S.forEach((t, i) => {
+    const items = [], w = q[i];
+    if (w) { items.push({net: "telegram", x: w}); lastTg = w; }
+    while (PINS[pi] && PINS[pi].off) pi++;
+    if (PINS[pi]) { items.push({net: "pinterest", pin: PINS[pi], n: pi}); pi++; }
+    if (new Date(t).getUTCHours() % 8 === 4 && lastTg) items.push({net: "tiktok", x: lastTg});
+    list.push({t, items});
+  });
+  // Make: Instagram cada 8 h (21:25, 05:25, 13:25 UTC), Facebook 4 veces al día (aprox.)
+  const end = S[S.length - 1], tgs = list.filter(s => s.items[0] && s.items[0].net === "telegram");
+  let w = rows().filter(x => g(x.r, "H") === "Publicado").sort((a, b) => (b.t || 0) - (a.t || 0))[0];
+  for (let t = S[0] - 7200000; t < end; t += 3600000) {
+    const h = new Date(t).getUTCHours(), slot = tgs.filter(s => s.t <= t).pop();
+    if (slot) w = slot.items[0].x;
+    if ([21, 5, 13].includes(h) && w) addMake(list, t + 25 * 60000, {net: "instagram", x: w, make: 1});
+    const lon = +new Date(t).toLocaleString("en-GB", {timeZone: "Europe/London", hour: "2-digit", hour12: false});
+    if ([8, 12, 16, 20].includes(lon) && w) addMake(list, t, {net: "facebook", x: w, make: 1});
+  }
+  return list.sort((a, b) => a.t - b.t).filter(s => s.t > Date.now() - 100 * 60000);
+}
+function addMake(list, t, it) { if (t < Date.now()) return; list.push({t, items: [it]}); }
+
+// ===== pintar =====
+function render() {
+  const tabs = {resumen: "Resumen", cola: "Cola", catalogo: "Catálogo", agregar: "Agregar", reportes: "Reportes"};
+  const nRep = (D.reportes || []).slice(1).filter(r => r[0] && r[8] !== "Resuelto").length;
+  $("app").innerHTML = `<header><div class="wrap hd"><div class="logo">KABUZIO <span>·</span> PANEL</div>
+    <nav>${Object.entries(tabs).map(([k, v]) => `<button class="${k === tab ? "on" : ""}" onclick="go('${k}')">${v}${k === "reportes" && nRep ? ` (${nRep})` : ""}</button>`).join("")}</nav>
+    <button class="btn sm" onclick="load(true).then(()=>toast('Actualizado'))">↻</button></div></header>
+    <main class="wrap" id="main"></main>`;
+  ({resumen, cola, catalogo, agregar, reportes})[tab]();
+}
+function go(t) { tab = t; render(); scrollTo(0, 0); }
+
+function resumen() {
+  const all = rows(), now = new Date(), m0 = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const pub = all.filter(x => g(x.r, "H") === "Publicado"), pend = pending();
+  const month = pub.filter(x => x.t && x.t >= m0).length;
+  const flags = c => all.filter(x => netState(x, c) === "ok").length;
+  const met = (D.metricas || []).slice(1).filter(r => r[0]);
+  const mDate = r => { const d = new Date(r[0]); return isNaN(d) ? 0 : d.getTime(); };
+  const clicks = met.filter(r => mDate(r) >= m0).reduce((a, r) => a + num(r[1]), 0);
+  const sales = met.filter(r => mDate(r) >= m0).reduce((a, r) => a + num(r[2]), 0);
+  const brands = (xs) => { const o = {}; xs.forEach(x => { const b = g(x.r, "M") || "Sin marca"; o[b] = (o[b] || 0) + 1; }); return Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 7); };
+  const bars = (list) => { const mx = Math.max(1, ...list.map(x => x[1])); return `<div class="bars">${list.map(([k, v]) => `<div class="r"><span>${esc(k)}</span><div class="b"><i style="width:${v / mx * 100}%"></i></div><span>${v}</span></div>`).join("") || `<p class="empty">Nada todavía.</p>`}</div>`; };
+  const tg = ST.telegram || {}, tt = ST.tiktok || {}, pi = ST.pinterest || {};
+  const upd = ST.actualizado ? new Date(ST.actualizado).toLocaleString("es", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"}) : "—";
+  $("main").innerHTML = `
+  <div class="kpis">
+    <div class="kpi"><div class="l">Publicados este mes</div><div class="v">${month}</div><div class="s">relojes nuevos en Telegram</div></div>
+    <div class="kpi"><div class="l">En cola</div><div class="v">${pend.length}</div><div class="s">${(pend.length / 12).toFixed(1)} días de posts</div></div>
+    <div class="kpi"><div class="l">Catálogo</div><div class="v">${all.length}</div><div class="s">${pub.length} publicados</div></div>
+    <div class="kpi"><div class="l">Clics Linktree</div><div class="v">${clicks}</div><div class="s">este mes (anotados)</div></div>
+    <div class="kpi"><div class="l">Ventas</div><div class="v">${sales}</div><div class="s">este mes (anotadas)</div></div>
+  </div>
+  <div class="sec-t"><h2>Canales</h2><p>Números reales leídos de cada app · ${upd}</p></div>
+  <div class="chans">
+    <div class="ch"><div class="n">✈️ Telegram</div><div class="big">${tg.seguidores ?? "—"}</div><div class="s">seguidores<br>${flags("S") || pub.length} posts</div></div>
+    <div class="ch"><div class="n">🎵 TikTok</div><div class="big">${tt.seguidores ?? "—"}</div><div class="s">seguidores<br>${tt.videos ?? "—"} videos · ${tt.likes ?? "—"} likes</div></div>
+    <div class="ch"><div class="n">📌 Pinterest</div><div class="big">${EST.pin ?? "—"}</div><div class="s">pines publicados<br>de ${PINS.filter(p => !p.off).length} en la cola</div></div>
+    <div class="ch"><div class="n">📸 Instagram</div><div class="big">${flags("Q")}</div><div class="s">posts<br>seguidores: falta Meta</div></div>
+    <div class="ch"><div class="n">📘 Facebook</div><div class="big">${flags("U")}</div><div class="s">posts<br>seguidores: falta Meta</div></div>
+  </div>
+  <div class="sec-t"><h2>Marcas</h2></div>
+  <div class="grid2">
+    <div class="box"><h3>Más publicadas</h3>${bars(brands(pub))}</div>
+    <div class="box"><h3>Más programadas</h3>${bars(brands(pend))}</div>
+  </div>
+  <div class="sec-t"><h2>Anotar Linktree y ventas</h2><p>Mira los clics en linktr.ee y las ventas en AliExpress Portals, y apúntalos aquí.</p></div>
+  <div class="box"><div class="form">
+    <label class="f">Fecha<input id="mf" type="date" value="${new Date().toISOString().slice(0, 10)}"></label>
+    <label class="f">Clics en Linktree<input id="mc" type="number" min="0" placeholder="0"></label>
+    <label class="f">Ventas<input id="mv" type="number" min="0" placeholder="0"></label>
+    <label class="f">Nota<input id="mn" placeholder="opcional"></label>
+  </div><div class="acts"><button class="btn gold" onclick="saveMetric()">Guardar</button></div>
+  ${met.length ? `<table class="mini" style="margin-top:14px">${met.slice(-6).reverse().map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1] || 0)} clics · ${esc(r[2] || 0)} ventas ${r[3] ? "· " + esc(r[3]) : ""}</td></tr>`).join("")}</table>` : ""}</div>`;
+}
+
+async function saveMetric() {
+  const d = {fecha: $("mf").value, clics: +$("mc").value || 0, ventas: +$("mv").value || 0, nota: $("mn").value};
+  try { await api("metric", d); toast("Guardado"); await load(true); } catch (e) { toast("No se guardó: " + e.message, 6000); }
+}
+
+function cola() {
+  const sch = schedule(24), byDay = {};
+  sch.forEach(s => { const k = new Date(s.t).toLocaleDateString("es", {weekday: "long", day: "numeric", month: "long"}); (byDay[k] = byDay[k] || []).push(s); });
+  const item = it => {
+    if (it.net === "pinterest") return `<div class="it"><span class="net">${NETS.pinterest}</span><img src="${esc(it.pin.i)}" loading="lazy"><div class="x"><div class="nm">${esc(it.pin.t)}</div><div class="mt">pin #${it.n}</div></div><span class="chip prog">Programado</span></div>`;
+    const x = it.x;
+    return `<div class="it"><span class="net">${NETS[it.net]}</span><img src="${esc(img(g(x.r, "D"), 100))}" loading="lazy"><div class="x"><div class="nm">${esc(nameOf(x))}</div><div class="mt">${esc(g(x.r, "B"))}${it.make ? " · lo publica Make (hora aprox.)" : ""}</div></div><span class="chip prog">Programado</span></div>`;
+  };
+  const q = pending();
+  const recent = rows().filter(x => g(x.r, "H") === "Publicado").sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 8);
+  $("main").innerHTML = `
+  <div class="sec-t"><h2>Orden de publicación</h2><p>Arrastra con ⋮⋮ o usa ↑ ↓ para cambiar el orden. El primero sale en el próximo turno.</p></div>
+  <div class="bar"><button class="btn gold" id="saveq" onclick="saveOrder()" disabled>Guardar orden</button><button class="btn" onclick="pubMenu(this,null,['pinterest'])">⚡ Publicar ahora un pin</button></div>
+  <div class="q" id="q">${q.map((x, i) => `<div class="qi" data-f="${x.f}"><span class="h">⋮⋮</span><span class="p">${i + 1}</span><img src="${esc(img(g(x.r, "D"), 100))}" loading="lazy"><div class="x"><div class="nm">${esc(nameOf(x))}</div><div class="mt">${esc(g(x.r, "M"))} · ${esc(g(x.r, "B"))} · fila ${x.f}</div></div>
+    <div class="a"><button class="btn sm" onclick="move(this,-1)" title="Subir">↑</button><button class="btn sm" onclick="move(this,1)" title="Bajar">↓</button><button class="btn sm" onclick="edit(${x.f})">Editar</button><button class="btn sm gold" onclick="pubMenu(this,${x.f})">⚡ Publicar ahora</button></div></div>`).join("") || `<p class="empty">No hay relojes en cola. Agrega uno o cambia un reloj a «Pendiente».</p>`}</div>
+  <div class="sec-t"><h2>Próximas 48 horas</h2><p>Hora de tu móvil. Telegram, Pinterest y TikTok los publica Gus; Instagram y Facebook, Make.</p></div>
+  ${Object.entries(byDay).map(([d, ss]) => `<div class="day"><h3>${esc(d)}</h3>${ss.map(s => `<div class="slot"><div class="t">${new Date(s.t).toLocaleTimeString("es", {hour: "2-digit", minute: "2-digit"})}</div><div class="items">${s.items.map(item).join("")}</div></div>`).join("")}</div>`).join("")}
+  <div class="sec-t"><h2>Publicados hace poco</h2></div>
+  <div class="q">${recent.map(x => `<div class="qi"><img src="${esc(img(g(x.r, "D"), 100))}" loading="lazy"><div class="x"><div class="nm">${esc(nameOf(x))}</div><div class="mt">${x.t ? new Date(x.t).toLocaleString("es", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"}) : esc(g(x.r, "I"))}</div></div>
+    <div class="a">${netChips(x)}</div></div>`).join("")}</div>`;
+  if (window.Sortable) Sortable.create($("q"), {handle: ".h", animation: 150, ghostClass: "ghost", onEnd: reordered});
+}
+function reordered() {
+  qOrder = [...$("q").children].map(e => +e.dataset.f);
+  [...$("q").children].forEach((e, i) => e.querySelector(".p").textContent = i + 1);
+  $("saveq").disabled = false;
+}
+function move(btn, d) {
+  const e = btn.closest(".qi"), o = d < 0 ? e.previousElementSibling : e.nextElementSibling;
+  if (!o) return;
+  d < 0 ? o.before(e) : o.after(e);
+  reordered();
+}
+function netChips(x) {
+  const c = (lab, st) => `<span class="chip ${st === "ok" ? "ok" : st === "err" ? "err" : "draft"}">${lab}</span>`;
+  return c("✈️", g(x.r, "S") ? "ok" : "") + c("📸", netState(x, "Q")) + c("🎵", netState(x, "R")) + c("📘", netState(x, "U"));
+}
+async function saveOrder() {
+  const cambios = pending().map((x, i) => ({f: x.f, c: "AM", v: i + 1}));
+  $("saveq").disabled = true;
+  try { await api("save", {cambios}); toast("Orden guardado"); await load(true); } catch (e) { toast("No se guardó: " + e.message, 6000); $("saveq").disabled = false; }
+}
+
+function pubMenu(btn, f, only) {
+  const m = $("menu"), r = btn.getBoundingClientRect(), nets = only || ["telegram", "tiktok"];
+  m.innerHTML = nets.map(n => `<button onclick="publishNow('${n}',${f})">${NETS[n]}</button>`).join("") + (only ? "" : `<button disabled style="opacity:.5">📸 Instagram · 📘 Facebook: cuando esté Meta</button>`);
+  m.style.display = "block"; m.style.top = (scrollY + r.bottom + 6) + "px"; m.style.left = Math.max(8, Math.min(r.left, innerWidth - 300)) + "px";
+  setTimeout(() => document.addEventListener("click", () => m.style.display = "none", {once: true}), 0);
+}
+async function publishNow(net, f) {
+  $("menu").style.display = "none";
+  const w = f ? nameOf(rows().find(x => x.f === f)) : "el siguiente pin";
+  if (!confirm(`¿Publicar ahora en ${NETS[net]}?\n\n${w}`)) return;
+  try { await api("publish", {red: net, fila: f || ""}); toast("Enviado. Sale en 1 o 2 minutos.", 5000); setTimeout(() => load(true), 90000); }
+  catch (e) { toast("No se pudo: " + e.message, 7000); }
+}
+
+let filt = {q: "", s: "Todos"};
+function catalogo() {
+  const all = rows(), states = ["Todos", ...new Set(all.map(x => g(x.r, "H") || "Sin estado"))];
+  $("main").innerHTML = `<div class="sec-t"><h2>Catálogo</h2><p>${all.length} relojes · toca uno para editarlo</p></div>
+  <div class="bar"><input id="fq" type="search" placeholder="Buscar por nombre o marca" value="${esc(filt.q)}">
+  <select id="fs">${states.map(s => `<option ${s === filt.s ? "selected" : ""}>${esc(s)}</option>`).join("")}</select></div>
+  <div class="cards" id="cards"></div>`;
+  $("fq").oninput = e => { filt.q = e.target.value; cards(); };
+  $("fs").onchange = e => { filt.s = e.target.value; cards(); };
+  cards();
+}
+function cards() {
+  const q = filt.q.toLowerCase();
+  const list = rows().filter(x => (filt.s === "Todos" || (g(x.r, "H") || "Sin estado") === filt.s) && (!q || (nameOf(x) + " " + g(x.r, "M")).toLowerCase().includes(q))).reverse();
+  $("cards").innerHTML = list.map(x => { const [l, c] = state(x); return `<div class="card" onclick="edit(${x.f})"><div class="ph"><img src="${esc(img(g(x.r, "D")))}" loading="lazy"><span class="chip ${c}">${esc(l)}</span></div>
+    <div class="in"><div class="br">${esc(g(x.r, "M"))}</div><div class="nm">${esc(nameOf(x))}</div><div class="pr">${esc(g(x.r, "B"))}</div>
+    <div class="nets"><span class="dot ${g(x.r, "S") ? "ok" : ""}">TG</span><span class="dot ${netState(x, "Q")}">IG</span><span class="dot ${netState(x, "R")}">TT</span><span class="dot ${netState(x, "U")}">FB</span></div></div></div>`; }).join("") || `<p class="empty">Nada con ese filtro.</p>`;
+}
+
+// campos que se pueden editar
+const FIELDS = [
+  ["F", "Título del post (gancho)", "full"], ["A", "Nombre del reloj", "full"], ["B", "Precio (ej. $64.50)"], ["C", "Precio antes"],
+  ["M", "Marca"], ["T", "Cupón"], ["H", "Estado", "", "sel"], ["AM", "Prioridad en la cola (1 = primero)"],
+  ["E", "Link de afiliado", "full"], ["D", "Foto principal (URL)", "full"], ["W", "Más fotos (URLs separadas por espacio)", "full", "area"],
+  ["V", "Video (URL)", "full"], ["AN", "Especificaciones (zafiro, automático, 10 ATM…)", "full", "area"]];
+const STATES = ["Pendiente", "Borrador", "Publicado", "Bajo 60"];
+function fieldHTML([c, lab, cls, kind], val) {
+  const id = "e_" + c;
+  if (kind === "sel") { const opts = [...new Set([...STATES, val].filter(Boolean))]; return `<label class="f ${cls}">${lab}<select id="${id}">${opts.map(o => `<option ${o === val ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></label>`; }
+  if (kind === "area") return `<label class="f ${cls}">${lab}<textarea id="${id}">${esc(val)}</textarea></label>`;
+  return `<label class="f ${cls}">${lab}<input id="${id}" value="${esc(val)}"></label>`;
+}
+function photosOf(r) { return [...new Set((g(r, "D") + " " + g(r, "W")).split(/\s+/).filter(Boolean))]; }
+function edit(f) {
+  const x = rows().find(y => y.f === f), [l, c] = state(x);
+  $("mbox").innerHTML = `<div class="top"><h2>Editar reloj</h2><span class="chip ${c}">${esc(l)}</span></div>
+    <div class="prev" style="margin-bottom:14px">${photosOf(x.r).slice(0, 10).map(u => `<img src="${esc(img(u, 100))}">`).join("")}</div>
+    <div class="form">${FIELDS.map(fd => fieldHTML(fd, g(x.r, fd[0]))).join("")}</div>
+    <div class="warnbox" id="ew" style="margin-top:10px"></div>
+    <div class="acts"><a class="btn" href="${esc(g(x.r, "E"))}" target="_blank" rel="noopener">Ver en AliExpress</a><button class="btn" onclick="closeM()">Cancelar</button>
+    <button class="btn" onclick="pubMenu(this,${f})">⚡ Publicar ahora</button><button class="btn gold" onclick="saveEdit(${f})">Guardar</button></div>`;
+  $("modal").classList.add("on");
+  const chk = () => $("ew").innerHTML = warnings({A: $("e_A").value, B: $("e_B").value, M: $("e_M").value}).join("<br>");
+  ["e_A", "e_B", "e_M"].forEach(i => $(i).oninput = chk); chk();
+}
+function closeM() { $("modal").classList.remove("on"); }
+$("modal").onclick = e => { if (e.target.id === "modal") closeM(); };
+function price(v) { v = v.trim(); return v && /^[0-9.,]+$/.test(v) ? "$" + v : v; }
+async function saveEdit(f) {
+  const x = rows().find(y => y.f === f), cambios = [];
+  FIELDS.forEach(([c]) => { let v = $("e_" + c).value; if (c === "B" || c === "C") v = price(v); if (v.trim() !== g(x.r, c)) cambios.push({f, c, v}); });
+  if (!cambios.length) return closeM();
+  try { await api("save", {cambios}); closeM(); toast("Guardado"); await load(true); } catch (e) { toast("No se guardó: " + e.message, 6000); }
+}
+function warnings(o) {
+  const w = [], b = (o.M + " " + o.A).toLowerCase();
+  if (o.B && num(o.B) < 60) w.push("⚠️ Precio por debajo de $60: según tus reglas queda fuera de la web y los posts.");
+  const fam = FAMOSAS.find(m => b.includes(m));
+  if (fam) w.push(`⚠️ Menciona «${fam}»: si no es la marca del vendedor, suele ser réplica.`);
+  if (/1:1/.test(o.A)) w.push("⚠️ No uses «1:1» en el nombre.");
+  return w;
+}
+
+function agregar() {
+  $("main").innerHTML = `<div class="sec-t"><h2>Agregar reloj</h2><p>Queda guardado en la hoja y, si lo dejas «Pendiente», entra en la cola.</p></div>
+  <div class="box"><div class="form">
+    ${fieldHTML(["E", "Link de afiliado de AliExpress *", "full"], "")}
+    ${fieldHTML(["A", "Nombre del reloj *", "full"], "")}
+    ${fieldHTML(["F", "Título del post (gancho)", "full"], "")}
+    ${fieldHTML(["B", "Precio * (ej. 89.90)"], "")}${fieldHTML(["C", "Precio antes"], "")}
+    ${fieldHTML(["M", "Marca *"], "")}${fieldHTML(["H", "Estado", "", "sel"], "Pendiente")}
+    ${fieldHTML(["D", "Foto principal (URL) *", "full"], "")}
+    ${fieldHTML(["W", "Más fotos (URLs separadas por espacio)", "full", "area"], "")}
+    ${fieldHTML(["V", "Video (URL)", "full"], "")}
+    ${fieldHTML(["AN", "Especificaciones (zafiro, automático, 10 ATM…)", "full", "area"], "")}
+    ${fieldHTML(["T", "Cupón"], "")}
+  </div>
+  <div class="prev" id="ap" style="margin-top:12px"></div><div class="warnbox" id="aw" style="margin-top:10px"></div>
+  <div class="acts"><button class="btn gold" id="addb" onclick="addWatch()">Agregar reloj</button></div></div>`;
+  const chk = () => {
+    $("aw").innerHTML = warnings({A: $("e_A").value, B: $("e_B").value, M: $("e_M").value}).join("<br>");
+    $("ap").innerHTML = ($("e_D").value + " " + $("e_W").value).split(/\s+/).filter(Boolean).slice(0, 10).map(u => `<img src="${esc(u.includes("alicdn") || u.includes("aliexpress") ? img(u, 100) : u)}">`).join("");
+  };
+  ["e_A", "e_B", "e_M", "e_D", "e_W"].forEach(i => $(i).oninput = chk);
+}
+async function addWatch() {
+  const fila = {}; ["E", "A", "F", "B", "C", "M", "H", "D", "W", "V", "AN", "T"].forEach(c => fila[c] = $("e_" + c).value.trim());
+  if (!fila.E || !fila.A || !fila.B || !fila.M || !fila.D) return toast("Faltan campos con *", 4000);
+  fila.B = price(fila.B); fila.C = price(fila.C);
+  if (!fila.F) fila.F = fila.A.split(" ").slice(0, 6).join(" ");
+  fila.D = fila.D.replace(/_\d+x\d+\.jpg$/, "");
+  const dup = rows().find(x => g(x.r, "E") === fila.E);
+  if (dup && !confirm("Ese link ya está en la fila " + dup.f + ". ¿Agregar igual?")) return;
+  $("addb").disabled = true;
+  try { const r = await api("add", {fila}); toast("Agregado en la fila " + r.fila); await load(true); go("catalogo"); }
+  catch (e) { toast("No se agregó: " + e.message, 6000); $("addb").disabled = false; }
+}
+
+function reportes() {
+  const rs = (D.reportes || []).slice(1).map((r, i) => ({r, f: i + 2})).filter(x => x.r[0]).reverse();
+  $("main").innerHTML = `<div class="sec-t"><h2>Reportes de la web</h2><p>Lo que los visitantes avisan con «Report a problem».</p></div>
+  <div class="box">${rs.map(x => `<div class="rp ${x.r[8] === "Resuelto" ? "done" : ""}"><b>${esc(x.r[3])}</b> · ${esc(x.r[1])} <span style="color:var(--muted)">(${esc(x.r[2])})</span><br>
+    ${x.r[4] ? esc(x.r[4]) + "<br>" : ""}<span style="color:var(--muted);font-size:12px">${esc(x.r[0])}${x.r[5] ? " · " + esc(x.r[5]) : ""}</span>
+    ${x.r[8] === "Resuelto" ? "" : `<div style="margin-top:8px;display:flex;gap:6px">${x.r[6] ? `<a class="btn sm" href="${esc(x.r[6])}" target="_blank" rel="noopener">Abrir link</a>` : ""}<button class="btn sm" onclick="resolveRep(${x.f})">Marcar resuelto</button></div>`}</div>`).join("") || `<p class="empty">Sin reportes.</p>`}</div>`;
+}
+async function resolveRep(f) { try { await api("resolve", {fila: f}); toast("Resuelto"); await load(true); } catch (e) { toast("No se pudo: " + e.message, 6000); } }
+
+load();
+</script>
+</body>
+</html>
