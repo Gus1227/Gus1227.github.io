@@ -91,7 +91,7 @@ body.pick .card:not(.pk):hover{outline:3px dashed var(--ok);outline-offset:-1px}
 <div class="mb" id="mb"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script>
-const HOOK="https://hook.eu1.make.com/46no31m2nwxq5f402nth2bha656qs7ko";
+const HOOK="https://script.google.com/macros/s/AKfycbz09-5xnxih0ZKrXQdMNXKkPXba4uM_PD7b3gdA0ArLazAeDd8dpQJ5y5xYE86YnqLUSQ/exec"; // Apps Script de la hoja (antes Make 7755360)
 const STYLES=["Chronograph","Diver","Smartwatch","Automatic","Quartz","Other"];
 const TYPES=[["chronograph","Chronograph"],["dive","Diver"],["smart","Smartwatch"],["automatic","Automatic"],["mechanical","Automatic"],["tourbillon","Automatic"],["skeleton","Automatic"],["quartz","Quartz"]];
 const C={name:0,price:1,img:3,estado:7,marca:12,ventas:13,video:21,fotos:22,pid:23,orden:27,oculto:28,fotosweb:29,estilo:30,nombre:31};
@@ -103,7 +103,7 @@ let KEY="",items=[],orderChanged=false,busy=false,sel=new Set(),pick=false,reps=
 try{const h=new URLSearchParams(location.hash.slice(1)).get("k");if(h){localStorage.setItem("kz_key",h);history.replaceState(null,"",location.pathname)}KEY=localStorage.getItem("kz_key")||""}catch(e){KEY=new URLSearchParams(location.hash.slice(1)).get("k")||""}
 
 function toast(t,ms){const el=$("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);if(ms!==0)toast.t=setTimeout(()=>el.classList.remove("on"),ms||3000)}
-async function call(a,p){const b=new URLSearchParams({k:KEY,a});if(p)b.set("p",JSON.stringify(p));const r=await fetch(HOOK,{method:"POST",body:b});const t=await r.text();let j;try{j=JSON.parse(t)}catch(e){throw new Error("Make no respondió bien ("+r.status+")")}if(r.status===403)throw new Error("clave");return j}
+async function call(a,p){a={load:"eload",save:"esave",reports:"ereports"}[a]||a;const b=new URLSearchParams({k:KEY,a});if(p)b.set("p",JSON.stringify(p));const r=await fetch(HOOK,{method:"POST",body:b});const t=await r.text();let j;try{j=JSON.parse(t)}catch(e){throw new Error("La hoja no respondió bien ("+r.status+")")}if(r.status===403||(j&&j.error==="clave"))throw new Error("clave");if(j&&j.error)throw new Error(j.error);return j}
 
 function defMedia(photos,video){const m=photos.slice();if(video)m.splice(1,0,"video");return m}
 function rowToItem(r,i){
