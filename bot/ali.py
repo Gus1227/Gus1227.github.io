@@ -15,12 +15,24 @@ COL = lambda c: sum((ord(ch) - 64) * 26 ** i for i, ch in enumerate(reversed(c))
 
 
 def ali(method, **params):
+    for attempt in range(6):
+        res = _ali(method, **params)
+        if res is not None:
+            return res
+        time.sleep(2 + attempt * 2)  # "Api access frequency exceeds the limit": wait and retry
+    raise SystemExit(f"AliExpress {method}: límite de llamadas")
+
+
+def _ali(method, **params):
+    time.sleep(1.2)
     p = {"app_key": os.environ["ALI_APP_KEY"].strip(), "method": method, "sign_method": "sha256",
          "timestamp": str(int(time.time() * 1000)), **{k: str(v) for k, v in params.items()}}
     base = "".join(k + p[k] for k in sorted(p))
     p["sign"] = hmac.new(os.environ["ALI_SECRET"].strip().encode(), base.encode(), hashlib.sha256).hexdigest().upper()
     res = json.load(urllib.request.urlopen(API + "?" + urllib.parse.urlencode(p), timeout=60))
     body = next(iter(res.values()))
+    if "ApiCallLimit" in json.dumps(res):
+        return None
     if "error_response" in res or not isinstance(body, dict):
         raise SystemExit(f"AliExpress {method}: {json.dumps(res)[:400]}")
     return body.get("resp_result", body)
