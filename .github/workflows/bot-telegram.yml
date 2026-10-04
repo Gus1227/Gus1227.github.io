@@ -11,7 +11,7 @@ on:
         options: ["no", "si"]
         default: "no"
       fila:
-        description: "Solo revisar: número de fila, o «links» para revisar todos los links, «arreglar» (prueba) o «arreglar-si» (escribe)"
+        description: "Solo revisar: número de fila, o «links» para revisar todos los links, «arreglar» (prueba), «arreglar-si» (escribe) o «posts» (corrige los posts de hoy)"
         required: false
         default: ""
 concurrency: bot-telegram
@@ -33,10 +33,12 @@ jobs:
         env:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           FILA: ${{ inputs.fila }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
         run: |
           case "$FILA" in
             links) python3 bot/revisar_links.py ;;
             arreglar) python3 bot/arreglar_links.py ;;
             arreglar-si) ARREGLAR=si python3 bot/arreglar_links.py ;;
+            posts) python3 bot/corregir_posts.py ;;
             *) python3 bot/revisar_fila.py ;;
           esac
