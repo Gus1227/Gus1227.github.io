@@ -46,7 +46,7 @@ def tiktok():
     pics = pics[:10]
     brand = f"#{g(r, BRAND).lower()}" if g(r, BRAND) else ""
     desc = (f"⌚ {g(r, NAME)}\n💰 Now {g(r, PRICE)}\n\n👆 Tap the link in our bio to get it · new watches every day\n\n"
-            f"#ad #watches #watchtok {brand} #kabuziodeal")
+            f"#ad #watches #watchtok {brand} #kabuzio")
     video = g(r, VIDEO)
     print(f"TikTok fila {n}: {g(r, NAME)}\nfotos: {len(pics)}, video: {'sí' if video else 'no'}\n---\n{desc}\n---")
     if not PUBLISH:

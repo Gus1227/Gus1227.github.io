@@ -55,7 +55,7 @@ def caption(top):
         n = sold(r[SALES] if SALES < len(r) else "")
         lines.append(f"{medal[i]} <b>{g(r, NAME)[:70]}</b>\n💰 {g(r, PRICE)}{f' · 🔥 {n}+ sold' if n else ''}\n"
                      f"👉 <a href=\"{html.escape(good_link(r))}\">Get it here</a>\n")
-    lines.append("🌐 All watches: gus1227.github.io\n#top #watches #KabuzioDeal")
+    lines.append("🌐 All watches: gus1227.github.io\n#top #watches #Kabuzio")
     return "\n".join(lines)
 
 

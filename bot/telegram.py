@@ -111,7 +111,7 @@ def caption(r):
     tags = re.sub(r"\s*#\s*$", "", g(TAGS))  # "#Watches #" when the watch has no brand
     return (f"<b>{g(TITLE)}</b>\n\n{tags} {band} {kind}{off}\n📦 {name}\n"
             f"💰 Now: <b>{g(PRICE)}</b> (was <s>{g(OLD)}</s>){save}\n✅{g(RATING)}\n"
-            f"👉 <a href=\"{link}\">Get it here</a>\n{coupon}\n#deal #aliexpress #KabuzioDeal")
+            f"👉 <a href=\"{link}\">Get it here</a>\n{coupon}\n#deal #aliexpress #Kabuzio")
 
 
 def photos(r):
