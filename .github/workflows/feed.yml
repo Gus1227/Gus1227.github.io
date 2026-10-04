@@ -13,12 +13,14 @@ jobs:
       - name: Build feed.xml from the catalog
         run: |
           python3 - <<'PY'
-          import csv, io, urllib.request, html, re, datetime
+          import csv, io, urllib.request, html, re, datetime, os, json
           CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/pub?gid=596242979&single=true&output=csv"
           SITE = "https://gus1227.github.io/"
           rows = list(csv.DictReader(io.StringIO(urllib.request.urlopen(CSV, timeout=60).read().decode("utf-8"))))
           now = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
           e = lambda s: html.escape(str(s or "").strip())
+          os.makedirs("pins", exist_ok=True)
+          dates = json.load(open("pins/dates.json")) if os.path.exists("pins/dates.json") else {}
           items = []
           for r in rows:
               name, price, img, link = r.get("Producto"), r.get("Precio"), r.get("Imagen_URL"), r.get("Enlace")
@@ -30,18 +32,30 @@ jobs:
               brand = (r.get("Marca") or "").strip()
               brand = "" if brand in ("", "Sin marca") else re.sub(r"([a-z])([A-Z])", r"\1 \2", brand)
               tags = " ".join(t for t in (r.get("Categoria") or "").split() if t.startswith("#"))
-              desc = f"{name} for only {price}. Affordable watch deal from AliExpress. Tap to see the deal. {tags} #watchdeals #affordablewatches"
-              pic = img + "_800x800.jpg"
-              items.append(f"""<item><title>{e(name)} – {e(price)}</title><link>{SITE}?w={wid}</link><guid isPermaLink="false">{wid}</guid><description>{e(desc)}</description><enclosure url="{e(pic)}" type="image/jpeg" length="0"/><media:content url="{e(pic)}" medium="image"/></item>""")
+              desc = f"{name} – now {price}. Tap the Pin to buy it at this price on AliExpress. More deals daily on Telegram @KabuzioDeal. {tags} #watchdeals #watches"
+              f = f"pins/{wid}.jpg"
+              if not os.path.exists(f):
+                  try:
+                      req = urllib.request.Request(img + "_800x800.jpg", headers={"User-Agent": "Mozilla/5.0"})
+                      data = urllib.request.urlopen(req, timeout=30).read()
+                      if len(data) < 2000: raise ValueError("tiny image")
+                      open(f, "wb").write(data)
+                  except Exception as ex:
+                      print("no image", wid, ex)
+                      continue
+              pic = f"{SITE}{f}"
+              pub = dates.setdefault(wid, now)
+              items.append(f"""<item><title>{e(name)} – {e(price)}</title><link>{SITE}?w={wid}</link><pubDate>{pub}</pubDate><guid isPermaLink="false">{wid}</guid><description>{e(desc)}</description><enclosure url="{e(pic)}" type="image/jpeg" length="0"/><media:content url="{e(pic)}" medium="image"/></item>""")
           xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-          <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>Kabuzio – Watch Deals</title><link>{SITE}</link><description>Curated affordable watches from AliExpress. New deals every day.</description><lastBuildDate>{now}</lastBuildDate>{"".join(items)}</channel></rss>
+          <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>Kabuzio – Watch Deals</title><link>{SITE}</link><description>Watch deals from AliExpress. New deals every day.</description><lastBuildDate>{now}</lastBuildDate>{"".join(items)}</channel></rss>
           """
           open("feed.xml", "w", encoding="utf-8").write("\n".join(l.strip() for l in xml.splitlines()))
+          json.dump(dates, open("pins/dates.json", "w"), indent=0)
           print(len(items), "items")
           PY
       - name: Save feed.xml
         run: |
           git config user.name "kabuzio-bot"
           git config user.email "kabuzio-bot@users.noreply.github.com"
-          git add feed.xml
+          git add feed.xml pins
           git diff --cached --quiet || (git commit -m "Update Pinterest feed" && git push)
