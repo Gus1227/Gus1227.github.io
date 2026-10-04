@@ -1,0 +1,26 @@
+name: Bot Telegram
+on:
+  # Apagado hasta apagar Telegram en Make (si no, saldría doble).
+  # Para encenderlo: quitar el # de las dos líneas de abajo (cada 2 h, minuto 5).
+  # schedule:
+  #   - cron: "5 */2 * * *"
+  workflow_dispatch:
+    inputs:
+      publicar:
+        description: "¿Publicar de verdad? (no = solo prueba)"
+        type: choice
+        options: ["no", "si"]
+        default: "no"
+concurrency: bot-telegram
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install cryptography
+      - name: Publicar el siguiente reloj
+        env:
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          PUBLICAR: ${{ github.event_name == 'schedule' && 'si' || inputs.publicar }}
+        run: python3 bot/telegram.py
