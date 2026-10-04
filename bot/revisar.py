@@ -3,7 +3,7 @@
 #      and their product id goes to «Vistos» so they never come back
 #   2. if fewer than 50 are left, it searches AliExpress again (30 keywords) and refills up to 200
 # The bot clock runs it every turn, so no button is needed. REVISAR=si writes; anything else only prints.
-import datetime, os, re, sys
+import datetime, os, re, sys, time
 
 sys.path.insert(0, os.path.dirname(__file__))
 from telegram import google_token, sheets
@@ -40,6 +40,9 @@ def main():
     quedan = len([r for r in rows if any(c.strip() for c in r)]) - len(acted)
     print(f"Revisar: {len(rows)} filas, marcadas {len(acted)}, aceptadas {len(accepted)}, quedan {quedan}")
 
+    if WRITE and rev and "ENVIAR" in g(rev[0], 2):  # the old Make button is gone: the bot does it every 2 h
+        sheets(tok, "values/Revisar!C1?valueInputOption=RAW", {"values": [["✅ Gus lo pasa solo cada 2 h"]]}, method="PUT")
+
     # ---------- 1. accepted to Ofertas, ticked rows out ----------
     if acted:
         f2 = sheets(tok, "values/Ofertas!A2:AA2?valueRenderOption=FORMULA").get("values", [[]])[0]
@@ -72,9 +75,11 @@ def main():
     needed = 200 - quedan
     seen = {c.strip().lstrip("'") for row in [r[14:15] for r in rows] + vistos + ofx for c in row}
     found = {}
+    page = int(time.time() // 7200) % 5 + 1  # page 1 is always the same: each turn looks at another page
+    print("página", page)
     for kw in KEYWORDS:
         try:
-            res = ali("aliexpress.affiliate.product.query", keywords=kw, min_sale_price=60, page_no=1, page_size=50,
+            res = ali("aliexpress.affiliate.product.query", keywords=kw, min_sale_price=60, page_no=page, page_size=50,
                       ship_to_country="IL", sort="LAST_VOLUME_DESC", target_currency="USD", target_language="EN",
                       tracking_id="kabuzioTG")
         except SystemExit as e:

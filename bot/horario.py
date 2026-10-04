@@ -1,7 +1,7 @@
 # Kabuzio bot clock. GitHub's own cron is late or skips runs, so one run stays awake ~5.5 h,
 # posts at every even UTC hour (minute 5) and then starts the next run itself.
 # What it already did is kept in bot/estado.json (pushed to the repo), so a second run never posts twice.
-#   every 2 h: Telegram + 1 Pinterest pin      every 8 h (04, 12, 20 UTC): TikTok
+#   every 2 h: AliExpress data + Telegram + Revisar tab + 1 Pinterest pin      every 8 h (04, 12, 20 UTC): TikTok
 import datetime, json, os, subprocess, sys, time, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -54,6 +54,7 @@ def turn(slot):
     save(st, f"bot: turno {key}")  # mark first: a crash never means a double post
     run("ali.py", ALI_HACER="completar links ventas" if slot.hour == 6 else "completar links")
     run("telegram.py")
+    run("revisar.py", REVISAR="si")
     if run("zernio.py", REDES="pinterest", PIN=str(st["pin"])):
         st["pin"] += 1
     run("stats.py")
