@@ -22,6 +22,7 @@ jobs:
           os.makedirs("pins", exist_ok=True)
           dates = json.load(open("pins/dates.json")) if os.path.exists("pins/dates.json") else {}
           items = []
+          pins = []
           for r in rows:
               name, price, img, link = r.get("Producto"), r.get("Precio"), r.get("Imagen_URL"), r.get("Enlace")
               if not (name and img and link and link.startswith("https://")):
@@ -52,6 +53,7 @@ jobs:
                           print("no image", key, ex)
                           continue
                   pic = f"{SITE}{f}"
+                  pins.append((n, -sales, key, {"k": key, "t": f"{name} – {price}"[:100], "d": desc[:500], "l": f"{SITE}?w={wid}", "i": pic}))
                   items.append((n, -sales, key, f"""<title>{e(name)} – {e(price)}</title><link>{SITE}?w={wid}</link>@@PUB@@<guid isPermaLink="false">{key}</guid><description>{e(desc)}</description><enclosure url="{e(pic)}" type="image/jpeg" length="0"/><media:content url="{e(pic)}" medium="image"/>"""))
           # main photos of best sellers first, then 2nd photos, and so on
           items.sort(key=lambda t: (t[0], t[1]))
@@ -67,6 +69,17 @@ jobs:
           """
           open("feed.xml", "w", encoding="utf-8").write("\n".join(l.strip() for l in xml.splitlines()))
           json.dump(dates, open("pins/dates.json", "w"), indent=0)
+          # queue for Make/Zernio: 1 pin per hour, old order kept, new pins added at the end
+          old = json.load(open("pins/queue.json")) if os.path.exists("pins/queue.json") else []
+          pins.sort(key=lambda t: (t[0], t[1]))
+          cur = {p[2]: p[3] for p in pins}
+          queue = []
+          for q in old:
+              queue.append(dict(cur[q["k"]], off=0) if q["k"] in cur else dict(q, off=1))
+          known = {q["k"] for q in old}
+          queue += [dict(p[3], off=0) for p in pins if p[2] not in known]
+          json.dump(queue, open("pins/queue.json", "w"), ensure_ascii=False, indent=0)
+          print(len(queue), "in queue")
           print(len(items), "items")
           PY
       - name: Save feed.xml
