@@ -35,7 +35,7 @@ def tiktok():
     if not pick:
         print("TikTok: no hay relojes nuevos.")
         return
-    n, r = pick[-1]
+    n, r = max(pick, key=lambda t: (g(t[1], 8), t[0]))  # the most recently published one (I = Fecha_pub)
     pics = []
     for u in (g(r, IMG) + " " + g(r, EXTRA)).split():
         if u not in pics:
