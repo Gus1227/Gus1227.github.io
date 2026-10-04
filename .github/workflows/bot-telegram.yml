@@ -40,5 +40,7 @@ jobs:
             arreglar) python3 bot/arreglar_links.py ;;
             arreglar-si) ARREGLAR=si python3 bot/arreglar_links.py ;;
             posts) python3 bot/corregir_posts.py ;;
+            huecos) python3 bot/huecos.py ;;
+            poner-links) python3 bot/poner_links.py ;;
             *) python3 bot/revisar_fila.py ;;
           esac
