@@ -17,9 +17,10 @@ COL = lambda c: sum((ord(ch) - 64) * 26 ** i for i, ch in enumerate(reversed(c))
 def ali(method, **params):
     for attempt in range(6):
         res = _ali(method, **params)
-        if res is not None:
+        if not isinstance(res, str):
             return res
-        time.sleep(2 + attempt * 2)  # "Api access frequency exceeds the limit": wait and retry
+        print("espero:", res[:300], flush=True)
+        time.sleep(5 + attempt * 5)  # "Api access frequency exceeds the limit": wait and retry
     raise SystemExit(f"AliExpress {method}: límite de llamadas")
 
 
@@ -32,7 +33,7 @@ def _ali(method, **params):
     res = json.load(urllib.request.urlopen(API + "?" + urllib.parse.urlencode(p), timeout=60))
     body = next(iter(res.values()))
     if "ApiCallLimit" in json.dumps(res):
-        return None
+        return json.dumps(res)
     if "error_response" in res or not isinstance(body, dict):
         raise SystemExit(f"AliExpress {method}: {json.dumps(res)[:400]}")
     return body.get("resp_result", body)
@@ -146,7 +147,10 @@ def main():
     tok = google_token()
     hacer = os.environ.get("ALI_HACER", "completar links").split()
     if "completar" in hacer:
-        completar(tok, read_rows(tok))
+        try:
+            completar(tok, read_rows(tok))
+        except SystemExit as e:  # keep going: links do not depend on it
+            print(e)
     if "links" in hacer:
         links(tok, read_rows(tok))
     if "ventas" in hacer:
