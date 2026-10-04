@@ -93,6 +93,10 @@ def pinterest():
 
 
 if __name__ == "__main__":
+    if os.environ.get("ZERNIO_KEY") and not PUBLISH:
+        accs = zernio("/accounts")
+        accs = accs.get("accounts", accs) if isinstance(accs, dict) else accs
+        print("Llave OK. Cuentas en Zernio:", [(a.get("platform"), a.get("_id")) for a in accs])
     if "tiktok" in REDES:
         tiktok()
     if "pinterest" in REDES:
