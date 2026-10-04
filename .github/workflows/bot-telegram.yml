@@ -1,4 +1,4 @@
-name: Bot Telegram
+name: Bot Kabuzio
 on:
   # Cada 2 h, minuto 5 (Telegram ya está apagado en Make: escenario 7725903, input telegram = false).
   schedule:
@@ -10,13 +10,13 @@ on:
         type: choice
         options: ["no", "si"]
         default: "no"
-      zernio:
-        description: "TikTok / Pinterest por Zernio (en vez de Telegram)"
+      red:
+        description: "¿En qué red publicar?"
         type: choice
-        options: ["nada", "tiktok", "pinterest", "tiktok pinterest"]
-        default: "nada"
+        options: ["telegram", "tiktok", "pinterest"]
+        default: "telegram"
       fila:
-        description: "Solo revisar: número de fila, o «links» para revisar todos los links, «arreglar» (prueba), «arreglar-si» (escribe) o «posts» (corrige los posts publicados)"
+        description: "(Solo para Claude) Revisar: número de fila, o «links» para revisar todos los links, «arreglar» (prueba), «arreglar-si» (escribe) o «posts» (corrige los posts publicados)"
         required: false
         default: ""
 concurrency: bot-telegram
@@ -32,13 +32,13 @@ jobs:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           PUBLICAR: ${{ github.event_name == 'schedule' && 'si' || inputs.publicar }}
         run: python3 bot/telegram.py
-        if: ${{ !inputs.fila && (github.event_name == 'schedule' || inputs.zernio == 'nada') }}
+        if: ${{ !inputs.fila && (github.event_name == 'schedule' || inputs.red == 'telegram') }}
       - name: TikTok y Pinterest (Zernio)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.zernio != 'nada' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.red != 'telegram' && !inputs.fila }}
         env:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
-          REDES: ${{ inputs.zernio }}
+          REDES: ${{ inputs.red }}
           PUBLICAR: ${{ inputs.publicar }}
         run: python3 bot/zernio.py
       - name: Revisar una fila
