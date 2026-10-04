@@ -1,7 +1,7 @@
 # Kabuzio bot: TikTok and Pinterest through the Zernio API.
 # Same posts as Make: TikTok = scenario 7728023 (photo carousel with music + video post, marks R = "Sí"),
 # Pinterest = scenario 7763492 (1 pin from pins/q/<n>.json every 2 h).
-import datetime, json, os, sys, time, urllib.error, urllib.request
+import datetime, json, os, re, sys, time, urllib.error, urllib.request
 
 sys.path.insert(0, os.path.dirname(__file__))
 from telegram import NAME, PRICE, IMG, STATE, VIDEO, EXTRA, TAB, google_token, sheets
@@ -82,7 +82,25 @@ def tiktok():
 
 
 # ---------- Pinterest ----------
+def pin_of_row(fila):
+    """Pin of one watch (by its sheet row): same key as feed.yml (last part of Enlace)."""
+    token = google_token()
+    link = sheets(token, f"values/{TAB}!E{fila}").get("values", [[""]])[0][0]
+    wid = re.sub(r"[^A-Za-z0-9_-]", "", link.rstrip("/").split("/")[-1])
+    queue = json.load(open(os.path.join(os.path.dirname(__file__), "..", "pins", "queue.json"), encoding="utf-8"))
+    q = next((q for q in queue if q["k"] == wid), None)
+    if not q:
+        raise SystemExit(f"Pinterest: ese reloj no tiene pin todavía (se crea en la próxima vuelta de feed.yml).")
+    return json.loads(q["b"])
+
+
 def pinterest():
+    if os.environ.get("FILA_PUB"):  # "Publicar ahora" of one watch from the panel
+        body = pin_of_row(int(os.environ["FILA_PUB"]))
+        print("Pinterest (reloj elegido):", body["platforms"][0]["platformSpecificData"]["title"])
+        if PUBLISH:
+            print("Pinterest:", json.dumps(zernio("/posts", body))[:300])
+        return
     # same turn number as Make 7763492: round((unix - 1791128378) / 7200) + 77
     # the bot clock passes the next pin number (PIN); by hand it uses Make's formula
     manual = not os.environ.get("PIN")

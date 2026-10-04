@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
 <title>Kabuzio — Panel</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌚</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -247,10 +248,10 @@ function render() {
   $("app").innerHTML = `<header><div class="wrap hd"><div class="logo">KABUZIO <span>·</span> PANEL</div>
     <nav>${Object.entries(tabs).map(([k, v]) => `<button class="${k === tab ? "on" : ""}" onclick="go('${k}')">${v}${k === "reportes" && nRep ? ` (${nRep})` : ""}</button>`).join("")}</nav>
     <button class="btn sm" onclick="load(true).then(()=>toast('Actualizado'))">↻</button></div></header>
-    <main class="wrap" id="main"></main>`;
+    <main class="${tab === "catalogo" ? "" : "wrap"}" id="main"></main>`;
   ({resumen, cola, catalogo, agregar, reportes})[tab]();
 }
-function go(t) { tab = t; render(); scrollTo(0, 0); }
+function go(t) { tab = t; render(); if (t !== "catalogo") $("main").style.padding = ""; scrollTo(0, 0); }
 
 function resumen() {
   const all = rows(), now = new Date(), m0 = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
@@ -352,31 +353,18 @@ function pubMenu(btn, f, only) {
 }
 async function publishNow(net, f) {
   $("menu").style.display = "none";
-  const w = f ? nameOf(rows().find(x => x.f === f)) : "el siguiente pin";
+  const w = f ? nameOf(rows().find(x => x.f === f)) : "el siguiente pin de la cola";
   if (!confirm(`¿Publicar ahora en ${NETS[net]}?\n\n${w}`)) return;
   try { await api("publish", {red: net, fila: f || ""}); toast("Enviado. Sale en 1 o 2 minutos.", 5000); setTimeout(() => load(true), 90000); }
   catch (e) { toast("No se pudo: " + e.message, 7000); }
 }
 
-let filt = {q: "", s: "Todos"};
+// Catálogo = el editor de la web tal cual (misma página, misma clave)
 function catalogo() {
-  const all = rows(), states = ["Todos", ...new Set(all.map(x => g(x.r, "H") || "Sin estado"))];
-  $("main").innerHTML = `<div class="sec-t"><h2>Catálogo</h2><p>${all.length} relojes · toca uno para editarlo</p></div>
-  <div class="bar"><input id="fq" type="search" placeholder="Buscar por nombre o marca" value="${esc(filt.q)}">
-  <select id="fs">${states.map(s => `<option ${s === filt.s ? "selected" : ""}>${esc(s)}</option>`).join("")}</select></div>
-  <div class="cards" id="cards"></div>`;
-  $("fq").oninput = e => { filt.q = e.target.value; cards(); };
-  $("fs").onchange = e => { filt.s = e.target.value; cards(); };
-  cards();
+  try { localStorage.setItem("kz_key", K); } catch (e) {}
+  $("main").style.padding = "0";
+  $("main").innerHTML = `<iframe src="editor.html" style="width:100%;height:calc(100vh - 64px);border:0;display:block;background:#fff"></iframe>`;
 }
-function cards() {
-  const q = filt.q.toLowerCase();
-  const list = rows().filter(x => (filt.s === "Todos" || (g(x.r, "H") || "Sin estado") === filt.s) && (!q || (nameOf(x) + " " + g(x.r, "M")).toLowerCase().includes(q))).reverse();
-  $("cards").innerHTML = list.map(x => { const [l, c] = state(x); return `<div class="card" onclick="edit(${x.f})"><div class="ph"><img src="${esc(img(g(x.r, "D")))}" loading="lazy"><span class="chip ${c}">${esc(l)}</span></div>
-    <div class="in"><div class="br">${esc(g(x.r, "M"))}</div><div class="nm">${esc(nameOf(x))}</div><div class="pr">${esc(g(x.r, "B"))}</div>
-    <div class="nets"><span class="dot ${g(x.r, "S") ? "ok" : ""}">TG</span><span class="dot ${netState(x, "Q")}">IG</span><span class="dot ${netState(x, "R")}">TT</span><span class="dot ${netState(x, "U")}">FB</span></div></div></div>`; }).join("") || `<p class="empty">Nada con ese filtro.</p>`;
-}
-
 // campos que se pueden editar
 const FIELDS = [
   ["F", "Título del post (gancho)", "full"], ["A", "Nombre del reloj", "full"], ["B", "Precio (ej. $64.50)"], ["C", "Precio antes"],
