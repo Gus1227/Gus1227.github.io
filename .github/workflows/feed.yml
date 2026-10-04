@@ -53,8 +53,8 @@ jobs:
                           print("no image", key, ex)
                           continue
                   pic = f"{SITE}{f}"
-                  pins.append((n, -sales, key, {"k": key, "t": f"{name} – {price}"[:100], "d": desc[:500], "l": f"{SITE}?w={wid}", "i": pic}))
-                  items.append((n, -sales, key, f"""<title>{e(name)} – {e(price)}</title><link>{SITE}?w={wid}</link>@@PUB@@<guid isPermaLink="false">{key}</guid><description>{e(desc)}</description><enclosure url="{e(pic)}" type="image/jpeg" length="0"/><media:content url="{e(pic)}" medium="image"/>"""))
+                  pins.append((n, -sales, key, {"k": key, "t": f"{name} – {price}"[:100], "d": desc[:500], "l": f"{SITE}?w={wid}&src=pin", "i": pic}))
+                  items.append((n, -sales, key, f"""<title>{e(name)} – {e(price)}</title><link>{SITE}?w={wid}&amp;src=pin</link>@@PUB@@<guid isPermaLink="false">{key}</guid><description>{e(desc)}</description><enclosure url="{e(pic)}" type="image/jpeg" length="0"/><media:content url="{e(pic)}" medium="image"/>"""))
           # main photos of best sellers first, then 2nd photos, and so on
           items.sort(key=lambda t: (t[0], t[1]))
           base = datetime.datetime.utcnow()
