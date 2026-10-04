@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /panel.html
+Disallow: /editor.html
+Disallow: /bot/
+Sitemap: https://gus1227.github.io/sitemap.xml
