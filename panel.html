@@ -261,7 +261,13 @@ function resumen() {
   const met = (D.metricas || []).slice(1).filter(r => r[0]);
   const mDate = r => { const d = new Date(r[0]); return isNaN(d) ? 0 : d.getTime(); };
   const clicks = met.filter(r => mDate(r) >= m0).reduce((a, r) => a + num(r[1]), 0);
-  const sales = met.filter(r => mDate(r) >= m0).reduce((a, r) => a + num(r[2]), 0);
+  // real sales from AliExpress (tab «Ventas», filled by the bot); before that, the ones written by hand
+  const V = (D.ventas || []).slice(1).filter(r => r[0]), real = !!D.ventas;
+  const vMonth = V.filter(r => { const d = new Date(String(r[2]).replace(" ", "T")); return !isNaN(d) && d.getTime() >= m0; });
+  const sales = real ? vMonth.length : met.filter(r => mDate(r) >= m0).reduce((a, r) => a + num(r[2]), 0);
+  const comm = vMonth.reduce((a, r) => a + num(String(r[7]).replace(/[^0-9.]/g, "")), 0);
+  const NET = {kabuzioTG: "✈️ Telegram", kabuzioIG: "📸 Instagram", kabuzioTT: "🎵 TikTok", kabuzioFB: "📘 Facebook", kabuzioWEB: "🌐 Web", kabuzioPIN: "📌 Pinterest"};
+  const byNet = Object.entries(V.reduce((o, r) => { const k = NET[r[5]] || r[5] || "Otro"; o[k] = (o[k] || 0) + 1; return o; }, {})).sort((a, b) => b[1] - a[1]);
   const brands = (xs) => { const o = {}; xs.forEach(x => { const b = g(x.r, "M") || "Sin marca"; o[b] = (o[b] || 0) + 1; }); return Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 7); };
   const bars = (list) => { const mx = Math.max(1, ...list.map(x => x[1])); return `<div class="bars">${list.map(([k, v]) => `<div class="r"><span>${esc(k)}</span><div class="b"><i style="width:${v / mx * 100}%"></i></div><span>${v}</span></div>`).join("") || `<p class="empty">Nada todavía.</p>`}</div>`; };
   const tg = ST.telegram || {}, tt = ST.tiktok || {}, pi = ST.pinterest || {};
@@ -272,7 +278,7 @@ function resumen() {
     <div class="kpi"><div class="l">En cola</div><div class="v">${pend.length}</div><div class="s">${(pend.length / 12).toFixed(1)} días de posts</div></div>
     <div class="kpi"><div class="l">Catálogo</div><div class="v">${all.length}</div><div class="s">${pub.length} publicados</div></div>
     <div class="kpi"><div class="l">Clics Linktree</div><div class="v">${clicks}</div><div class="s">este mes (anotados)</div></div>
-    <div class="kpi"><div class="l">Ventas</div><div class="v">${sales}</div><div class="s">este mes (anotadas)</div></div>
+    <div class="kpi"><div class="l">Ventas</div><div class="v">${sales}</div><div class="s">${real ? `este mes · $${comm.toFixed(2)} comisión` : "este mes (anotadas)"}</div></div>
   </div>
   <div class="sec-t"><h2>Canales</h2><p>Números reales leídos de cada app · ${upd}</p></div>
   <div class="chans">
@@ -282,6 +288,8 @@ function resumen() {
     <div class="ch"><div class="n">📸 Instagram</div><div class="big">${flags("Q")}</div><div class="s">posts<br>seguidores: falta Meta</div></div>
     <div class="ch"><div class="n">📘 Facebook</div><div class="big">${flags("U")}</div><div class="s">posts<br>seguidores: falta Meta</div></div>
   </div>
+  ${real ? `<div class="sec-t"><h2>Ventas por red</h2><p>Directo de AliExpress · últimos 30 días</p></div>
+  <div class="box">${bars(byNet)}</div>` : ""}
   <div class="sec-t"><h2>Marcas</h2></div>
   <div class="grid2">
     <div class="box"><h3>Más publicadas</h3>${bars(brands(pub))}</div>

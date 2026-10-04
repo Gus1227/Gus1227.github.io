@@ -52,7 +52,7 @@ def turn(slot):
         return  # too late for this turn, wait for the next one
     st["hecho"] = key
     save(st, f"bot: turno {key}")  # mark first: a crash never means a double post
-    run("ali.py", ALI_HACER="completar links ventas" if slot.hour == 6 else "completar links")
+    run("ali.py", ALI_HACER="completar links ventas")
     run("telegram.py")
     run("revisar.py", REVISAR="si")
     if run("zernio.py", REDES="pinterest", PIN=str(st["pin"])):
