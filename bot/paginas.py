@@ -1,6 +1,6 @@
 # Kabuzio: one page per watch (w/<id>.html) + sitemap.xml + robots.txt, so Google can show each watch
 # to people searching for it. Reads the same public «Catalogo» CSV as the website. Run by feed.yml.
-import csv, glob, html, io, json, os, re, urllib.request
+import csv, glob, hashlib, html, io, json, os, re, urllib.request
 
 CSV = ("https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/"
        "pub?gid=596242979&single=true&output=csv")
@@ -30,7 +30,9 @@ def watches():
             link = enlace
         if not (name and link.startswith("https://") and enlace) or (r.get("Oculto_web") or "").strip().lower().startswith("s"):
             continue
-        wid = re.sub(r"[^A-Za-z0-9_-]", "", enlace.rstrip("/").split("/")[-1])
+        # readable address for Google: words of the name + a short code of the link (links can be 1000+ characters)
+        slug = re.sub(r"[^a-z0-9]+", "-", (r.get("Producto") or name).lower()).strip("-")[:60].rstrip("-")
+        wid = f"{slug}-{hashlib.sha1(enlace.encode()).hexdigest()[:6]}"
         pics = []
         for u in [r.get("Imagen_URL") or ""] + (r.get("Fotos_extra") or "").split():
             if u.startswith("https://") and u not in pics:
@@ -75,6 +77,7 @@ def page(w, related):
         ld["brand"] = {"@type": "Brand", "name": w["brand"]}
     if not price_num:
         ld.pop("offers")
+    ldjs = json.dumps(ld, ensure_ascii=False).replace("</", "<\\/")
     pics = "".join(f'<img src="{e(p)}_200x200.jpg" alt="{e(w["name"])} photo {i + 1}" loading="lazy" '
                    f'onclick="document.getElementById(\'big\').src=\'{e(p)}_800x800.jpg\'">' for i, p in enumerate(w["pics"]))
     rel = "".join(f'<a href="{r["id"]}.html"><img src="{e(r["pics"][0])}_350x350.jpg" alt="{e(r["name"])}" loading="lazy">'
@@ -89,7 +92,7 @@ def page(w, related):
 <meta name="referrer" content="no-referrer">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌚</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script type="application/ld+json">{json.dumps(ld, ensure_ascii=False).replace("</", "<\\/")}</script>
+<script type="application/ld+json">{ldjs}</script>
 <style>{CSS}</style></head><body>
 <nav class="nav"><div><a class="logo" href="../">KABUZIO</a><a class="back" href="../">← All watches</a></div></nav>
 <main><div><img id="big" class="big" src="{e(w['pics'][0])}_800x800.jpg" alt="{e(w['name'])}"><div class="th">{pics}</div></div>
