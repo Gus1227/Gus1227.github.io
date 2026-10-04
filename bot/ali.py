@@ -15,10 +15,10 @@ COL = lambda c: sum((ord(ch) - 64) * 26 ** i for i, ch in enumerate(reversed(c))
 
 
 def ali(method, **params):
-    p = {"app_key": os.environ["ALI_APP_KEY"], "method": method, "sign_method": "sha256",
+    p = {"app_key": os.environ["ALI_APP_KEY"].strip(), "method": method, "sign_method": "sha256",
          "timestamp": str(int(time.time() * 1000)), **{k: str(v) for k, v in params.items()}}
     base = "".join(k + p[k] for k in sorted(p))
-    p["sign"] = hmac.new(os.environ["ALI_SECRET"].encode(), base.encode(), hashlib.sha256).hexdigest().upper()
+    p["sign"] = hmac.new(os.environ["ALI_SECRET"].strip().encode(), base.encode(), hashlib.sha256).hexdigest().upper()
     res = json.load(urllib.request.urlopen(API + "?" + urllib.parse.urlencode(p), timeout=60))
     body = next(iter(res.values()))
     if "error_response" in res or not isinstance(body, dict):
