@@ -118,7 +118,7 @@ label.f input:focus,label.f textarea:focus,label.f select:focus{border-color:var
 .mbox .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
 .mbox h2{font-size:24px}
 .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#111;padding:11px 18px;border-radius:999px;font-size:13.5px;z-index:70;display:none;max-width:92vw;text-align:center}
+.toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);background:var(--ink);color:#111;padding:11px 18px;border-radius:999px;font-size:13.5px;z-index:70;display:none;max-width:92vw;text-align:center}
 .login{max-width:340px;margin:16vh auto 0;text-align:center;padding:0 16px}
 .login h1{font-size:34px;letter-spacing:.16em}
 .login p{color:var(--muted);margin:10px 0 20px}
@@ -355,7 +355,7 @@ async function publishNow(net, f) {
   $("menu").style.display = "none";
   const w = f ? nameOf(rows().find(x => x.f === f)) : "el siguiente pin de la cola";
   if (!confirm(`¿Publicar ahora en ${NETS[net]}?\n\n${w}`)) return;
-  try { await api("publish", {red: net, fila: f || ""}); toast("Enviado. Sale en 1 o 2 minutos.", 5000); setTimeout(() => load(true), 90000); }
+  try { await api("publish", {red: net, fila: f || ""}); toast("✓ Enviado. Sale en 1 o 2 minutos.", 8000); setTimeout(() => load(true), 90000); }
   catch (e) { toast("No se pudo: " + e.message, 7000); }
 }
 
