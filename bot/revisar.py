@@ -16,7 +16,9 @@ KEYWORDS = ("automatic watch men,mechanical watch men,chronograph watch men,dive
             "titanium watch men,ceramic watch men,moonphase watch men,tonneau watch men,field watch men,"
             "pagani design watch,san martin watch,addiesdive watch,berny watch,sugess watch,watchdives watch,"
             "tsar bomba watch,seagull movement watch,proxima watch,steeldive watch,heimdallr watch,phylida watch,"
-            "cronos watch,merkur watch,baltany watch").split(",")
+            "cronos watch,merkur watch,baltany watch,seakoss watch,ailang watch,daniel gorman watch,specht sohne watch,"
+            "didun watch,cadisen watch,benyar watch,hruodland watch,ixdao watch,thorn watch,"
+            "nh35 automatic watch,vh31 watch,meteorite dial watch,carbon fiber watch men").split(",")
 FAMOUS = re.compile(r"rolex|omega|invicta|casio|seiko|citizen|tissot|tag heuer|patek|audemars|cartier|hublot|"
                     r"breitling|g-shock|apple|rolx|1:1")
 # Ofertas columns that are formulas (same in every row): copied from row 2
@@ -75,9 +77,12 @@ def main():
     needed = 200 - quedan
     seen = {c.strip().lstrip("'") for row in [r[14:15] for r in rows] + vistos + ofx for c in row}
     found = {}
-    page = int(time.time() // 7200) % 5 + 1  # page 1 is always the same: each turn looks at another page
-    print("página", page)
-    for kw in KEYWORDS:
+    first = int(time.time() // 7200) % 5 + 1  # page 1 is always the same: each turn starts on another page
+    pages = [first, first % 5 + 1, (first + 1) % 5 + 1]
+    print("páginas", pages)
+    for kw, page in ((k, pg) for pg in pages for k in KEYWORDS):
+        if len(found) >= needed:
+            break
         try:
             res = ali("aliexpress.affiliate.product.query", keywords=kw, min_sale_price=60, page_no=page, page_size=50,
                       ship_to_country="IL", sort="LAST_VOLUME_DESC", target_currency="USD", target_language="EN",
