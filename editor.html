@@ -31,7 +31,7 @@ button{font:inherit;cursor:pointer;color:var(--ink)}
 .ph{aspect-ratio:1;background:var(--soft);position:relative;cursor:grab}
 .ph img{width:100%;height:100%;object-fit:cover;pointer-events:none}
 .pos{position:absolute;top:8px;left:8px;background:var(--ink);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px}
-.hid{position:absolute;top:8px;right:8px;background:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid var(--line)}
+.hid{position:absolute;bottom:8px;left:8px;background:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid var(--line)}
 .inf{padding:8px 10px 4px}
 .br{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .nm{font-size:12.5px;line-height:1.3;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:32px}
@@ -41,8 +41,23 @@ button{font:inherit;cursor:pointer;color:var(--ink)}
 .acts button+button{border-left:1px solid var(--line)}
 .acts button:hover{background:var(--soft)}
 .ghost{opacity:.3}
+.ck{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:999px;border:2px solid #fff;background:rgba(0,0,0,.25);color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.25);padding:0}
+.card.pk .ck{background:var(--ink);border-color:var(--ink)}
+.card.pk{outline:3px solid var(--ink);outline-offset:-1px}
+body.pick .card:not(.pk){cursor:crosshair}
+body.pick .card:not(.pk):hover{outline:3px dashed var(--ok);outline-offset:-1px}
+.mb{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:40;background:var(--ink);color:#fff;border-radius:16px;padding:10px 12px;display:none;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100vw - 24px);box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.mb.on{display:flex}
+.mb b{font-size:13px;padding:0 4px}
+.mb button{background:#fff;color:var(--ink);border:none;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:500}
+.mb button.on{background:var(--ok);color:#fff}
+.rp{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;font-size:13px;line-height:1.45}
+.rp.done{opacity:.5}
+.rp .t{font-weight:600}
+.rp .m{color:var(--muted);font-size:12px}
+.rp .row2{margin-top:8px}
 .sel{outline:2px solid var(--ink)}
-.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;z-index:60;display:none;max-width:92vw;text-align:center}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;z-index:60;display:none;max-width:92vw;text-align:center}
 .toast.on{display:block}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 0}
 .md{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center}
@@ -73,6 +88,7 @@ button{font:inherit;cursor:pointer;color:var(--ink)}
 <div id="app"></div>
 <div class="md" id="md"><div class="box" id="box"></div></div>
 <div class="toast" id="toast"></div>
+<div class="mb" id="mb"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script>
 const HOOK="https://hook.eu1.make.com/46no31m2nwxq5f402nth2bha656qs7ko";
@@ -83,7 +99,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const typeOf=n=>{n=n.toLowerCase();for(const[k,v]of TYPES)if(n.includes(k))return v;return "Other"};
 const nice=b=>String(b||"").replace(/([a-z])([A-Z])/g,"$1 $2");
-let KEY="",items=[],orderChanged=false,busy=false;
+let KEY="",items=[],orderChanged=false,busy=false,sel=new Set(),pick=false,reps=null;
 try{const h=new URLSearchParams(location.hash.slice(1)).get("k");if(h){localStorage.setItem("kz_key",h);history.replaceState(null,"",location.pathname)}KEY=localStorage.getItem("kz_key")||""}catch(e){KEY=new URLSearchParams(location.hash.slice(1)).get("k")||""}
 
 function toast(t,ms){const el=$("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);if(ms!==0)toast.t=setTimeout(()=>el.classList.remove("on"),ms||3000)}
@@ -113,30 +129,44 @@ function login(msg){
 async function load(){
   if(!KEY)return login();
   $("app").innerHTML='<div class="login"><p style="color:var(--muted)">Cargando relojes…</p></div>';
-  try{const rows=await call("load");items=rows.slice(1).map(rowToItem).filter(it=>it.name&&/^(Publicado|Pendiente)$/i.test(it.estado));orderChanged=false;sortItems();shell();render()}
+  try{const rows=await call("load");items=rows.slice(1).map(rowToItem).filter(it=>it.name&&/^(Publicado|Pendiente)$/i.test(it.estado));orderChanged=false;sel.clear();pick=false;sortItems();shell();render()}
   catch(e){if(e.message==="clave")return login("Clave incorrecta. Prueba otra vez.");$("app").innerHTML=`<div class="login"><p>No se pudo cargar: ${esc(e.message)}</p><button class="btn" onclick="load()">Reintentar</button></div>`}}
 
 function shell(){
-  $("app").innerHTML=`<div class="top"><div class="top-in"><span class="logo">KABUZIO · EDITOR</span><a class="btn" href="./" target="_blank">Ver web</a><button class="btn dark" id="save" disabled>Guardar cambios</button></div></div>
+  $("app").innerHTML=`<div class="top"><div class="top-in"><span class="logo">KABUZIO · EDITOR</span><button class="btn" id="rpb">📩 Reportes</button><a class="btn" href="./" target="_blank">Ver web</a><button class="btn dark" id="save" disabled>Guardar cambios</button></div></div>
   <div class="bar"><input type="search" id="q" placeholder="Buscar reloj o marca"><label><input type="checkbox" id="showoff" checked> Mostrar ocultos</label><button class="btn" id="reset">Orden por más vendidos</button></div>
-  <p class="tip">Arrastra la foto para mover un reloj. ⬆ lo pone primero. 👁 lo oculta o lo muestra. ✏️ cambia fotos, nombre, marca y estilo. Al terminar, toca <b>Guardar cambios</b>. La web se actualiza sola en unos 5 minutos. Los relojes nuevos salen detrás de los que ordenaste.</p>
+  <p class="tip">Arrastra la foto para mover un reloj. Para mover <b>varios a la vez</b>, toca el círculo ○ de cada uno y usa la barra de abajo. ⬆ lo pone primero. 👁 lo oculta o lo muestra. ✏️ cambia fotos, nombre, marca y estilo. Al terminar, toca <b>Guardar cambios</b>. La web se actualiza sola en unos 5 minutos. Los relojes nuevos salen detrás de los que ordenaste.</p>
   <main class="grid" id="grid"></main>`;
   $("q").oninput=render;$("showoff").onchange=render;
-  $("save").onclick=save;
+  $("save").onclick=save;$("rpb").onclick=showReports;loadReports();
   $("reset").onclick=()=>{if(!confirm("¿Quitar el orden manual y ordenar por más vendidos?"))return;items.forEach(it=>it.orden=null);orderChanged=false;sortItems();render()};
-  Sortable.create($("grid"),{animation:150,handle:".ph",delay:180,delayOnTouchOnly:true,ghostClass:"ghost",filter:".empty",
+  Sortable.create($("grid"),{animation:150,handle:".ph",delay:180,delayOnTouchOnly:true,ghostClass:"ghost",filter:".empty,.ck",preventOnFilter:false,
     onEnd:e=>{if(e.oldIndex===e.newIndex)return;const vis=visible(),a=vis[e.oldIndex],b=vis[e.newIndex];items.splice(items.indexOf(a),1);items.splice(items.indexOf(b)+(e.newIndex>e.oldIndex?1:0),0,a);orderChanged=true;render()}});
   window.onbeforeunload=()=>dirty()?"":undefined}
 
 function visible(){const q=($("q")||{}).value?.toLowerCase().trim()||"",so=$("showoff")?.checked;return items.filter(it=>(so||!it.oculto)&&(!q||(it.name+" "+it.nombre+" "+it.marca).toLowerCase().includes(q)))}
+function moveGroup(at){const g=items.filter(it=>sel.has(it.row));if(!g.length)return;const rest=items.filter(it=>!sel.has(it.row));
+  const idx=at==="end"?rest.length:typeof at==="number"?Math.max(0,Math.min(at,rest.length)):Math.max(0,rest.indexOf(at));
+  rest.splice(idx,0,...g);items=rest;orderChanged=true;pick=false;render();toast(g.length+(g.length===1?" reloj movido":" relojes movidos")+" ✓ Recuerda Guardar cambios",3500)}
+function bar(){const mb=$("mb");document.body.classList.toggle("pick",pick);if(!sel.size){mb.classList.remove("on");pick=false;document.body.classList.remove("pick");return}
+  mb.innerHTML=pick?`<b>Toca el reloj donde quieres ponerlos (quedan antes de ese)</b><button data-m="cancel">Cancelar</button>`:`<b>${sel.size} ${sel.size===1?"seleccionado":"seleccionados"}</b><button data-m="top">⬆ Al principio</button><button data-m="pick">📍 Mover antes de…</button><button data-m="pos">#️⃣ A la posición…</button><button data-m="end">⬇ Al final</button><button data-m="hide">👁 Ocultar/mostrar</button><button data-m="clear">✕ Quitar selección</button>`;
+  mb.classList.add("on");
+  mb.querySelectorAll("button").forEach(b=>b.onclick=()=>{const m=b.dataset.m;
+    if(m==="top")moveGroup(0);if(m==="end")moveGroup("end");if(m==="clear"){sel.clear();render()}if(m==="cancel"){pick=false;bar()}
+    if(m==="pick"){pick=true;bar()}
+    if(m==="pos"){const n=parseInt(prompt("¿En qué posición quieres ponerlos? (1 = primero)","1"),10);if(n>0)moveGroup(n-1)}
+    if(m==="hide"){const g=items.filter(it=>sel.has(it.row)),v=!g.every(it=>it.oculto);g.forEach(it=>it.oculto=v);render()}})}
 function move(it,to){const from=items.indexOf(it);items.splice(from,1);items.splice(Math.max(0,Math.min(to,items.length)),0,it);orderChanged=true;render()}
 
 function render(){
   const vis=visible();
-  $("grid").innerHTML=vis.length?vis.map(it=>{const n=items.indexOf(it)+1,im=firstImg(it);return `<div class="card${it.oculto?" off":""}${snap(it)!==it.orig?" chg":""}" data-row="${it.row}">
-   <div class="ph"><img loading="lazy" referrerpolicy="no-referrer" src="${esc(im)}_220x220.jpg" onerror="this.onerror=null;this.src='${esc(im)}'" alt=""><span class="pos">${n}</span>${it.oculto?'<span class="hid">Oculto</span>':""}</div>
+  $("grid").innerHTML=vis.length?vis.map(it=>{const n=items.indexOf(it)+1,im=firstImg(it);return `<div class="card${sel.has(it.row)?" pk":""}${it.oculto?" off":""}${snap(it)!==it.orig?" chg":""}" data-row="${it.row}">
+   <div class="ph"><img loading="lazy" referrerpolicy="no-referrer" src="${esc(im)}_220x220.jpg" onerror="this.onerror=null;this.src='${esc(im)}'" alt=""><span class="pos">${n}</span><button class="ck" data-a="ck" title="Seleccionar">${sel.has(it.row)?"✓":""}</button>${it.oculto?'<span class="hid">Oculto</span>':""}</div>
    <div class="inf"><div class="br">${esc(nice(it.marca)||"Sin marca")}${it.estilo?" · "+esc(it.estilo):""}</div><div class="nm">${esc(it.nombre||it.name)}</div><div class="pr">${esc(it.price)} · ${it.media.length} ${it.media.length===1?"foto":"fotos"}</div></div>
    <div class="acts"><button data-a="top" title="Poner primero">⬆</button><button data-a="up" title="Subir uno">↑</button><button data-a="down" title="Bajar uno">↓</button><button data-a="hide" title="Ocultar o mostrar">👁</button><button data-a="edit" title="Editar">✏️</button></div></div>`}).join(""):'<div class="empty">No hay relojes con esa búsqueda.</div>';
+  $("grid").querySelectorAll(".ck").forEach(b=>{b.onpointerdown=e=>e.stopPropagation();b.onclick=e=>{e.stopPropagation();const r=+b.closest(".card").dataset.row;sel.has(r)?sel.delete(r):sel.add(r);render()}});
+  $("grid").querySelectorAll(".card").forEach(c=>c.addEventListener("click",e=>{if(!pick)return;e.preventDefault();e.stopPropagation();const it=items.find(x=>x.row==c.dataset.row);if(!it||sel.has(it.row))return toast("Toca un reloj que no esté seleccionado");moveGroup(it)},true));
+  bar();
   $("grid").querySelectorAll(".acts button").forEach(b=>b.onclick=()=>{const it=items.find(x=>x.row==b.closest(".card").dataset.row),i=items.indexOf(it);
     if(b.dataset.a==="top")move(it,0);if(b.dataset.a==="up")move(it,i-1);if(b.dataset.a==="down")move(it,i+1);
     if(b.dataset.a==="hide"){it.oculto=!it.oculto;render()}if(b.dataset.a==="edit")edit(it)});
@@ -160,6 +190,15 @@ function edit(it){
   $("mx").onclick=$("cn").onclick=close;$("md").onclick=e=>{if(e.target.id==="md")close()};
   $("rf").onclick=()=>{media=it.all.slice();off=[];draw()};
   $("ok").onclick=()=>{it.media=media;it.nombre=$("en").value.trim();const b=$("eb").value.trim().replace(/\s+/g,"");if(b)it.marca=b;it.estilo=$("es").value;close();render()};
+  $("md").classList.add("on")}
+
+async function loadReports(){try{const r=await call("reports");reps=(Array.isArray(r)?r:[]).slice(1).map((v,i)=>({row:i+2,v})).filter(x=>x.v.some(Boolean));const n=reps.filter(x=>x.v[8]!=="Resuelto").length;const b=$("rpb");if(b)b.textContent="📩 Reportes"+(n?" ("+n+")":"");if(b&&n)b.classList.add("dark")}catch(e){}}
+function showReports(){
+  const list=(reps||[]).slice().reverse();
+  $("box").innerHTML=`<h2><span>Reportes de la web</span><button id="mx" aria-label="Cerrar">×</button></h2><p style="font-size:13px;color:var(--muted)">Lo que la gente reporta desde el botón «Report a problem» de cada reloj.</p>`+
+   (reps===null?'<p class="rp">Cargando…</p>':list.length?list.map(x=>{const v=x.v,done=v[8]==="Resuelto";return `<div class="rp${done?" done":""}"><div class="t">${esc(v[3]||"Reporte")} ${done?"· ✓ Resuelto":""}</div><div>${esc(v[1])} · ${esc(v[2])}</div>${v[4]?`<div>«${esc(v[4])}»</div>`:""}<div class="m">${esc(v[0])}${v[5]?" · "+esc(v[5]):""}</div><div class="row2">${v[6]?`<a class="btn" href="${esc(v[6])}" target="_blank" rel="noopener">Abrir link</a>`:""}${done?"":`<button class="btn dark" data-r="${x.row}">Marcar resuelto</button>`}</div></div>`}).join(""):'<p class="rp">No hay reportes todavía. 🎉</p>');
+  $("mx").onclick=()=>$("md").classList.remove("on");$("md").onclick=e=>{if(e.target.id==="md")$("md").classList.remove("on")};
+  $("box").querySelectorAll("[data-r]").forEach(b=>b.onclick=async()=>{b.disabled=true;b.textContent="Guardando…";try{await call("save",{valueInputOption:"RAW",data:[{range:"Reportes!I"+b.dataset.r,values:[["Resuelto"]]}]});const x=reps.find(y=>y.row==b.dataset.r);if(x)x.v[8]="Resuelto";const n=reps.filter(x=>x.v[8]!=="Resuelto").length;$("rpb").textContent="📩 Reportes"+(n?" ("+n+")":"");if(!n)$("rpb").classList.remove("dark");showReports()}catch(e){b.disabled=false;b.textContent="Marcar resuelto";toast("No se guardó: "+e.message)}});
   $("md").classList.add("on")}
 
 async function save(){

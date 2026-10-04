@@ -47,7 +47,7 @@ select{border:none;background:transparent;font:inherit;font-size:13px;color:var(
 .grid{max-width:1200px;margin:0 auto;padding:12px 20px 60px;display:grid;grid-template-columns:repeat(2,1fr);gap:28px 14px}
 @media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr);gap:40px 20px}}
 @media(min-width:1000px){.grid{grid-template-columns:repeat(4,1fr)}}
-.card{display:block;scroll-margin-top:80px}
+.card{display:flex;flex-direction:column;scroll-margin-top:80px}
 .card.hit .ph{outline:2px solid var(--ink);outline-offset:3px}
 .ph{position:relative;aspect-ratio:1;background:var(--soft);border-radius:6px;overflow:hidden}
 .ph img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
@@ -56,7 +56,24 @@ select{border:none;background:transparent;font:inherit;font-size:13px;color:var(
 .brand{margin-top:12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .name{margin-top:4px;font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .price{margin-top:6px;font-weight:600;font-size:15px}
-.cta{display:inline-block;margin-top:8px;font-size:12px;font-weight:500;border-bottom:1px solid var(--ink);padding-bottom:1px}
+.cl{display:block;flex:1}
+.cta{display:block;margin-top:10px;text-align:center;background:var(--ink);color:#fff;padding:11px 12px;border-radius:999px;font-size:13px;font-weight:600;transition:.15s}
+.cta:hover{opacity:.85}
+.rep{display:block;margin:8px auto 0;background:none;border:none;font:inherit;font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.rm{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px}
+.rm.on{display:flex}
+.rm-b{background:#fff;border-radius:16px;width:100%;max-width:420px;padding:22px;max-height:90vh;overflow:auto}
+.rm-b h3{font-size:17px;margin-bottom:4px}
+.rm-b .rw{color:var(--muted);font-size:13px;margin-bottom:14px}
+.rm-b label{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px;font-size:14px;cursor:pointer}
+.rm-b label:has(input:checked){border-color:var(--ink)}
+.rm-b textarea,.rm-b input[type=email]{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit;font-size:14px;margin-top:6px}
+.rm-b textarea{min-height:70px;resize:vertical}
+.rm-a{display:flex;gap:10px;margin-top:14px}
+.rm-a button{flex:1;padding:12px;border-radius:999px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;border:1px solid var(--ink)}
+.rm-s{background:var(--ink);color:#fff}
+.rm-c{background:#fff;color:var(--ink)}
+.rm-ok{text-align:center;padding:20px 0;font-size:15px}
 .sk .ph{animation:p 1.2s infinite ease-in-out}
 @keyframes p{50%{opacity:.5}}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 0}
@@ -101,6 +118,7 @@ footer a{color:var(--ink);font-weight:500}
 </div>
 <main class="grid" id="grid"></main>
 <div class="lb" id="lb"><div class="lb-top"><span class="lb-t" id="lbt"></span><button class="lb-x" id="lbx" aria-label="Close">×</button></div><div class="lb-main"><button class="lb-a lb-p" id="lbp" aria-label="Previous">‹</button><img id="lbi" referrerpolicy="no-referrer" alt=""><video id="lbv" controls playsinline muted style="display:none;max-width:100%;max-height:100%"></video><button class="lb-a lb-n" id="lbn" aria-label="Next">›</button><span class="lb-n0" id="lbc"></span></div><div class="lb-th" id="lbth"></div><div class="lb-bot"><span class="lb-pr" id="lbpr"></span><a class="lb-go" id="lbgo" target="_blank" rel="nofollow sponsored noopener">View deal</a></div></div>
+<div class="rm" id="rm"><div class="rm-b" id="rmb"><h3>Report a problem</h3><div class="rw" id="rmw"></div><form id="rmf"><label><input type="radio" name="r" value="Link doesn't work" required> The link doesn't work</label><label><input type="radio" name="r" value="Different price"> The price is different</label><label><input type="radio" name="r" value="Not available"> Item not available</label><label><input type="radio" name="r" value="Wrong photos or info"> Wrong photos or info</label><label><input type="radio" name="r" value="Other"> Other</label><textarea id="rmt" maxlength="500" placeholder="Tell us more (optional)"></textarea><input type="email" id="rme" maxlength="120" placeholder="Your email, if you want a reply (optional)"><div class="rm-a"><button type="button" class="rm-c" id="rmc">Cancel</button><button type="submit" class="rm-s" id="rms">Send</button></div></form></div></div>
 <footer>Ad · As an affiliate we earn a commission on purchases, at no extra cost to you.<br>Prices may change on AliExpress. · <a href="https://t.me/KabuzioDeal" target="_blank" rel="noopener">@KabuzioDeal</a></footer>
 <script>
 const CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/pub?gid=596242979&single=true&output=csv";
@@ -122,7 +140,7 @@ function render(){
   l.sort(s==="low"?(a,b)=>a.price-b.price:s==="high"?(a,b)=>b.price-a.price:s==="top"?(a,b)=>a.ord-b.ord||b.sales-a.sales||b.i-a.i:s==="best"?(a,b)=>b.sales-a.sales||b.i-a.i:(a,b)=>b.i-a.i);
   $("count").textContent=l.length+(l.length===1?" watch":" watches");
   const newest=items.length-6;
-  $("grid").innerHTML=l.length?l.map(x=>`<a class="card${x.wid===W?" hit":""}" id="w-${esc(x.wid)}" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener"><div class="ph">${x.o>=newest?'<span class="badge">NEW</span>':""}<img loading="lazy" referrerpolicy="no-referrer" src="${esc(x.img)}_480x480.jpg" onerror="this.onerror=null;this.src='${esc(x.img)}'" alt="${esc(x.name)}">${media(x).length>1?`<span class="more" role="button" data-o="${x.o}" data-j="0">${media(x).some(it=>it.t==="v")?"▶ ":""}${media(x).filter(it=>it.t==="i").length} photo${media(x).filter(it=>it.t==="i").length>1?"s":""}</span>`:""}</div>${thumbs(x)}<div class="brand">${esc(x.brand)}</div><div class="name">${esc(x.name)}</div><div class="price">${esc(x.priceText)}</div><span class="cta">View deal</span></a>`).join(""):'<div class="empty">No watches match. Try another filter.</div>';
+  $("grid").innerHTML=l.length?l.map(x=>`<div class="card${x.wid===W?" hit":""}" id="w-${esc(x.wid)}"><a class="cl" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener"><div class="ph">${x.o>=newest?'<span class="badge">NEW</span>':""}<img loading="lazy" referrerpolicy="no-referrer" src="${esc(x.img)}_480x480.jpg" onerror="this.onerror=null;this.src='${esc(x.img)}'" alt="${esc(x.name)}">${media(x).length>1?`<span class="more" role="button" data-o="${x.o}" data-j="0">${media(x).some(it=>it.t==="v")?"▶ ":""}${media(x).filter(it=>it.t==="i").length} photo${media(x).filter(it=>it.t==="i").length>1?"s":""}</span>`:""}</div>${thumbs(x)}<div class="brand">${esc(x.brand)}</div><div class="name">${esc(x.name)}</div><div class="price">${esc(x.priceText)}</div></a><a class="cta" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener">View deal</a><button class="rep" type="button" data-r="${x.o}">Report a problem</button></div>`).join(""):'<div class="empty">No watches match. Try another filter.</div>';
 }
 $("grid").innerHTML=Array(8).fill('<div class="card sk"><div class="ph"></div></div>').join("");
 fetch(CSV).then(r=>r.text()).then(t=>{
@@ -147,6 +165,13 @@ function show(k){const m=lb.m;lb.k=(k+m.length)%m.length;const it=m[lb.k],i=$("l
 function openLb(x,k0){lb.x=x;lb.m=media(x);$("lbt").textContent=x.name;$("lbpr").textContent=x.priceText||"";$("lbgo").href=x.link;$("lbth").innerHTML=lb.m.map((it,j)=>it.t==="v"?`<span class="lb-tv" data-j="${j}">▶</span>`:`<img referrerpolicy="no-referrer" loading="lazy" src="${esc(it.u)}_480x480.jpg" data-j="${j}" alt="">`).join("");$("lbth").querySelectorAll("[data-j]").forEach(t=>t.onclick=()=>show(+t.dataset.j));const one=lb.m.length<2;$("lbp").style.display=$("lbn").style.display=one?"none":"";$("lb").classList.add("on");document.body.style.overflow="hidden";show(k0||0)}
 function closeLb(){$("lbv").pause();$("lb").classList.remove("on");document.body.style.overflow=""}
 $("grid").addEventListener("click",e=>{let m=e.target.closest(".more,.more2"),k=m?+m.dataset.j:0;if(!m){const ph=e.target.closest(".ph");m=ph&&ph.querySelector(".more");k=0}if(!m)return;e.preventDefault();e.stopPropagation();const x=items.find(y=>y.o==m.dataset.o);if(x)openLb(x,k)});
+const RH="https://hook.eu1.make.com/46no31m2nwxq5f402nth2bha656qs7ko";let rx=null;
+$("grid").addEventListener("click",e=>{const b=e.target.closest(".rep");if(!b)return;e.preventDefault();rx=items.find(y=>y.o==b.dataset.r);if(!rx)return;$("rmw").textContent=rx.name+(rx.priceText?" · "+rx.priceText:"");$("rmf").reset();$("rmf").style.display="";const ok=$("rmb").querySelector(".rm-ok");if(ok)ok.remove();$("rms").disabled=false;$("rms").textContent="Send";$("rm").classList.add("on")});
+const closeRm=()=>$("rm").classList.remove("on");$("rmc").onclick=closeRm;$("rm").addEventListener("click",e=>{if(e.target.id==="rm")closeRm()});
+$("rmf").onsubmit=e=>{e.preventDefault();if(!rx)return;const r=$("rmf").querySelector("input[name=r]:checked");$("rms").disabled=true;$("rms").textContent="Sending…";
+  const row=[new Date().toISOString().replace("T"," ").slice(0,16)+" UTC",rx.name,rx.priceText||"",r?r.value:"",$("rmt").value.trim(),$("rme").value.trim(),rx.link||"",rx.wid||"","Nuevo"];
+  const done=()=>{$("rmf").style.display="none";const d=document.createElement("div");d.className="rm-ok";d.textContent="Thanks! We'll check it soon. 🙌";$("rmb").appendChild(d);setTimeout(closeRm,1800)};
+  fetch(RH,{method:"POST",body:new URLSearchParams({a:"report",p:JSON.stringify({values:[row]})})}).then(done).catch(done)};
 $("lbx").onclick=closeLb;$("lbp").onclick=()=>show(lb.k-1);$("lbn").onclick=()=>show(lb.k+1);
 document.addEventListener("keydown",e=>{if(!$("lb").classList.contains("on"))return;if(e.key==="Escape")closeLb();if(e.key==="ArrowLeft")show(lb.k-1);if(e.key==="ArrowRight")show(lb.k+1)});
 let sx=null;$("lbi").addEventListener("touchstart",e=>{sx=e.touches[0].clientX},{passive:true});$("lbi").addEventListener("touchend",e=>{if(sx===null)return;const d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>40)show(lb.k+(d<0?1:-1));sx=null});
