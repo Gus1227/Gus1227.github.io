@@ -45,6 +45,7 @@ jobs:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           FILA: ${{ inputs.fila }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
         run: |
           case "$FILA" in
             links) python3 bot/revisar_links.py ;;
@@ -53,5 +54,7 @@ jobs:
             posts) python3 bot/corregir_posts.py ;;
             huecos) python3 bot/huecos.py ;;
             poner-links) python3 bot/poner_links.py ;;
+            stats) DEBUG=1 python3 bot/stats.py ;;
+            cabecera) python3 -c "import sys;sys.path.insert(0,'bot');import telegram as t;r=t.sheets(t.google_token(),'values/Ofertas!A1:AZ1')['values'][0];print(len(r),list(enumerate(r)))" ;;
             *) python3 bot/revisar_fila.py ;;
           esac
