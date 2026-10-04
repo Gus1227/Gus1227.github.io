@@ -45,11 +45,14 @@ def main():
         m = g(r, 12)
         new = brand_of(m) or (brand_of(g(r, 0)) if NOT_BRAND.match(m) or not m else "")
         if not new:
-            if NOT_BRAND.match(m) or not m:
+            if m and NOT_BRAND.match(m):  # a word that is not a brand: leave it without brand (Cheche, 2026-10-04)
+                cells.append((n, m, ""))
+            elif not m:
                 unknown[g(r, 0)[:60]] += 1
             continue
         if new != m:
             cells.append((n, m, new))
+    cells = [c for c in cells if c[1] != c[2]]
     for n, m, new in cells:
         print(f"  fila {n}: «{m}» -> {new}")
     print(f"Cambios: {len(cells)}. Sin marca clara: {sum(unknown.values())}")
