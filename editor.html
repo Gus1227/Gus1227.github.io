@@ -116,7 +116,7 @@ function rowToItem(r,i){
   const it={row:i+1,name:g("name"),price:g("price"),estado:g("estado"),pid:g("pid"),sales:+g("ventas").replace(/\D/g,"")||0,video,all,
     marca:g("marca"),orden:isFinite(o)?o:null,oculto:/^s[ií]/i.test(g("oculto")),media:fw.length?fw:all.slice(),estilo:g("estilo"),nombre:g("nombre")};
   it.orig=snap(it);return it}
-function snap(it){return JSON.stringify([it.marca,it.orden,it.oculto,it.media.join(" "),it.estilo,it.nombre])}
+function snap(it){return JSON.stringify([it.marca,it.orden,it.oculto,it.media.join(" "),it.estilo,it.nombre,it.price])}
 function fwOut(it){const d=it.all.join(" "),m=it.media.join(" ");return m===d?"":m}
 function sortItems(){items.sort((a,b)=>(a.orden??1e9)-(b.orden??1e9)||b.sales-a.sales||b.row-a.row)}
 const firstImg=it=>it.media.find(t=>t!=="video")||it.all.find(t=>t!=="video")||"";
@@ -186,6 +186,7 @@ function edit(it){
   $("box").innerHTML=`<h2><span>Editar reloj</span><button id="mx" aria-label="Cerrar">×</button></h2>
    <div class="f"><span>Fotos</span><div class="ph-list" id="pl"></div><small>Arrastra para cambiar el orden. La 1ª es la portada. «Quitar» la esconde solo en la web.</small></div>
    <div class="f"><span>Nombre en la web</span><input id="en" value="${esc(it.nombre)}" placeholder="${esc(it.name)}"><small>Vacío = nombre original de AliExpress.</small></div>
+   <div class="f"><span>Precio (USD)</span><input id="ep" inputmode="decimal" value="${esc(it.price)}" placeholder="$99.99"><small>Precio actual en AliExpress. Cambia la web y los próximos posts.</small></div>
    <div class="f"><span>Marca</span><input id="eb" list="bl" value="${esc(nice(it.marca))}"><datalist id="bl">${brands.map(b=>`<option value="${esc(nice(b))}">`).join("")}</datalist><small>Cambia también los hashtags de los posts.</small></div>
    <div class="f"><span>Estilo (filtro de la web)</span><select id="es"><option value="">Automático (${esc(typeOf(it.name))})</option>${STYLES.map(s=>`<option${s===it.estilo?" selected":""}>${s}</option>`).join("")}</select></div>
    <div class="row2"><button class="btn dark" id="ok">Listo</button><button class="btn" id="cn">Cancelar</button><button class="btn" id="rf" style="margin-left:auto">Fotos como al principio</button></div>`;
@@ -194,7 +195,7 @@ function edit(it){
   const close=()=>$("md").classList.remove("on");
   $("mx").onclick=$("cn").onclick=close;$("md").onclick=e=>{if(e.target.id==="md")close()};
   $("rf").onclick=()=>{media=it.all.slice();off=[];draw()};
-  $("ok").onclick=()=>{it.media=media;it.nombre=$("en").value.trim();const b=$("eb").value.trim().replace(/\s+/g,"");if(b)it.marca=b;it.estilo=$("es").value;close();render()};
+  $("ok").onclick=()=>{const pv=$("ep").value.trim();if(pv){const n=parseFloat(pv.replace(/[^0-9.]/g,""));if(!(n>0))return toast("Escribe un precio válido, por ejemplo 99.99");it.price="$"+n.toFixed(2)}it.media=media;it.nombre=$("en").value.trim();const b=$("eb").value.trim().replace(/\s+/g,"");if(b)it.marca=b;it.estilo=$("es").value;close();render()};
   $("md").classList.add("on")}
 
 async function loadReports(){try{const r=await call("reports");reps=(Array.isArray(r)?r:[]).slice(1).map((v,i)=>({row:i+2,v})).filter(x=>x.v.some(Boolean));const n=reps.filter(x=>x.v[8]!=="Resuelto").length;const b=$("rpb");if(b)b.textContent="📩 Reportes"+(n?" ("+n+")":"");if(b&&n)b.classList.add("dark")}catch(e){}}
@@ -213,8 +214,9 @@ async function save(){
     const where=it=>{const r=fresh[it.row-1];const same=r=>r&&(it.pid?String(r[C.pid]||"").trim()===it.pid:String(r[C.name]||"").trim()===it.name);if(same(r))return it.row;const i=fresh.findIndex(same);return i<0?0:i+1};
     const data=[];let lost=0;
     items.forEach((it,i)=>{const o=JSON.parse(it.orig),ord=orderChanged?i+1:it.orden;
-      const ch=it.marca!==o[0]||ord!==o[1]||it.oculto!==o[2]||it.media.join(" ")!==o[3]||it.estilo!==o[4]||it.nombre!==o[5];if(!ch)return;
+      const ch=it.price!==o[6]||it.marca!==o[0]||ord!==o[1]||it.oculto!==o[2]||it.media.join(" ")!==o[3]||it.estilo!==o[4]||it.nombre!==o[5];if(!ch)return;
       const r=where(it);if(!r){lost++;return}
+      if(it.price!==o[6])data.push({range:"Ofertas!B"+(r+1),values:[[it.price]]});
       if(it.marca!==o[0])data.push({range:"Ofertas!M"+(r+1),values:[[it.marca]]});
       data.push({range:`Ofertas!AB${r+1}:AF${r+1}`,values:[[ord??"",it.oculto?"Sí":"",fwOut(it),it.estilo,it.nombre]]})});
     if(data.length){const res=await call("save",{valueInputOption:"RAW",data});if(!res.totalUpdatedCells&&res.totalUpdatedCells!==0)throw new Error((res.error&&res.error.message)||"la hoja no confirmó")}
