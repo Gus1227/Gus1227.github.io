@@ -11,7 +11,7 @@ on:
         options: ["no", "si"]
         default: "no"
       fila:
-        description: "Solo revisar esta fila (número), sin publicar"
+        description: "Solo revisar: número de fila, o «links» para revisar todos los links"
         required: false
         default: ""
 concurrency: bot-telegram
@@ -33,4 +33,4 @@ jobs:
         env:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           FILA: ${{ inputs.fila }}
-        run: python3 bot/revisar_fila.py
+        run: if [ "$FILA" = links ]; then python3 bot/revisar_links.py; else python3 bot/revisar_fila.py; fi
