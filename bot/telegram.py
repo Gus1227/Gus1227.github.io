@@ -38,6 +38,37 @@ def sheets(token, path, body=None, method="GET"):
     return json.load(urllib.request.urlopen(req, timeout=60))
 
 
+# ---------- links: check that a link opens the right watch ----------
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *a, **k):
+        return None
+
+
+def item_of(url):
+    """AliExpress item number a link opens (first redirect), or '' if unknown."""
+    try:
+        urllib.request.build_opener(_NoRedirect).open(
+            urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"}), timeout=20)
+    except urllib.error.HTTPError as e:
+        m = re.search(r"/item/(\d+)", e.headers.get("Location") or "")
+        return m.group(1) if m else ""
+    except Exception:
+        return ""
+    return ""
+
+
+def good_link(r):
+    """Telegram link (AG) only if it opens the same watch as Enlace (E); otherwise Enlace."""
+    g = lambda i: (r[i] if i < len(r) else "").strip()
+    tg_link, main = g(LINK_TG), g(LINK)
+    if tg_link and main:
+        want = item_of(main)
+        if want and item_of(tg_link) == want:
+            return tg_link
+        print("Link_TG lleva a otro reloj: uso Enlace")
+    return main or tg_link
+
+
 # ---------- the post (copy of the Make caption) ----------
 def num(s):
     s = re.sub(r"[^0-9.]", "", str(s or "").replace(",", ""))
@@ -62,7 +93,7 @@ def caption(r):
     if old > p:
         off = " #70off" if p <= old * 0.3 else " #50off" if p <= old * 0.5 else ""
     save = f" 🔻-{round((old - p) / old * 100)}%" if old > p else ""
-    link = html.escape(r[LINK_TG] if LINK_TG < len(r) and r[LINK_TG].strip() else r[LINK]).strip()
+    link = html.escape(good_link(r))
     coupon = f"🎟 Coupon: {g(COUPON)}" if g(COUPON) else ""
     return (f"<b>{g(TITLE)}</b>\n\n{g(TAGS)} {band} {kind}{off}\n📦 {name}\n"
             f"💰 Now: <b>{g(PRICE)}</b> (was <s>{g(OLD)}</s>){save}\n✅{g(RATING)}\n"
