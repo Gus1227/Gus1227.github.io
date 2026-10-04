@@ -130,10 +130,16 @@ def quiet():
 def tg(method, payload):
     url = f"https://api.telegram.org/bot{os.environ['TG_TOKEN']}/{method}"
     req = urllib.request.Request(url, json.dumps(payload).encode(), headers={"Content-Type": "application/json"})
-    try:
-        return json.load(urllib.request.urlopen(req, timeout=120))
-    except urllib.error.HTTPError as e:
-        return json.loads(e.read() or b"{}")
+    for _ in range(3):
+        try:
+            return json.load(urllib.request.urlopen(req, timeout=120))
+        except urllib.error.HTTPError as e:
+            res = json.loads(e.read() or b"{}")
+            wait = res.get("parameters", {}).get("retry_after")
+            if not wait:
+                return res
+            time.sleep(wait + 1)
+    return res
 
 
 def send(r):
