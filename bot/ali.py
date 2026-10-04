@@ -1,0 +1,145 @@
+# Kabuzio bot: AliExpress affiliate API (replaces the Make scenarios for details, links and sales).
+#   completar: fills empty data of new rows (name, prices, photos, video, sales, rating, product id) from the link
+#   links:     one short affiliate link per network in AG:AL (kabuzioTG/IG/TT/FB/WEB/PIN), matched by source_value
+#   ventas:    orders of the last 30 days into the «Ventas» tab (one row per sub-order, updated in place)
+# Run: ALI_HACER="completar links" (default) or "ventas". Secrets: ALI_APP_KEY, ALI_SECRET.
+import datetime, hashlib, hmac, json, os, sys, time, urllib.parse, urllib.request
+from zoneinfo import ZoneInfo
+
+sys.path.insert(0, os.path.dirname(__file__))
+from telegram import TAB, google_token, item_of, sheets
+
+API = "https://api-sg.aliexpress.com/sync"
+NETS = [("AG", "kabuzioTG"), ("AH", "kabuzioIG"), ("AI", "kabuzioTT"), ("AJ", "kabuzioFB"), ("AK", "kabuzioWEB"), ("AL", "kabuzioPIN")]
+COL = lambda c: sum((ord(ch) - 64) * 26 ** i for i, ch in enumerate(reversed(c))) - 1  # "AG" -> 32
+
+
+def ali(method, **params):
+    p = {"app_key": os.environ["ALI_APP_KEY"], "method": method, "sign_method": "sha256",
+         "timestamp": str(int(time.time() * 1000)), **{k: str(v) for k, v in params.items()}}
+    base = "".join(k + p[k] for k in sorted(p))
+    p["sign"] = hmac.new(os.environ["ALI_SECRET"].encode(), base.encode(), hashlib.sha256).hexdigest().upper()
+    res = json.load(urllib.request.urlopen(API + "?" + urllib.parse.urlencode(p), timeout=60))
+    body = next(iter(res.values()))
+    if "error_response" in res or not isinstance(body, dict):
+        raise SystemExit(f"AliExpress {method}: {json.dumps(res)[:400]}")
+    return body.get("resp_result", body)
+
+
+def read_rows(tok):
+    return sheets(tok, f"values/{TAB}!A1:AN?valueRenderOption=FORMATTED_VALUE").get("values", [])
+
+
+def write(tok, cells):
+    """cells: [(a1, value)]"""
+    for i in range(0, len(cells), 400):
+        sheets(tok, "values:batchUpdate", {"valueInputOption": "USER_ENTERED", "data": [
+            {"range": f"{TAB}!{a}", "values": [[v]]} for a, v in cells[i:i + 400]]}, method="POST")
+
+
+def cell(r, c):
+    i = COL(c)
+    return (r[i] if i < len(r) else "").strip()
+
+
+# ---------- completar: rows that only have a link ----------
+def completar(tok, rows):
+    todo = []
+    for n, r in enumerate(rows[1:], start=2):
+        if cell(r, "E").startswith("http") and not (cell(r, "A") and cell(r, "B") and cell(r, "D") and cell(r, "X")):
+            pid = cell(r, "X") or item_of(cell(r, "E"))
+            if pid:
+                todo.append((n, r, pid))
+    print("completar:", len(todo), "filas")
+    cells = []
+    for i in range(0, len(todo), 20):
+        part = todo[i:i + 20]
+        res = ali("aliexpress.affiliate.productdetail.get", product_ids=",".join(p for _, _, p in part),
+                  target_currency="USD", target_language="EN", tracking_id="kabuzioTG")
+        prods = {str(p["product_id"]): p for p in ((res.get("result") or {}).get("products") or {}).get("product", [])}
+        for n, r, pid in part:
+            p = prods.get(pid)
+            if not p:
+                print(f"fila {n}: la API no da el producto {pid}")
+                continue
+            imgs = [p.get("product_main_image_url", "")] + ((p.get("product_small_image_urls") or {}).get("string") or [])
+            imgs = list(dict.fromkeys(u for u in imgs if u))
+            new = {"A": p.get("product_title", ""), "B": f"${p['target_sale_price']}" if p.get("target_sale_price") else "",
+                   "C": f"${p['target_original_price']}" if p.get("target_original_price") else "",
+                   "D": imgs[0] if imgs else "", "W": " ".join(imgs[1:10]), "V": p.get("product_video_url", ""),
+                   "X": pid, "N": str(p.get("lastest_volume", "")), "O": p.get("evaluate_rate", "")}
+            for c, v in new.items():
+                if v and not cell(r, c):
+                    cells.append((f"{c}{n}", v))
+            if not cell(r, "H"):
+                cells.append((f"H{n}", "Pendiente" if (p.get("target_sale_price") and float(p["target_sale_price"]) >= 60) else "Bajo 60"))
+    write(tok, cells)
+    print("completar: escritas", len(cells), "celdas")
+
+
+# ---------- links: one short link per network ----------
+def links(tok, rows):
+    cells = []
+    for col, tracking in NETS:
+        need = [(n, cell(r, "E")) for n, r in enumerate(rows[1:], start=2)
+                if cell(r, "E").startswith("http") and "/e/" not in cell(r, col) and cell(r, "H") in ("Pendiente", "Publicado", "")]
+        for i in range(0, len(need), 5):  # long links: few per call so the URL stays short
+            part = need[i:i + 5]
+            res = ali("aliexpress.affiliate.link.generate", promotion_link_type=0,
+                      source_values=",".join(u for _, u in part), tracking_id=tracking)
+            got = {l.get("source_value"): l.get("promotion_link") for l in
+                   ((res.get("result") or {}).get("promotion_links") or {}).get("promotion_link", [])}
+            for n, u in part:  # matched by source_value: the API returns them in another order
+                if got.get(u):
+                    cells.append((f"{col}{n}", got[u]))
+    write(tok, cells)
+    print("links: escritos", len(cells))
+
+
+# ---------- ventas ----------
+FIELDS = ("created_time,paid_time,finished_time,order_status,tracking_id,paid_amount,estimated_paid_commission,"
+          "estimated_finished_commission,product_id,product_title,ship_to_country,sub_order_id,order_id")
+HEAD = ["sub_order_id", "order_id", "created_time", "paid_time", "order_status", "tracking_id", "paid_amount",
+        "estimated_paid_commission", "estimated_finished_commission", "product_id", "product_title", "ship_to_country"]
+
+
+def ventas(tok):
+    la = ZoneInfo("America/Los_Angeles")
+    fin = datetime.datetime.now(la)
+    ini = fin - datetime.timedelta(days=30)
+    orders = []
+    for status in ("Payment Completed", "Buyer Confirmed Receipt"):
+        page = 1
+        while True:
+            res = ali("aliexpress.affiliate.order.list", start_time=ini.strftime("%Y-%m-%d %H:%M:%S"),
+                      end_time=fin.strftime("%Y-%m-%d %H:%M:%S"), fields=FIELDS, status=status, page_no=page, page_size=50)
+            got = ((res.get("result") or {}).get("orders") or {}).get("order", [])
+            orders += got
+            if len(got) < 50:
+                break
+            page += 1
+    meta = sheets(tok, "?fields=sheets.properties")
+    if not any(s["properties"]["title"] == "Ventas" for s in meta["sheets"]):
+        sheets(tok, ":batchUpdate", {"requests": [{"addSheet": {"properties": {"title": "Ventas"}}}]}, method="POST")
+    old = sheets(tok, "values/Ventas!A1:L").get("values", [])
+    by = {r[0]: r for r in old[1:] if r}
+    for o in orders:
+        by[str(o.get("sub_order_id"))] = [str(o.get(h, "")) for h in HEAD]
+    table = [HEAD] + sorted(by.values(), key=lambda r: r[2], reverse=True)
+    sheets(tok, "values/Ventas!A1:L?valueInputOption=RAW", {"values": table}, method="PUT")
+    print("ventas:", len(orders), "en 30 días,", len(table) - 1, "en total")
+
+
+def main():
+    tok = google_token()
+    hacer = os.environ.get("ALI_HACER", "completar links").split()
+    if "completar" in hacer:
+        completar(tok, read_rows(tok))
+    if "links" in hacer:
+        links(tok, read_rows(tok))
+    if "ventas" in hacer:
+        ventas(tok)
+
+
+if __name__ == "__main__":
+    main()

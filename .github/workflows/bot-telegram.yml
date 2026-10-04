@@ -57,6 +57,8 @@ jobs:
           FILA: ${{ inputs.fila }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
+          ALI_APP_KEY: ${{ secrets.ALI_APP_KEY }}
+          ALI_SECRET: ${{ secrets.ALI_SECRET }}
         run: |
           case "$FILA" in
             links) python3 bot/revisar_links.py ;;
@@ -66,7 +68,7 @@ jobs:
             huecos) python3 bot/huecos.py ;;
             poner-links) python3 bot/poner_links.py ;;
             stats) DEBUG=1 python3 bot/stats.py ;;
-            columnas) MARCAR=11 python3 bot/columnas.py ;;
+            ali-*) ALI_HACER="${FILA#ali-}" python3 bot/ali.py ;;
             cabecera) python3 -c "import sys;sys.path.insert(0,'bot');import telegram as t;r=t.sheets(t.google_token(),'values/Ofertas!A1:AZ1')['values'][0];print(len(r),list(enumerate(r)))" ;;
             *) python3 bot/revisar_fila.py ;;
           esac
