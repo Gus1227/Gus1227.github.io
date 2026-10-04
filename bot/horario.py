@@ -59,6 +59,8 @@ def turn(slot):
     if run("zernio.py", REDES="pinterest", PIN=str(st["pin"])):
         st["pin"] += 1
     run("stats.py")
+    if slot.hour == 16:  # 19:00 in Israel: refresh the pinned Top 3 in Telegram
+        run("top.py", TOP="si")
     tiktok = slot.hour % 8 == 4 and st.get("tiktok") != key
     if tiktok:
         run("zernio.py", REDES="tiktok")
