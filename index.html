@@ -123,7 +123,7 @@ footer a{color:var(--ink);font-weight:500}
 <script>
 const CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/pub?gid=596242979&single=true&output=csv";
 const TYPES=[["chronograph","Chronograph"],["dive","Diver"],["smart","Smartwatch"],["automatic","Automatic"],["mechanical","Automatic"],["tourbillon","Automatic"],["skeleton","Automatic"],["quartz","Quartz"]];
-const PRICES=[["","All prices"],["0-100","$40–100"],["100-200","$100–200"],["200-99999","$200+"]];
+const PRICES=[["","All prices"],["0-100","$60–100"],["100-200","$100–200"],["200-99999","$200+"]];
 let items=[],st={type:"",price:""};const Q=new URLSearchParams(location.search),W=Q.get("w")||"";
 // one tracking link per channel: ?src=pin|fb|ig|tt|tg picks that column, the web itself uses Link_WEB
 const SRC=(()=>{const m={pin:"Link_PIN",fb:"Link_FB",ig:"Link_IG",tt:"Link_TT",tg:"Link_TG"};let s=(Q.get("src")||"").toLowerCase();try{if(m[s])sessionStorage.setItem("src",s);else s=sessionStorage.getItem("src")||""}catch(e){}return m[s]||"Link_WEB"})();
