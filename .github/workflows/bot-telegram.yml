@@ -10,6 +10,11 @@ on:
         type: choice
         options: ["no", "si"]
         default: "no"
+      zernio:
+        description: "TikTok / Pinterest por Zernio (en vez de Telegram)"
+        type: choice
+        options: ["nada", "tiktok", "pinterest", "tiktok pinterest"]
+        default: "nada"
       fila:
         description: "Solo revisar: número de fila, o «links» para revisar todos los links, «arreglar» (prueba), «arreglar-si» (escribe) o «posts» (corrige los posts publicados)"
         required: false
@@ -27,7 +32,15 @@ jobs:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           PUBLICAR: ${{ github.event_name == 'schedule' && 'si' || inputs.publicar }}
         run: python3 bot/telegram.py
-        if: ${{ !inputs.fila }}
+        if: ${{ !inputs.fila && (github.event_name == 'schedule' || inputs.zernio == 'nada') }}
+      - name: TikTok y Pinterest (Zernio)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.zernio != 'nada' }}
+        env:
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+          ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
+          REDES: ${{ inputs.zernio }}
+          PUBLICAR: ${{ inputs.publicar }}
+        run: python3 bot/zernio.py
       - name: Revisar una fila
         if: ${{ inputs.fila }}
         env:
