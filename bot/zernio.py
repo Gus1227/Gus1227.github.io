@@ -29,7 +29,9 @@ def tiktok():
     rows = sheets(token, f"values/{TAB}!A1:CZ?valueRenderOption=FORMATTED_VALUE").get("values", [])
     g = lambda r, i: (r[i] if i < len(r) else "").strip()
     # Make takes the LAST published row that has not gone to TikTok yet
-    pick = [(n, r) for n, r in enumerate(rows[1:], start=2) if g(r, STATE) == "Publicado" and not g(r, TT_DONE)]
+    want = os.environ.get("FILA_PUB", "").strip()  # "Publicar ahora" from the panel
+    pick = [(int(want), rows[int(want) - 1])] if want else \
+        [(n, r) for n, r in enumerate(rows[1:], start=2) if g(r, STATE) == "Publicado" and not g(r, TT_DONE)]
     if not pick:
         print("TikTok: no hay relojes nuevos.")
         return
@@ -80,7 +82,9 @@ def tiktok():
 def pinterest():
     # same turn number as Make 7763492: round((unix - 1791128378) / 7200) + 77
     # the bot clock passes the next pin number (PIN); by hand it uses Make's formula
-    n = int(os.environ.get("PIN") or round((time.time() - 1791128378) / 7200) + 77)
+    manual = not os.environ.get("PIN")
+    estado = os.path.join(os.path.dirname(__file__), "estado.json")
+    n = int(os.environ.get("PIN") or json.load(open(estado))["pin"])
     pins = os.path.join(os.path.dirname(__file__), "..", "pins")
     f = os.path.join(pins, "q", f"{n}.json")
     if not os.path.exists(f):
@@ -94,6 +98,15 @@ def pinterest():
         print("Modo prueba: no se publica nada.")
         return
     print("Pinterest:", json.dumps(zernio("/posts", body))[:300])
+    if manual:  # by hand: move the bot clock to the next pin so it is not posted twice
+        import subprocess
+        d = os.path.dirname(estado)
+        subprocess.run(["git", "pull", "-q", "--rebase", "origin", "main"], cwd=d)
+        st = json.load(open(estado))
+        st["pin"] = max(st["pin"], n + 1)
+        json.dump(st, open(estado, "w"), indent=1)
+        subprocess.run(["git", "commit", "-qam", f"bot: pin {n} a mano"], cwd=d)
+        subprocess.run(["git", "push", "-q", "origin", "HEAD:main"], cwd=d)
 
 
 if __name__ == "__main__":

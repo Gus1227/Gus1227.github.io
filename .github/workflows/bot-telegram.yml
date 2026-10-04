@@ -13,22 +13,32 @@ on:
         type: choice
         options: ["telegram", "tiktok", "pinterest"]
         default: "telegram"
+      reloj:
+        description: "Número de fila de un reloj concreto (vacío = el siguiente de la cola)"
+        required: false
+        default: ""
       fila:
         description: "(Solo para Claude) Revisar: número de fila, o «links» para revisar todos los links, «arreglar» (prueba), «arreglar-si» (escribe) o «posts» (corrige los posts publicados)"
         required: false
         default: ""
 concurrency: bot-telegram
+permissions:
+  contents: write
 jobs:
   post:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pip install cryptography
+      - run: |
+          pip install cryptography
+          git config user.name "kabuzio-bot"
+          git config user.email "kabuzio-bot@users.noreply.github.com"
       - name: Publicar el siguiente reloj
         env:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           PUBLICAR: ${{ inputs.publicar }}
+          FILA_PUB: ${{ inputs.reloj }}
         run: python3 bot/telegram.py
         if: ${{ !inputs.fila && inputs.red == 'telegram' }}
       - name: TikTok y Pinterest (Zernio)
@@ -38,6 +48,7 @@ jobs:
           ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
           REDES: ${{ inputs.red }}
           PUBLICAR: ${{ inputs.publicar }}
+          FILA_PUB: ${{ inputs.reloj }}
         run: python3 bot/zernio.py
       - name: Revisar una fila
         if: ${{ inputs.fila }}

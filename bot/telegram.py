@@ -11,7 +11,7 @@ PUBLISH = os.environ.get("PUBLICAR", "no").lower() in ("si", "sí", "yes", "true
 
 # column indexes (A = 0)
 NAME, PRICE, OLD, IMG, LINK, TITLE, TAGS, STATE, DATE, RATING = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-TG_ID, COUPON, VIDEO, EXTRA, LINK_TG = 18, 19, 21, 22, 32
+TG_ID, COUPON, VIDEO, EXTRA, LINK_TG, PRIO = 18, 19, 21, 22, 32, 38
 
 
 # ---------- Google Sheets (service account, no extra libraries but cryptography) ----------
@@ -163,13 +163,18 @@ def send(r):
 
 def main():
     token = google_token()
-    rows = sheets(token, f"values/{TAB}!A1:AL?valueRenderOption=FORMATTED_VALUE").get("values", [])
-    for n, r in enumerate(rows[1:], start=2):
-        if len(r) > STATE and r[STATE].strip() == "Pendiente":
-            break
+    rows = sheets(token, f"values/{TAB}!A1:AM?valueRenderOption=FORMATTED_VALUE").get("values", [])
+    want = os.environ.get("FILA_PUB", "").strip()  # "Publicar ahora" from the panel: this exact row
+    if want:
+        n = int(want)
+        r = rows[n - 1]
     else:
-        print("No hay relojes Pendiente.")
-        return
+        # next "Pendiente": lowest Prioridad (AM) first, then sheet order
+        pend = [(n, r) for n, r in enumerate(rows[1:], start=2) if len(r) > STATE and r[STATE].strip() == "Pendiente"]
+        if not pend:
+            print("No hay relojes Pendiente.")
+            return
+        n, r = min(pend, key=lambda t: (num(t[1][PRIO]) if len(t[1]) > PRIO and t[1][PRIO].strip() else 1e9, t[0]))
     print(f"Fila {n}: {r[NAME]}\n---\n{caption(r)}\n---\nfotos: {len(photos(r))}, video: {'sí' if len(r) > VIDEO and r[VIDEO].strip() else 'no'}")
     if not PUBLISH:
         print("Modo prueba: no se publica nada.")
@@ -178,7 +183,8 @@ def main():
     now = datetime.datetime.now(ZoneInfo("Asia/Jerusalem")).strftime("%Y-%m-%d %H:%M:%S")
     sheets(token, "values:batchUpdate", {"valueInputOption": "USER_ENTERED", "data": [
         {"range": f"{TAB}!H{n}:I{n}", "values": [["Publicado", now]]},
-        {"range": f"{TAB}!S{n}", "values": [[mid]]}]}, method="POST")
+        {"range": f"{TAB}!S{n}", "values": [[mid]]},
+        {"range": f"{TAB}!AM{n}", "values": [[""]]}]}, method="POST")
     print(f"Publicado en Telegram (mensaje {mid}) y marcado en la hoja.")
 
 
