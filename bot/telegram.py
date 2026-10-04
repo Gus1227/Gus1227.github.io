@@ -32,7 +32,7 @@ def google_token():
 
 
 def sheets(token, path, body=None, method="GET"):
-    url = f"https://sheets.googleapis.com/v4/spreadsheets/{SHEET}/{path}"
+    url = f"https://sheets.googleapis.com/v4/spreadsheets/{SHEET}" + ("" if path[:1] in "?:" else "/") + path
     req = urllib.request.Request(url, json.dumps(body).encode() if body else None, method=method,
                                  headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
     return json.load(urllib.request.urlopen(req, timeout=60))
