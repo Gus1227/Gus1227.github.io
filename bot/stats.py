@@ -21,23 +21,13 @@ def zernio():
     accs = get("https://zernio.com/api/v1/accounts", h)
     accs = accs.get("accounts", accs) if isinstance(accs, dict) else accs
     out = {}
-    if os.environ.get("DEBUG"):
-        for path in ("/accounts/follower-stats", "/analytics/followers", "/accounts/" + accs[0]["_id"] + "/stats",
-                     "/analytics?platform=tiktok", "/accounts/" + accs[0]["_id"]):
-            try:
-                print(path, "=>", json.dumps(get("https://zernio.com/api/v1" + path, h))[:1500])
-            except Exception as e:
-                print(path, "=>", e)
     for a in accs:
-        if os.environ.get("DEBUG"):
-            print(json.dumps(a.get("metadata", {}).get("profileData"))[:1500], a.get("followersCount"))
-        n = None
-        for k in ("followersCount", "followers_count", "followerCount", "followers"):
-            v = a.get(k) if k in a else (a.get("metadata") or {}).get(k)
-            if isinstance(v, (int, float)):
-                n = int(v)
-                break
-        out[str(a.get("platform", "")).lower()] = {"seguidores": n, "usuario": a.get("username") or a.get("displayName")}
+        pd = (a.get("metadata") or {}).get("profileData") or {}
+        extra = pd.get("extraData") or {}
+        n = pd.get("followersCount", a.get("followersCount"))
+        out[str(a.get("platform", "")).lower()] = {
+            "seguidores": n if isinstance(n, int) else None, "usuario": a.get("username"),
+            "likes": extra.get("likesCount"), "videos": extra.get("videoCount")}
     return out
 
 

@@ -21,7 +21,7 @@ def load():
 
 def save(st, msg):
     json.dump(st, open(STATE, "w"), indent=1)
-    git("add", STATE)
+    git("add", STATE, os.path.join(HERE, "..", "stats.json"))
     git("commit", "-qm", msg)
     for _ in range(4):
         if git("push", "-q", "origin", "HEAD:main").returncode == 0:
@@ -55,6 +55,7 @@ def turn(slot):
     run("telegram.py")
     if run("zernio.py", REDES="pinterest", PIN=str(st["pin"])):
         st["pin"] += 1
+    run("stats.py")
     tiktok = slot.hour % 8 == 4 and st.get("tiktok") != key
     if tiktok:
         run("zernio.py", REDES="tiktok")
