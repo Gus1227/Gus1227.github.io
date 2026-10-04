@@ -33,19 +33,35 @@ jobs:
               brand = "" if brand in ("", "Sin marca") else re.sub(r"([a-z])([A-Z])", r"\1 \2", brand)
               tags = " ".join(t for t in (r.get("Categoria") or "").split() if t.startswith("#"))
               desc = f"{name} – now {price}. Tap the Pin to buy it at this price on AliExpress. More deals daily on Telegram @KabuzioDeal. {tags} #watchdeals #watches"
-              f = f"pins/{wid}.jpg"
-              if not os.path.exists(f):
-                  try:
-                      req = urllib.request.Request(img + "_800x800.jpg", headers={"User-Agent": "Mozilla/5.0"})
-                      data = urllib.request.urlopen(req, timeout=30).read()
-                      if len(data) < 2000: raise ValueError("tiny image")
-                      open(f, "wb").write(data)
-                  except Exception as ex:
-                      print("no image", wid, ex)
-                      continue
-              pic = f"{SITE}{f}"
-              pub = dates.setdefault(wid, now)
-              items.append(f"""<item><title>{e(name)} – {e(price)}</title><link>{SITE}?w={wid}</link><pubDate>{pub}</pubDate><guid isPermaLink="false">{wid}</guid><description>{e(desc)}</description><enclosure url="{e(pic)}" type="image/jpeg" length="0"/><media:content url="{e(pic)}" medium="image"/></item>""")
+              sales = int(re.sub(r"\D", "", r.get("Ventas") or "") or 0)
+              pics = [img] + (r.get("Fotos_extra") or "").split()
+              seen = []
+              for u in pics:
+                  if u.startswith("https://") and u not in seen:
+                      seen.append(u)
+              for n, u in enumerate(seen[:6]):
+                  key = wid if n == 0 else f"{wid}-{n}"
+                  f = f"pins/{key}.jpg"
+                  if not os.path.exists(f):
+                      try:
+                          req = urllib.request.Request(u + "_800x800.jpg", headers={"User-Agent": "Mozilla/5.0"})
+                          data = urllib.request.urlopen(req, timeout=30).read()
+                          if len(data) < 2000: raise ValueError("tiny image")
+                          open(f, "wb").write(data)
+                      except Exception as ex:
+                          print("no image", key, ex)
+                          continue
+                  pic = f"{SITE}{f}"
+                  items.append((n, -sales, key, f"""<title>{e(name)} – {e(price)}</title><link>{SITE}?w={wid}</link>@@PUB@@<guid isPermaLink="false">{key}</guid><description>{e(desc)}</description><enclosure url="{e(pic)}" type="image/jpeg" length="0"/><media:content url="{e(pic)}" medium="image"/>"""))
+          # main photos of best sellers first, then 2nd photos, and so on
+          items.sort(key=lambda t: (t[0], t[1]))
+          base = datetime.datetime.utcnow()
+          out = []
+          for k, (n, s, key, body) in enumerate(items):
+              if key not in dates:
+                  dates[key] = (base + datetime.timedelta(seconds=k)).strftime("%a, %d %b %Y %H:%M:%S GMT")
+              out.append("<item>" + body.replace("@@PUB@@", f"<pubDate>{dates[key]}</pubDate>") + "</item>")
+          items = out
           xml = f"""<?xml version="1.0" encoding="UTF-8"?>
           <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>Kabuzio – Watch Deals</title><link>{SITE}</link><description>Watch deals from AliExpress. New deals every day.</description><lastBuildDate>{now}</lastBuildDate>{"".join(items)}</channel></rss>
           """
