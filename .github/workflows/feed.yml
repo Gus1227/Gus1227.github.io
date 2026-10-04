@@ -32,7 +32,7 @@ jobs:
               brand = (r.get("Marca") or "").strip()
               brand = "" if brand in ("", "Sin marca") else re.sub(r"([a-z])([A-Z])", r"\1 \2", brand)
               tags = " ".join(t for t in (r.get("Categoria") or "").split() if t.startswith("#"))
-              desc = f"{name} – now {price} on AliExpress. ⌚ From the best watch catalog on AliExpress, hand-picked by Kabuzio. 👉 See it on our website: gus1227.github.io or on Telegram: t.me/KabuzioDeal {tags} #watchdeals #watches"
+              desc = f"{name} – now {price} on AliExpress. ⌚ From the best watch catalog on AliExpress, hand-picked by Kabuzio. 👉 See it on our website or Telegram: linktr.ee/Kabuzio_Deal {tags} #watches #watchdeals"
               sales = int(re.sub(r"\D", "", r.get("Ventas") or "") or 0)
               pics = [img] + (r.get("Fotos_extra") or "").split()
               seen = []
