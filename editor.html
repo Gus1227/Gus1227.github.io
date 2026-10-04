@@ -135,13 +135,18 @@ async function load(){
 function shell(){
   $("app").innerHTML=`<div class="top"><div class="top-in"><span class="logo">KABUZIO · EDITOR</span><button class="btn" id="rpb">📩 Reportes</button><a class="btn" href="./" target="_blank">Ver web</a><button class="btn dark" id="save" disabled>Guardar cambios</button></div></div>
   <div class="bar"><input type="search" id="q" placeholder="Buscar reloj o marca"><label><input type="checkbox" id="showoff" checked> Mostrar ocultos</label><button class="btn" id="reset">Orden por más vendidos</button></div>
-  <p class="tip">Arrastra la foto para mover un reloj. Para mover <b>varios a la vez</b>, toca el círculo ○ de cada uno y usa la barra de abajo. ⬆ lo pone primero. 👁 lo oculta o lo muestra. ✏️ cambia fotos, nombre, marca y estilo. Al terminar, toca <b>Guardar cambios</b>. La web se actualiza sola en unos 5 minutos. Los relojes nuevos salen detrás de los que ordenaste.</p>
+  <p class="tip">Arrastra la foto para mover un reloj. Para mover <b>varios a la vez</b>, toca el círculo ○ de cada uno y arrastra cualquiera de ellos (se mueven todos juntos), o usa la barra de abajo. ⬆ lo pone primero. 👁 lo oculta o lo muestra. ✏️ cambia fotos, nombre, marca y estilo. Al terminar, toca <b>Guardar cambios</b>. La web se actualiza sola en unos 5 minutos. Los relojes nuevos salen detrás de los que ordenaste.</p>
   <main class="grid" id="grid"></main>`;
   $("q").oninput=render;$("showoff").onchange=render;
   $("save").onclick=save;$("rpb").onclick=showReports;loadReports();
   $("reset").onclick=()=>{if(!confirm("¿Quitar el orden manual y ordenar por más vendidos?"))return;items.forEach(it=>it.orden=null);orderChanged=false;sortItems();render()};
   Sortable.create($("grid"),{animation:150,handle:".ph",delay:180,delayOnTouchOnly:true,ghostClass:"ghost",filter:".empty,.ck",preventOnFilter:false,
-    onEnd:e=>{if(e.oldIndex===e.newIndex)return;const vis=visible(),a=vis[e.oldIndex],b=vis[e.newIndex];items.splice(items.indexOf(a),1);items.splice(items.indexOf(b)+(e.newIndex>e.oldIndex?1:0),0,a);orderChanged=true;render()}});
+    onStart:e=>{const r=+e.item.dataset.row;if(sel.has(r)&&sel.size>1)$("grid").querySelectorAll(".card.pk").forEach(c=>{if(c!==e.item)c.classList.add("ghost")})},
+    onEnd:e=>{const r=+e.item.dataset.row;
+      if(sel.has(r)&&sel.size>1){const cs=[...$("grid").children],k=cs.indexOf(e.item),it=x=>items.find(y=>y.row==x.dataset.row);
+        const nx=cs.slice(k+1).find(c=>!sel.has(+c.dataset.row)),pv=cs.slice(0,k).reverse().find(c=>!sel.has(+c.dataset.row));
+        if(nx)return moveGroup(it(nx));const rest=items.filter(x=>!sel.has(x.row));return moveGroup(pv?rest.indexOf(it(pv))+1:0)}
+      if(e.oldIndex===e.newIndex)return;const vis=visible(),a=vis[e.oldIndex],b=vis[e.newIndex];items.splice(items.indexOf(a),1);items.splice(items.indexOf(b)+(e.newIndex>e.oldIndex?1:0),0,a);orderChanged=true;render()}});
   window.onbeforeunload=()=>dirty()?"":undefined}
 
 function visible(){const q=($("q")||{}).value?.toLowerCase().trim()||"",so=$("showoff")?.checked;return items.filter(it=>(so||!it.oculto)&&(!q||(it.name+" "+it.nombre+" "+it.marca).toLowerCase().includes(q)))}
