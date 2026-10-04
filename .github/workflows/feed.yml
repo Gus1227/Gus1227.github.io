@@ -78,6 +78,10 @@ jobs:
               queue.append(dict(cur[q["k"]], off=0) if q["k"] in cur else dict(q, off=1))
           known = {q["k"] for q in old}
           queue += [dict(p[3], off=0) for p in pins if p[2] not in known]
+          for q in queue:
+              q["b"] = json.dumps({"content": q["d"], "mediaItems": [{"type": "image", "url": q["i"]}], "publishNow": True,
+                  "platforms": [{"platform": "pinterest", "accountId": "6ac2543ed3257a1645992aa0",
+                  "platformSpecificData": {"title": q["t"], "boardId": "1089026822335308630", "link": q["l"]}}]}, ensure_ascii=False)
           json.dump(queue, open("pins/queue.json", "w"), ensure_ascii=False, indent=0)
           print(len(queue), "in queue")
           print(len(items), "items")
