@@ -35,7 +35,10 @@ def tiktok():
     if not pick:
         print("TikTok: no hay relojes nuevos.")
         return
-    n, r = max(pick, key=lambda t: (g(t[1], 8), t[0]))  # the most recently published one (I = Fecha_pub)
+    # the most recently published one (I = Fecha_pub, as a date serial number)
+    dates = sheets(token, f"values/{TAB}!I1:I?valueRenderOption=UNFORMATTED_VALUE").get("values", [])
+    when = lambda n: (dates[n - 1][0] if n - 1 < len(dates) and dates[n - 1] and isinstance(dates[n - 1][0], (int, float)) else 0)
+    n, r = max(pick, key=lambda t: (when(t[0]), t[0]))
     pics = []
     for u in (g(r, IMG) + " " + g(r, EXTRA)).split():
         if u not in pics:
