@@ -11,7 +11,7 @@ on:
         options: ["no", "si"]
         default: "no"
       fila:
-        description: "Solo revisar: número de fila, o «links» para revisar todos los links, «arreglar» (prueba), «arreglar-si» (escribe) o «posts» (corrige los posts de hoy)"
+        description: "Solo revisar: número de fila, o «links» para revisar todos los links, «arreglar» (prueba), «arreglar-si» (escribe) o «posts» (corrige los posts publicados)"
         required: false
         default: ""
 concurrency: bot-telegram

@@ -1,9 +1,9 @@
-# Corrige el texto (y el link) de los posts de Telegram de hoy, usando los datos actuales de la hoja.
+# Corrige el texto (y el link) de los posts de Telegram ya publicados, usando los datos actuales de la hoja.
 import os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from telegram import google_token, sheets, caption, tg, TAB, CHAT, STATE, DATE, TG_ID
 
-DAY = os.environ.get("DIA", "2026-10-04")
+DAY = os.environ.get("DIA", "")
 token = google_token()
 rows = sheets(token, f"values/{TAB}!A1:AL").get("values", [])
 g = lambda r, i: (r[i] if i < len(r) else "").strip()
