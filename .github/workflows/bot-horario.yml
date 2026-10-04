@@ -1,0 +1,30 @@
+name: Bot horario
+# Publica solo: Telegram + Pinterest cada 2 h, TikTok cada 8 h (ver bot/horario.py).
+# Cada vuelta dura ~5.5 h y lanza la siguiente; el cron es solo un respaldo por si la cadena se corta.
+on:
+  schedule:
+    - cron: "35 */3 * * *"
+  workflow_dispatch:
+concurrency:
+  group: bot-horario
+  cancel-in-progress: false
+permissions:
+  contents: write
+  actions: write
+jobs:
+  reloj:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install cryptography
+      - run: |
+          git config user.name "kabuzio-bot"
+          git config user.email "kabuzio-bot@users.noreply.github.com"
+      - name: Publicar a su hora
+        env:
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -u bot/horario.py

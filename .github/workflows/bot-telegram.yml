@@ -1,8 +1,6 @@
 name: Bot Kabuzio
 on:
-  # Cada 2 h, minuto 5 (Telegram ya está apagado en Make: escenario 7725903, input telegram = false).
-  schedule:
-    - cron: "5 */2 * * *"
+  # Solo a mano. Lo automático está en bot-horario.yml.
   workflow_dispatch:
     inputs:
       publicar:
@@ -30,9 +28,9 @@ jobs:
         env:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
-          PUBLICAR: ${{ github.event_name == 'schedule' && 'si' || inputs.publicar }}
+          PUBLICAR: ${{ inputs.publicar }}
         run: python3 bot/telegram.py
-        if: ${{ !inputs.fila && (github.event_name == 'schedule' || inputs.red == 'telegram') }}
+        if: ${{ !inputs.fila && inputs.red == 'telegram' }}
       - name: TikTok y Pinterest (Zernio)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.red != 'telegram' && !inputs.fila }}
         env:

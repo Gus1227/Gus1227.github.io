@@ -79,10 +79,14 @@ def tiktok():
 # ---------- Pinterest ----------
 def pinterest():
     # same turn number as Make 7763492: round((unix - 1791128378) / 7200) + 77
-    n = round((time.time() - 1791128378) / 7200) + 77
-    f = os.path.join(os.path.dirname(__file__), "..", "pins", "q", f"{n}.json")
+    # the bot clock passes the next pin number (PIN); by hand it uses Make's formula
+    n = int(os.environ.get("PIN") or round((time.time() - 1791128378) / 7200) + 77)
+    pins = os.path.join(os.path.dirname(__file__), "..", "pins")
+    f = os.path.join(pins, "q", f"{n}.json")
     if not os.path.exists(f):
-        print(f"Pinterest: no hay pin {n} (está apagado o la cola terminó).")
+        if n >= len(json.load(open(os.path.join(pins, "queue.json")))):
+            raise SystemExit(f"Pinterest: la cola terminó (pin {n}).")
+        print(f"Pinterest: pin {n} apagado, paso al siguiente.")
         return
     body = json.load(open(f, encoding="utf-8"))
     print(f"Pinterest pin {n}: {body['platforms'][0]['platformSpecificData']['title']}")
