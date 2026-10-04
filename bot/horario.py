@@ -1,7 +1,7 @@
 # Kabuzio bot clock. GitHub's own cron is late or skips runs, so one run stays awake ~5.5 h,
 # posts at every even UTC hour (minute 5) and then starts the next run itself.
 # What it already did is kept in bot/estado.json (pushed to the repo), so a second run never posts twice.
-#   every 2 h: AliExpress data + Telegram + Revisar tab + 1-2 Pinterest pins (18 a day)      TikTok 5 a day (04, 08, 12, 16, 20 UTC)
+#   every 2 h: AliExpress data + Revisar tab; Telegram 2 a day (08, 18 UTC); Pinterest 8 a day; TikTok 3 a day (06, 12, 18 UTC)
 import datetime, json, os, subprocess, sys, time, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -53,16 +53,17 @@ def turn(slot):
     st["hecho"] = key
     save(st, f"bot: turno {key}")  # mark first: a crash never means a double post
     run("ali.py", ALI_HACER="completar links ventas")
-    run("telegram.py")
+    if slot.hour in (8, 18):  # 2 a day (11:00 and 21:00 Israel): the channel is the exclusive club, not a flood
+        run("telegram.py")
     run("revisar.py", REVISAR="si")
     run("marcas.py", MARCAS="si")  # new rows take the first word of the title as brand: tidy it before posting
-    for _ in range(2 if slot.hour % 4 == 0 else 1):  # 18 pins a day: 2 every 4 h, 1 the other turns
+    if slot.hour % 6:  # 8 pins a day (no pin at 00, 06, 12, 18 UTC)
         if run("zernio.py", REDES="pinterest", PIN=str(st["pin"])):
             st["pin"] += 1
     run("stats.py")
     if slot.hour == 16:  # 19:00 in Israel: refresh the pinned Top 3 in Telegram
         run("top.py", TOP="si")
-    tiktok = slot.hour % 4 == 0 and 4 <= slot.hour <= 20 and st.get("tiktok") != key
+    tiktok = slot.hour in (6, 12, 18) and st.get("tiktok") != key
     if tiktok:
         run("zernio.py", REDES="tiktok")
     st = {**load(), "pin": st["pin"], **({"tiktok": key} if tiktok else {})}
