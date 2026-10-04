@@ -10,6 +10,12 @@ e = lambda s: html.escape(str(s or "").strip())
 nice = lambda b: re.sub(r"([a-z])([A-Z])", r"\1 \2", b)
 
 
+def sold(v):
+    """«2,451» or «2451.00» -> 2451"""
+    m = re.search(r"\d[\d,]*(\.\d+)?", str(v or ""))
+    return int(float(m.group().replace(",", ""))) if m else 0
+
+
 def kind(name):
     n = name.lower()
     for words, k in ((("chronograph",), "Chronograph"), (("dive", "diver"), "Diver"), (("tourbillon",), "Tourbillon"),
@@ -40,7 +46,7 @@ def watches():
         brand = (r.get("Marca") or "").strip()
         out.append({"id": wid, "name": name, "price": (r.get("Precio") or "").strip(), "link": link, "pics": pics[:8],
                     "brand": "" if brand in ("", "Sin marca") else nice(brand), "kind": (r.get("Estilo_web") or "").strip() or kind(name),
-                    "sales": int(re.sub(r"\D", "", r.get("Ventas") or "") or 0), "video": (r.get("Video") or "").strip()})
+                    "sales": sold(r.get("Ventas")), "video": (r.get("Video") or "").strip()})
     return [w for w in out if w["id"] and w["pics"]]
 
 
