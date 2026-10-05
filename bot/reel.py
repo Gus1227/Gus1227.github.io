@@ -158,7 +158,7 @@ def build(r, out, k=0):
             t += durs[i - 1] - FADE
             chain.append(f"{last}[{i}:v]xfade=transition={FX[i % len(FX)]}:duration={FADE}:offset={t:.2f}[x{i}]")
             last = f"[x{i}]"
-        hook = hook_for(g(NAME), k, num(g(SALES)))
+        hook = hook_for(g(NAME), k, num(g(SALES)) / (100 if g(SALES).endswith("%") else 1))  # «66200%» = 662 (cell format)
         chain.append(f"{last}{text_layer(d, head, spec, price, hook)}[v]")
         ins = [a for c in clips for a in ("-i", c)]
         ff(*ins, "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo", "-filter_complex", ";".join(chain),
