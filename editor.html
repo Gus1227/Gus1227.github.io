@@ -40,6 +40,8 @@ button{font:inherit;cursor:pointer;color:var(--ink)}
 .acts button{flex:1;border:none;background:none;padding:9px 0;font-size:14px}
 .acts button+button{border-left:1px solid var(--line)}
 .acts button:hover{background:var(--soft)}
+.acts button.rl{font-weight:700}.acts button.rl.on{background:#111;color:#fff}
+.rq{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.rq img{width:48px;height:48px;object-fit:cover;border-radius:6px}.rq .n{font-weight:700;width:26px}.rq .x{flex:1;min-width:0}.rq .s{font-size:12px;color:var(--muted)}.rq .s.ok{color:#178a3a}.rq button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 8px}
 .ghost{opacity:.3}
 .ck{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:999px;border:2px solid #fff;background:rgba(0,0,0,.25);color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.25);padding:0}
 .card.pk .ck{background:var(--ink);border-color:var(--ink)}
@@ -114,11 +116,11 @@ function rowToItem(r,i){
   const tk=g("fotosweb").split(/\s+/),fw=tk.filter(t=>t==="video"?!!video:all.includes(t));
   const o=parseFloat(g("orden"));
   const it={row:i+1,name:g("name"),price:g("price"),estado:g("estado"),pid:g("pid"),sales:+g("ventas").replace(/\D/g,"")||0,video,all,
-    marca:g("marca"),orden:isFinite(o)?o:null,oculto:/^s[ií]/i.test(g("oculto")),media:fw.length?fw:all.slice(),estilo:g("estilo"),nombre:g("nombre"),reel:tk.includes("reel")};
+    marca:g("marca"),orden:isFinite(o)?o:null,oculto:/^s[ií]/i.test(g("oculto")),media:fw.length?fw:all.slice(),estilo:g("estilo"),nombre:g("nombre"),reel:(()=>{const m=tk.map(t=>/^reel(?::(\d+))?$/.exec(t)).find(Boolean);return m?(+m[1]||9999):0})()};
   it.orig=snap(it);return it}
 function snap(it){return JSON.stringify([it.marca,it.orden,it.oculto,it.media.join(" "),it.estilo,it.nombre,it.price,it.reel])}
 // «reel» at the end of Fotos_web = Cheche picked this watch for a Reel (the web ignores the word)
-function fwOut(it){const d=it.all.join(" "),m=it.media.join(" "),b=m===d?"":m;return it.reel?(b?b+" reel":"reel"):b}
+function fwOut(it){const d=it.all.join(" "),m=it.media.join(" "),b=m===d?"":m;return it.reel?(b?b+" ":"")+"reel:"+it.reel:b}
 function sortItems(){items.sort((a,b)=>(a.orden??1e9)-(b.orden??1e9)||b.sales-a.sales||b.row-a.row)}
 const firstImg=it=>it.media.find(t=>t!=="video")||it.all.find(t=>t!=="video")||"";
 const dirty=()=>orderChanged||items.some(it=>snap(it)!==it.orig);
@@ -134,12 +136,12 @@ async function load(){
   catch(e){if(e.message==="clave")return login("Clave incorrecta. Prueba otra vez.");$("app").innerHTML=`<div class="login"><p>No se pudo cargar: ${esc(e.message)}</p><button class="btn" onclick="load()">Reintentar</button></div>`}}
 
 function shell(){
-  $("app").innerHTML=`<div class="top"><div class="top-in"><span class="logo">KABUZIO · EDITOR</span><button class="btn" id="rpb">📩 Reportes</button><a class="btn" href="./" target="_blank">Ver web</a><button class="btn dark" id="save" disabled>Guardar cambios</button></div></div>
+  $("app").innerHTML=`<div class="top"><div class="top-in"><span class="logo">KABUZIO · EDITOR</span><button class="btn" id="rlb">🎬 Reels</button><button class="btn" id="rpb">📩 Reportes</button><a class="btn" href="./" target="_blank">Ver web</a><button class="btn dark" id="save" disabled>Guardar cambios</button></div></div>
   <div class="bar"><input type="search" id="q" placeholder="Buscar reloj o marca"><label><input type="checkbox" id="showoff" checked> Mostrar ocultos</label><button class="btn" id="reset">Orden por más vendidos</button></div>
   <p class="tip">Arrastra la foto para mover un reloj. Para mover <b>varios a la vez</b>, toca el círculo ○ de cada uno y arrastra cualquiera de ellos (se mueven todos juntos), o usa la barra de abajo. ⬆ lo pone primero. 👁 lo oculta o lo muestra. ✏️ cambia fotos, nombre, marca y estilo. Al terminar, toca <b>Guardar cambios</b>. La web se actualiza sola en unos 5 minutos. Los relojes nuevos salen detrás de los que ordenaste.</p>
   <main class="grid" id="grid"></main>`;
   $("q").oninput=render;$("showoff").onchange=render;
-  $("save").onclick=save;$("rpb").onclick=showReports;loadReports();
+  $("save").onclick=save;$("rpb").onclick=showReports;$("rlb").onclick=showReels;loadReports();loadReelsDone();
   $("reset").onclick=()=>{if(!confirm("¿Quitar el orden manual y ordenar por más vendidos?"))return;items.forEach(it=>it.orden=null);orderChanged=false;sortItems();render()};
   Sortable.create($("grid"),{animation:150,handle:".ph",delay:180,delayOnTouchOnly:true,ghostClass:"ghost",filter:".empty,.ck",preventOnFilter:false,
     onStart:e=>{const r=+e.item.dataset.row;if(sel.has(r)&&sel.size>1)$("grid").querySelectorAll(".card.pk").forEach(c=>{if(c!==e.item)c.classList.add("ghost")})},
@@ -168,14 +170,14 @@ function render(){
   const vis=visible();
   $("grid").innerHTML=vis.length?vis.map(it=>{const n=items.indexOf(it)+1,im=firstImg(it);return `<div class="card${sel.has(it.row)?" pk":""}${it.oculto?" off":""}${snap(it)!==it.orig?" chg":""}" data-row="${it.row}">
    <div class="ph"><img loading="lazy" referrerpolicy="no-referrer" src="${esc(im)}_220x220.jpg" onerror="this.onerror=null;this.src='${esc(im)}'" alt=""><span class="pos">${n}</span><button class="ck" data-a="ck" title="Seleccionar">${sel.has(it.row)?"✓":""}</button>${it.oculto?'<span class="hid">Oculto</span>':""}</div>
-   <div class="inf"><div class="br">${it.reel?"🎬 ":""}${esc(nice(it.marca)||"Sin marca")}${it.estilo?" · "+esc(it.estilo):""}</div><div class="nm">${esc(it.nombre||it.name)}</div><div class="pr">${esc(it.price)} · ${it.media.length} ${it.media.length===1?"foto":"fotos"}</div></div>
-   <div class="acts"><button data-a="top" title="Poner primero">⬆</button><button data-a="up" title="Subir uno">↑</button><button data-a="down" title="Bajar uno">↓</button><button data-a="hide" title="Ocultar o mostrar">👁</button><button data-a="edit" title="Editar">✏️</button></div></div>`}).join(""):'<div class="empty">No hay relojes con esa búsqueda.</div>';
+   <div class="inf"><div class="br">${esc(nice(it.marca)||"Sin marca")}${it.estilo?" · "+esc(it.estilo):""}</div><div class="nm">${esc(it.nombre||it.name)}</div><div class="pr">${esc(it.price)} · ${it.media.length} ${it.media.length===1?"foto":"fotos"}</div></div>
+   <div class="acts"><button data-a="top" title="Poner primero">⬆</button><button data-a="up" title="Subir uno">↑</button><button data-a="down" title="Bajar uno">↓</button><button data-a="hide" title="Ocultar o mostrar">👁</button><button data-a="edit" title="Editar">✏️</button><button data-a="reel" class="rl${it.reel?" on":""}" title="Elegir para Reel">🎬${it.reel?" "+reelPos(it):""}</button></div></div>`}).join(""):'<div class="empty">No hay relojes con esa búsqueda.</div>';
   $("grid").querySelectorAll(".ck").forEach(b=>{b.onpointerdown=e=>e.stopPropagation();b.onclick=e=>{e.stopPropagation();const r=+b.closest(".card").dataset.row;sel.has(r)?sel.delete(r):sel.add(r);render()}});
   $("grid").querySelectorAll(".card").forEach(c=>c.addEventListener("click",e=>{if(!pick)return;e.preventDefault();e.stopPropagation();const it=items.find(x=>x.row==c.dataset.row);if(!it||sel.has(it.row))return toast("Toca un reloj que no esté seleccionado");moveGroup(it)},true));
   bar();
   $("grid").querySelectorAll(".acts button").forEach(b=>b.onclick=()=>{const it=items.find(x=>x.row==b.closest(".card").dataset.row),i=items.indexOf(it);
     if(b.dataset.a==="top")move(it,0);if(b.dataset.a==="up")move(it,i-1);if(b.dataset.a==="down")move(it,i+1);
-    if(b.dataset.a==="hide"){it.oculto=!it.oculto;render()}if(b.dataset.a==="edit")edit(it)});
+    if(b.dataset.a==="hide"){it.oculto=!it.oculto;render()}if(b.dataset.a==="edit")edit(it);if(b.dataset.a==="reel")toggleReel(it)});
   const s=$("save");s.disabled=!dirty()||busy;s.textContent=busy?"Guardando…":"Guardar cambios"}
 
 function edit(it){
@@ -197,7 +199,29 @@ function edit(it){
   const close=()=>$("md").classList.remove("on");
   $("mx").onclick=$("cn").onclick=close;$("md").onclick=e=>{if(e.target.id==="md")close()};
   $("rf").onclick=()=>{media=it.all.slice();off=[];draw()};
-  $("ok").onclick=()=>{const pv=$("ep").value.trim();if(pv){const n=parseFloat(pv.replace(/[^0-9.]/g,""));if(!(n>0))return toast("Escribe un precio válido, por ejemplo 99.99");it.price="$"+n.toFixed(2)}it.media=media;it.nombre=$("en").value.trim();const b=$("eb").value.trim().replace(/\s+/g,"");if(b)it.marca=b;it.estilo=$("es").value;it.reel=$("er").checked;close();render()};
+  $("ok").onclick=()=>{const pv=$("ep").value.trim();if(pv){const n=parseFloat(pv.replace(/[^0-9.]/g,""));if(!(n>0))return toast("Escribe un precio válido, por ejemplo 99.99");it.price="$"+n.toFixed(2)}it.media=media;it.nombre=$("en").value.trim();const b=$("eb").value.trim().replace(/\s+/g,"");if(b)it.marca=b;it.estilo=$("es").value;if($("er").checked&&!it.reel)it.reel=reelQueue().length+1;if(!$("er").checked&&it.reel){it.reel=0;renumber()}close();render()};
+  $("md").classList.add("on")}
+
+// ---------- Reels: Cheche's own queue, separate from the web order ----------
+let reelsDone=[];
+async function loadReelsDone(){try{const r=await fetch("bot/estado.json?"+Date.now(),{cache:"no-store"});reelsDone=((await r.json()).reels)||[]}catch(e){reelsDone=[]}render();reelBtn()}
+const reelQueue=()=>items.filter(x=>x.reel).sort((a,b)=>a.reel-b.reel);
+const reelDone=it=>!!it.pid&&reelsDone.includes(String(it.pid).replace(/^'/,""));
+const reelPos=it=>reelQueue().indexOf(it)+1;
+function renumber(){reelQueue().forEach((x,i)=>x.reel=i+1)}
+function reelBtn(){const q=reelQueue(),p=q.filter(x=>!reelDone(x)).length,b=$("rlb");if(b)b.textContent="🎬 Reels"+(q.length?` (${p} por hacer)`:"")}
+function reelSummary(){const q=reelQueue(),p=q.filter(x=>!reelDone(x)).length;return `Reels: ${p} por hacer · ${q.length-p} hechos`}
+function toggleReel(it){if(it.reel){it.reel=0;renumber();toast("Quitado de Reels. "+reelSummary(),4000)}else{renumber();it.reel=reelQueue().length+1;toast(`🎬 Reel nº ${it.reel}. `+reelSummary()+". Toca Guardar cambios.",5000)}render();reelBtn()}
+function showReels(){
+  renumber();const q=reelQueue();
+  $("box").innerHTML=`<h2><span>🎬 Reels</span><button id="mx" aria-label="Cerrar">×</button></h2><p style="font-size:13px;color:var(--muted)">${esc(reelSummary())}. El bot hace primero el nº 1. Este orden es solo para los Reels: la web no cambia. Al terminar, toca <b>Guardar cambios</b>.</p>`+
+   (q.length?q.map((x,i)=>`<div class="rq"><span class="n">${i+1}</span><img referrerpolicy="no-referrer" src="${esc(firstImg(x))}_220x220.jpg" alt=""><div class="x"><div>${esc(x.nombre||x.name).slice(0,60)}</div><div class="s${reelDone(x)?" ok":""}">${reelDone(x)?"✓ Hecho":"Por hacer"} · ${x.media.length} ${x.media.length===1?"foto":"fotos"}</div></div><button data-q="up" data-r="${x.row}" aria-label="Subir">↑</button><button data-q="down" data-r="${x.row}" aria-label="Bajar">↓</button><button data-q="del" data-r="${x.row}" aria-label="Quitar">✕</button></div>`).join(""):'<p class="rp">Aún no elegiste relojes. Toca 🎬 debajo de un reloj.</p>');
+  $("mx").onclick=()=>$("md").classList.remove("on");$("md").onclick=e=>{if(e.target.id==="md")$("md").classList.remove("on")};
+  $("box").querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{const it=items.find(x=>x.row==b.dataset.r),q=reelQueue(),i=q.indexOf(it);
+    if(b.dataset.q==="del")it.reel=0;
+    if(b.dataset.q==="up"&&i>0){q.splice(i,1);q.splice(i-1,0,it);q.forEach((x,j)=>x.reel=j+1)}
+    if(b.dataset.q==="down"&&i<q.length-1){q.splice(i,1);q.splice(i+1,0,it);q.forEach((x,j)=>x.reel=j+1)}
+    renumber();render();reelBtn();showReels()});
   $("md").classList.add("on")}
 
 async function loadReports(){try{const r=await call("reports");reps=(Array.isArray(r)?r:[]).slice(1).map((v,i)=>({row:i+2,v})).filter(x=>x.v.some(Boolean));const n=reps.filter(x=>x.v[8]!=="Resuelto").length;const b=$("rpb");if(b)b.textContent="📩 Reportes"+(n?" ("+n+")":"");if(b&&n)b.classList.add("dark")}catch(e){}}

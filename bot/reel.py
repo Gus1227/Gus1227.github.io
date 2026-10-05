@@ -4,7 +4,7 @@
 # The file goes to r/<product id>.mp4 in this repo, so GitHub Pages serves it to Instagram, Facebook and TikTok.
 #   REEL_FILA=<row>  that row;  empty = the next watch Cheche ticked «🎬 Reel» in the editor (once per watch)
 #   REEL=si          also commit and push the file
-import json, os, subprocess, sys, tempfile, urllib.request
+import json, os, re, subprocess, sys, tempfile, urllib.request
 
 sys.path.insert(0, os.path.dirname(__file__))
 from telegram import EXTRA, IMG, NAME, PRICE, PRIO, STATE, TAB, VIDEO, BRAND_M, google_token, num, sheets
@@ -65,7 +65,7 @@ def media(r):
     that order and only those; otherwise the clean photos (no text on them) with the video second."""
     g = lambda i: (r[i] if i < len(r) else "").strip()
     pics = list(dict.fromkeys((g(IMG) + " " + g(EXTRA)).split()))
-    own = [t for t in g(FOTOS_WEB).split() if t != "reel"]
+    own = [t for t in g(FOTOS_WEB).split() if not t.startswith("reel")]
     if any("://" in t for t in own):
         seq = [("video", g(VIDEO)) if t == "video" else ("photo", t) for t in own if t != "video" or g(VIDEO)]
         return seq[:MAX_OWN]
@@ -125,12 +125,15 @@ def main():
         n = int(want)
     else:  # the next watch Cheche ticked «🎬 Reel» in the editor that has no Reel yet
         g = lambda r, i: (r[i] if i < len(r) else "").strip()
-        picked = [n for n, r in enumerate(rows[1:], start=2) if "reel" in g(r, FOTOS_WEB).split()
-                  and g(r, STATE) in ("Publicado", "Pendiente") and g(r, 23).lstrip("'") not in st.get("reels", [])]
+        def pos(r):  # «reel:3» = number 3 in Cheche's Reel queue (editor → 🎬 Reels)
+            m = next((re.match(r"reel(?::(\d+))?$", t) for t in g(r, FOTOS_WEB).split() if t.startswith("reel")), None)
+            return (int(m.group(1)) if m.group(1) else 9999) if m else 0
+        picked = sorted((pos(r), n) for n, r in enumerate(rows[1:], start=2) if pos(r)
+                        and g(r, STATE) in ("Publicado", "Pendiente") and g(r, 23).lstrip("'") not in st.get("reels", []))
         if not picked:
             print("Reel: no hay relojes elegidos para Reel (🎬 en el editor).")
             return
-        n = picked[0]
+        n = picked[0][1]
     r = rows[n - 1]
     pid = (r[23] if len(r) > 23 else "").strip().lstrip("'") or f"fila{n}"
     os.makedirs(os.path.join(ROOT, "r"), exist_ok=True)
