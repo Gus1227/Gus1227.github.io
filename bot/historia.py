@@ -9,7 +9,7 @@ import os, random, subprocess, sys, tempfile
 sys.path.insert(0, os.path.dirname(__file__))
 from reel import H, SANS, SERIF, W, ff, get
 from fotos import limpias
-from telegram import EXTRA, IMG, NAME, PRICE, STATE, TAB, BRAND_M, SALES, google_token, num, sheets
+from telegram import EXTRA, IMG, NAME, PRICE, STATE, TAB, BRAND_M, SALES, google_token, num, sheets, ventas
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
@@ -75,10 +75,10 @@ def main():
                          ("Link in bio", SANS, 36, 1720, gray)],
                      out, [(get(ia, os.path.join(d, "a.jpg")), 290, 590, 420), (get(ib, os.path.join(d, "b.jpg")), 290, 1180, 420)])
             elif kind == "top":
-                best = max(pub, key=lambda r: num(g(r, SALES)))
+                best = max(pub, key=lambda r: ventas(g(r, SALES)))
                 head, spec, price, pic = info(best)
                 card(d, [("MOST LOVED", SANS, 34, 150, gray), (head, SERIF, 62, 220, "white"),
-                         (f"{int(num(g(best, SALES))):,}+ orders · Buyer Protection", SANS, 34, 1420, gray),
+                         (f"{int(ventas(g(best, SALES))):,}+ orders · Buyer Protection", SANS, 34, 1420, gray),
                          (f"Now {price}", SERIF, 76, 1500, "white"), ("Link in bio", SANS, 40, 1640, gray)],
                      out, [(get(pic, os.path.join(d, "a.jpg")), 90, 360, 900)])
             else:

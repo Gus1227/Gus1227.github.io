@@ -14,7 +14,7 @@ SALES, BRAND = 13, 12  # N = Ventas, M = Marca
 
 def sold(v):
     m = re.search(r"\d[\d,]*(\.\d+)?", str(v or ""))
-    return int(float(m.group().replace(",", ""))) if m else 0
+    return int(float(m.group().replace(",", "")) / (100 if str(v or "").strip().endswith("%") else 1)) if m else 0  # «66200%» = 662
 
 
 def when(v):

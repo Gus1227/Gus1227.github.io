@@ -84,6 +84,12 @@ def good_link(r):
 
 
 # ---------- the post (copy of the Make caption) ----------
+def ventas(v):
+    """AliExpress orders from column N. The cell is formatted as a percent, so 662 shows as «66200%»."""
+    v = str(v or "").strip()
+    return num(v) / (100 if v.endswith("%") else 1)
+
+
 def num(s):
     s = re.sub(r"[^0-9.]", "", str(s or "").replace(",", ""))
     try:
@@ -103,7 +109,7 @@ def caption(r):
     if not kind and re.search(r"automatic|mechanical|tourbillon|skeleton", name.lower()):
         kind = "#automatic"
     feats = "".join(f"◦ {html.escape(f)}\n" for f in specs(name))
-    sold = num(raw(SALES))
+    sold = ventas(raw(SALES))
     proof = " · ".join(x for x in (f"{int(sold):,}+ sold" if sold >= 50 else "", g(RATING).strip(" ✅")) if x)
     link = html.escape(good_link(r))
     coupon = f"\nCoupon: <code>{g(COUPON)}</code>" if g(COUPON) else ""

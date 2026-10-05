@@ -8,7 +8,7 @@
 import json, os, re, subprocess, sys, tempfile, urllib.request
 
 sys.path.insert(0, os.path.dirname(__file__))
-from telegram import EXTRA, IMG, NAME, PRICE, PRIO, SALES, STATE, TAB, VIDEO, BRAND_M, google_token, num, sheets
+from telegram import EXTRA, IMG, NAME, PRICE, PRIO, SALES, STATE, TAB, VIDEO, BRAND_M, google_token, num, sheets, ventas
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "estado.json")
@@ -159,7 +159,7 @@ def build(r, out, k=0):
             t += durs[i - 1] - FADE
             chain.append(f"{last}[{i}:v]xfade=transition={FX[i % len(FX)]}:duration={FADE}:offset={t:.2f}[x{i}]")
             last = f"[x{i}]"
-        hook = hook_for(g(NAME), k, num(g(SALES)) / (100 if g(SALES).endswith("%") else 1))  # «66200%» = 662 (cell format)
+        hook = hook_for(g(NAME), k, ventas(g(SALES)))
         chain.append(f"{last}{text_layer(d, head, spec, price, hook)}[v]")
         ins = [a for c in clips for a in ("-i", c)]
         ff(*ins, "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo", "-filter_complex", ";".join(chain),
@@ -183,7 +183,7 @@ def main():
                         and g(r, STATE) in ("Publicado", "Pendiente") and g(r, 23).lstrip("'") not in st.get("reels", []))
         if not picked and os.environ.get("REEL_AUTO", "no").lower() in ("si", "sí", "1"):
             # the daily Reel with no 🎬 left: the best seller (AliExpress orders) that has no Reel yet
-            sold = lambda r: num(g(r, SALES)) / (100 if g(r, SALES).endswith("%") else 1)
+            sold = lambda r: ventas(g(r, SALES))
             picked = sorted((-sold(r), n) for n, r in enumerate(rows[1:], start=2)
                             if g(r, STATE) == "Publicado" and num(g(r, PRICE)) >= 60 and g(r, IMG)
                             and g(r, 23).lstrip("'") not in st.get("reels", []))
