@@ -106,7 +106,7 @@ jobs:
           print(len(items), "items")
           PY
       - name: One page per watch for Google (w/, sitemap.xml)
-        run: python3 bot/paginas.py && python3 bot/catalogo.py
+        run: python3 bot/paginas.py && (python3 bot/catalogo.py || true)
       - name: Save feed.xml
         run: |
           git config user.name "kabuzio-bot"
