@@ -77,6 +77,10 @@ jobs:
             textos) python3 bot/textos.py && python3 bot/telegram.py && REDES=tiktok python3 bot/zernio.py ;;
             textos-si) TEXTOS=si python3 bot/textos.py ;;
             meta) python3 bot/meta.py ;;
+            meta-fb) META=facebook python3 bot/meta.py ;;
+            meta-ig) META=instagram python3 bot/meta.py ;;
+            meta-fb-si) META=facebook PUBLICAR=si python3 bot/meta.py ;;
+            meta-ig-si) META=instagram PUBLICAR=si python3 bot/meta.py ;;
             revisar) python3 bot/revisar.py ;;
             revisar-si) REVISAR=si python3 bot/revisar.py ;;
             ali-*) ALI_HACER="${FILA#ali-}" python3 bot/ali.py ;;

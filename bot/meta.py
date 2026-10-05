@@ -1,19 +1,26 @@
 # Kabuzio bot: Facebook page and Instagram through the Meta Graph API (to replace Make 7725903 and 7728023).
-# META_TOKEN is the never-expiring token of the business system user «kabuzio-bot» (GitHub secret).
-# Step 1 (now): META=check only reads who the token is and which page / Instagram it can use. Tokens are never printed.
-import json, os, urllib.error, urllib.parse, urllib.request
+# META_TOKEN is the never-expiring token of the business system user «kabuzio-bot» (GitHub secret). Tokens are never printed.
+#   META=check      who the token is and which page / Instagram it can use
+#   META=facebook   newest "Publicado" watch not yet on Facebook (U empty): photos post + video, marks U = Sí
+#   META=instagram  newest "Publicado" watch not yet on Instagram (Q empty): carousel (video 2nd), marks Q = Sí
+# Same choice of watch, captions and marks as the Make scenarios. PUBLICAR=si publishes; anything else only prints.
+import json, os, sys, time, urllib.error, urllib.parse, urllib.request
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 GRAPH = "https://graph.facebook.com/v23.0"
+PAGE, IG = "1270319586174146", "17841418825394135"  # Kabuzio Watches, @kabuzio_deal
+PUBLISH = os.environ.get("PUBLICAR", "no").lower() in ("si", "sí", "yes", "true", "1")
+NAME, PRICE, IMG, LINK, STATE, BRAND, IG_DONE, COUPON, FB_DONE, VIDEO, EXTRA, LINK_FB, HEAD, SPECS = \
+    0, 1, 3, 4, 7, 12, 16, 19, 20, 21, 22, 35, 40, 41
 
 
-def graph(path, params=None, post=False):
-    params = dict(params or {}, access_token=os.environ["META_TOKEN"])
+def graph(path, params=None, post=False, token=None):
+    params = dict(params or {}, access_token=token or os.environ["META_TOKEN"])
     data = urllib.parse.urlencode(params).encode()
-    req = urllib.request.Request(GRAPH + path, data if post else None, method="POST" if post else "GET")
-    if not post:
-        req = urllib.request.Request(GRAPH + path + "?" + data.decode())
+    req = urllib.request.Request(GRAPH + path, data, method="POST") if post else \
+        urllib.request.Request(GRAPH + path + "?" + data.decode())
     try:
-        return json.load(urllib.request.urlopen(req, timeout=120))
+        return json.load(urllib.request.urlopen(req, timeout=180))
     except urllib.error.HTTPError as e:
         raise SystemExit(f"Meta {path}: {e.code} {e.read()[:500]!r}")
 
@@ -31,5 +38,133 @@ def check():
         print("No veo ninguna página: revisa que el usuario del sistema tenga la página asignada.")
 
 
+# ---------- the watch ----------
+def pick(done_col):
+    from telegram import TAB, google_token, sheets
+    tok = google_token()
+    rows = sheets(tok, f"values/{TAB}!A1:CZ?valueRenderOption=FORMATTED_VALUE").get("values", [])
+    g = lambda r, i: (r[i] if i < len(r) else "").strip()
+    want = os.environ.get("FILA_PUB", "").strip()  # "Publicar ahora" from the panel: this exact row
+    cands = [(int(want), rows[int(want) - 1])] if want else \
+        [(n, r) for n, r in enumerate(rows[1:], start=2) if g(r, STATE) == "Publicado" and not g(r, done_col)]
+    if not cands:
+        return tok, None, None, g
+    n, r = cands[-1]  # Make: sortOrder desc, the lowest one in the sheet
+    return tok, n, r, g
+
+
+def media(r, g):
+    pics = []
+    for u in (g(r, IMG) + " " + g(r, EXTRA)).split():
+        if u not in pics:
+            pics.append(u)
+    return [u + "_800x800.jpg" for u in pics[:10]], g(r, VIDEO)
+
+
+def headline(r, g):
+    from textos import headline as h, specs
+    return g(r, HEAD) or h(g(r, NAME), g(r, BRAND)) or g(r, NAME), g(r, SPECS) or " · ".join(specs(g(r, NAME)))
+
+
+def mark(tok, n, col, value):
+    from telegram import TAB, sheets
+    letter = chr(65 + col)
+    sheets(tok, "values:batchUpdate", {"valueInputOption": "USER_ENTERED",
+                                       "data": [{"range": f"{TAB}!{letter}{n}", "values": [[value]]}]}, method="POST")
+
+
+# ---------- Facebook ----------
+def facebook():
+    from telegram import item_of
+    tok, n, r, g = pick(FB_DONE)
+    if not n:
+        print("Facebook: no hay relojes nuevos.")
+        return
+    pics, video = media(r, g)
+    head, feats = headline(r, g)
+    link = g(r, LINK)
+    if g(r, LINK_FB) and item_of(g(r, LINK_FB)) == item_of(link):  # its own Facebook link only if it opens the same watch
+        link = g(r, LINK_FB)
+    coupon = f"\nCoupon: {g(r, COUPON)}" if g(r, COUPON) else ""
+    text = (f"{head}\n{feats}\n\n💰 Now {g(r, PRICE)} · Buyer Protection · Worldwide shipping\n"
+            f"👉 View the piece: {link}{coupon}\n"
+            f"More hand-picked pieces every day on Telegram: https://t.me/KabuzioDeal\n"
+            f"Full collection: https://gus1227.github.io\n\n#watchdeals #watches #quietluxury #Kabuzio")
+    print(f"Facebook fila {n}: {g(r, NAME)}\nfotos: {len(pics)}, video: {'sí' if video else 'no'}\n---\n{text}\n---")
+    if not PUBLISH:
+        print("Modo prueba: no se publica nada.")
+        return
+    page_tok = graph(f"/{PAGE}", {"fields": "access_token"})["access_token"]
+    ids = [graph(f"/{PAGE}/photos", {"url": u, "published": "false"}, post=True, token=page_tok)["id"] for u in pics]
+    params = {"message": text}
+    for i, pid in enumerate(ids):
+        params[f"attached_media[{i}]"] = json.dumps({"media_fbid": pid})
+    post = graph(f"/{PAGE}/feed", params, post=True, token=page_tok)
+    print("Facebook post:", post.get("id"))
+    mark(tok, n, FB_DONE, "Sí")
+    if video:
+        try:
+            v = graph(f"/{PAGE}/videos", {"file_url": video, "description": text}, post=True, token=page_tok)
+            print("Facebook video:", v.get("id"))
+        except SystemExit as e:  # Make ignores video errors too
+            print("Video falló:", e)
+
+
+# ---------- Instagram ----------
+def wait_ready(cid):
+    for _ in range(40):  # videos need a while on Meta's side
+        st = graph(f"/{cid}", {"fields": "status_code"}).get("status_code")
+        if st == "FINISHED":
+            return True
+        if st in ("ERROR", "EXPIRED"):
+            return False
+        time.sleep(10)
+    return False
+
+
+def instagram():
+    tok, n, r, g = pick(IG_DONE)
+    if not n:
+        print("Instagram: no hay relojes nuevos.")
+        return
+    pics, video = media(r, g)
+    head, feats = headline(r, g)
+    brand = g(r, BRAND).lstrip("#").lower()
+    caption = (f"{head}\n{feats}\n\n💰 Now {g(r, PRICE)}\n\n"
+               f"👆 Tap the link in our bio to get it · new watches every day\nAd · affiliate link\n.\n"
+               f"#watchesofinstagram #watchdeals #quietluxury {('#' + brand) if brand else ''} #kabuzio")
+    items = [("IMAGE", u) for u in pics[:1]] + ([("VIDEO", video)] if video else []) + [("IMAGE", u) for u in pics[1:]]
+    items = items[:10]
+    print(f"Instagram fila {n}: {g(r, NAME)}\npiezas: {len(items)} (video: {'sí' if video else 'no'})\n---\n{caption}\n---")
+    if not PUBLISH:
+        print("Modo prueba: no se publica nada.")
+        return
+    try:
+        if len(items) >= 2:
+            kids = []
+            for kind, url in items:
+                p = {"is_carousel_item": "true", **({"media_type": "VIDEO", "video_url": url} if kind == "VIDEO" else {"image_url": url})}
+                try:
+                    cid = graph(f"/{IG}/media", p, post=True)["id"]
+                except SystemExit as e:
+                    print("Pieza descartada:", e)
+                    continue
+                if kind == "VIDEO" and not wait_ready(cid):
+                    print("El video no quedó listo: va sin video")
+                    continue
+                kids.append(cid)
+            box = graph(f"/{IG}/media", {"media_type": "CAROUSEL", "children": ",".join(kids), "caption": caption}, post=True)["id"]
+        else:
+            box = graph(f"/{IG}/media", {"image_url": pics[0], "caption": caption}, post=True)["id"]
+        wait_ready(box)
+        res = graph(f"/{IG}/media_publish", {"creation_id": box}, post=True)
+    except SystemExit as e:  # Make marks the row «Revisar» when Instagram refuses it, and moves on
+        print("Instagram falló:", e)
+        mark(tok, n, IG_DONE, "Revisar")
+        return
+    print("Instagram post:", res.get("id"))
+    mark(tok, n, IG_DONE, "Sí")
+
+
 if __name__ == "__main__":
-    {"check": check}[os.environ.get("META", "check")]()
+    {"check": check, "facebook": facebook, "instagram": instagram}[os.environ.get("META", "check")]()
