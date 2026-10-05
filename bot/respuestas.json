@@ -1,0 +1,204 @@
+{
+ "_info": "Kabuzio: respuestas automáticas (agentes 7 y 11). Gus busca las palabras clave (minúsculas) en el comentario o mensaje y elige una de las respuestas al azar. {link} = link del reloj del post si se conoce, si no el Linktree. En comentarios de Instagram/TikTok nunca se pone link: se dice 'link in bio'.",
+ "linktree": "https://linktr.ee/Kabuzio_Deal",
+ "web": "https://gus1227.github.io",
+ "reglas": [
+  {
+   "id": "precio",
+   "claves": [
+    "price",
+    "how much",
+    "cost",
+    "precio",
+    "cuanto",
+    "cuánto"
+   ],
+   "comentario": [
+    "It's $PRICE right now, with buyer protection and worldwide shipping. The link is in our bio 👆",
+    "Currently $PRICE. You'll find it through the link in our bio 👆"
+   ],
+   "mensaje": [
+    "Thanks for asking! It's $PRICE at the moment, with buyer protection and worldwide shipping. Here it is: {link}"
+   ]
+  },
+  {
+   "id": "link",
+   "claves": [
+    "link",
+    "where",
+    "buy",
+    "get it",
+    "how to order",
+    "donde",
+    "dónde",
+    "comprar"
+   ],
+   "comentario": [
+    "Tap the link in our bio 👆 it's right there, with every watch we feature.",
+    "It's in the link in our bio 👆 Enjoy!"
+   ],
+   "mensaje": [
+    "Here you go: {link}\nIt ships worldwide and is covered by AliExpress buyer protection. Any question, just ask."
+   ]
+  },
+  {
+   "id": "marca",
+   "claves": [
+    "brand",
+    "what watch",
+    "which watch",
+    "model",
+    "name",
+    "marca"
+   ],
+   "comentario": [
+    "It's the BRAND we featured in this post. Full details through the link in our bio 👆"
+   ],
+   "mensaje": [
+    "It's the BRAND. All the details and real customer photos are here: {link}"
+   ]
+  },
+  {
+   "id": "envio",
+   "claves": [
+    "ship",
+    "shipping",
+    "deliver",
+    "delivery",
+    "country",
+    "envio",
+    "envío"
+   ],
+   "comentario": [
+    "It ships worldwide 🌍 Shipping time depends on your country; you'll see it before ordering."
+   ],
+   "mensaje": [
+    "It ships worldwide. You'll see the exact delivery time for your country on the page before you order, and AliExpress buyer protection covers you until it arrives: {link}"
+   ]
+  },
+  {
+   "id": "real",
+   "claves": [
+    "fake",
+    "replica",
+    "real?",
+    "legit",
+    "scam",
+    "original",
+    "falso",
+    "réplica"
+   ],
+   "comentario": [
+    "We only feature watches from independent brands, never copies of famous ones. Each one has real orders, real reviews and buyer protection.",
+    "No replicas here. Independent brands, real customer reviews and AliExpress buyer protection on every order."
+   ],
+   "mensaje": [
+    "Good question. We only share independent brands, never copies of famous watches. Every piece has thousands of real orders and reviews, and AliExpress buyer protection gives you a refund if it doesn't arrive or isn't as described: {link}"
+   ]
+  },
+  {
+   "id": "specs",
+   "claves": [
+    "sapphire",
+    "automatic",
+    "mechanical",
+    "quartz",
+    "movement",
+    "water",
+    "waterproof",
+    "size",
+    "mm",
+    "steel"
+   ],
+   "comentario": [
+    "All the specs are listed on the product page, linked in our bio 👆 We only mention what the maker actually lists."
+   ],
+   "mensaje": [
+    "Here are the full specs from the maker, including size, movement and water resistance: {link}\nIf you tell me your wrist size or the style you like, I can suggest a few more."
+   ]
+  },
+  {
+   "id": "elogio",
+   "claves": [
+    "beautiful",
+    "nice",
+    "love",
+    "gorgeous",
+    "clean",
+    "stunning",
+    "😍",
+    "🔥",
+    "❤",
+    "want",
+    "need"
+   ],
+   "comentario": [
+    "Thank you! A clean dial never gets old ⌚",
+    "Glad you like it. More pieces like this every day 👆",
+    "Appreciate it! This one is a quiet favourite of ours."
+   ],
+   "mensaje": [
+    "Thank you! If you like this style, here are more pieces we picked: {link}"
+   ]
+  },
+  {
+   "id": "recomendar",
+   "claves": [
+    "recommend",
+    "suggest",
+    "gift",
+    "present",
+    "budget",
+    "looking for",
+    "regalo"
+   ],
+   "comentario": [
+    "Happy to help! Send us a DM with the style you like and we'll suggest a few."
+   ],
+   "mensaje": [
+    "Happy to help! Two quick questions so I pick the right ones:\n1. Which style: dress, diver, chronograph or field?\n2. Roughly what price range?\nMeanwhile, here's our full selection: {web}"
+   ]
+  },
+  {
+   "id": "queja",
+   "claves": [
+    "broken",
+    "didn't arrive",
+    "not arrived",
+    "refund",
+    "problem",
+    "bad",
+    "roto",
+    "no llegó"
+   ],
+   "comentario": [
+    "Sorry to hear that. Please send us a DM and we'll help you sort it out."
+   ],
+   "mensaje": [
+    "Sorry to hear that. Orders go through AliExpress, so the fastest fix is: My Orders → the order → Open Dispute. Buyer protection gives you a refund if it didn't arrive or isn't as described. If you get stuck, tell me and I'll guide you. (I'll also let the team know.)"
+   ],
+   "avisar": true
+  }
+ ],
+ "por_defecto": {
+  "comentario": [
+   "Thanks for stopping by! New watches every day 👆"
+  ],
+  "mensaje": [
+   "Hi! Thanks for writing. All our watches are here: {web}\nTell me the style you like and I'll suggest a few."
+  ]
+ },
+ "bienvenida_dm": "Welcome to Kabuzio ⌚ Every day we pick independent watches with real reviews and buyer protection. What style do you like: dress, diver, chronograph or field?",
+ "no_responder": [
+  "follow back",
+  "f4f",
+  "promo",
+  "collab",
+  "dm us",
+  "check my",
+  "earn",
+  "crypto",
+  "investment"
+ ],
+ "dm_tras_comentario": "Hi! Thanks for your comment on our post ⌚ Here's the watch: {link}\nIt ships worldwide with AliExpress buyer protection. Want me to suggest similar pieces?"
+}

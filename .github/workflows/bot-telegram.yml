@@ -83,6 +83,8 @@ jobs:
             meta-ig) META=instagram python3 bot/meta.py ;;
             meta-fb-si) META=facebook PUBLICAR=si python3 bot/meta.py ;;
             meta-ig-si) META=instagram PUBLICAR=si python3 bot/meta.py ;;
+            respuestas) python3 bot/respuestas.py ;;
+            respuestas-si) RESPONDER=si python3 bot/respuestas.py ;;
             carrusel) python3 bot/carrusel.py ;;
             carrusel-si) CARRUSEL_SI=si python3 bot/carrusel.py ;;
             historias) python3 bot/historia.py ;;
