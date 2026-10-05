@@ -82,6 +82,9 @@ jobs:
             meta-ig) META=instagram python3 bot/meta.py ;;
             meta-fb-si) META=facebook PUBLICAR=si python3 bot/meta.py ;;
             meta-ig-si) META=instagram PUBLICAR=si python3 bot/meta.py ;;
+            reel) python3 bot/reel.py ;;
+            reel-si) REEL=si python3 bot/reel.py ;;
+            reel-[0-9]*) REEL=si REEL_FILA="${FILA#reel-}" python3 bot/reel.py ;;
             rendimiento) python3 bot/rendimiento.py ;;
             rendimiento-si) RENDIMIENTO=si python3 bot/rendimiento.py ;;
             revisar) python3 bot/revisar.py ;;
