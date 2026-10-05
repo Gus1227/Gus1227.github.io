@@ -62,6 +62,7 @@ def limpias(urls, brand=""):
         return urls
     clean = [u for u in urls if words(u, brand) < TEXTY]
     save()
+    print(f"fotos limpias: {len(clean)} de {len(urls)}" + ("" if shutil.which("tesseract") else " (sin OCR)"))
     return clean or urls[:1]
 
 
