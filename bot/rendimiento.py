@@ -80,7 +80,8 @@ def main():
     for n, r in enumerate(rows[1:], start=2):
         if g(r, STATE) != "Pendiente":
             continue
-        title = re.sub(r"(seiko|citizen|miyota)\s*(japan\s*)?([a-z]{0,2}\d+\w*\s*)?(automatic\s*|quartz\s*|mechanical\s*|chronograph\s*)?(movement|movt|mechanism|caliber)", "", g(r, NAME).lower())
+        title = re.sub(r"(seiko|citizen|miyota)[^,;|]{0,25}?(movement|movt|mechanism|caliber|calibre)|(seiko|miyota|citizen)\s*(japan\s*)?(nh|vh|vk|pt)\d+\w*",
+                       "", g(r, NAME).lower())  # a Seiko/Miyota MOVEMENT is a real part, not a fake brand
         if FAMOUS.search(title):
             fake.append(n)
             continue
@@ -101,7 +102,7 @@ def main():
         n = again[0][1]
         cells += [(f"H{n}", "Pendiente"), (f"AM{n}", str(AUTO - 1))] + [(f"{c}{n}", "") for c in "QRU"]
         print(f"Repetir: fila {n} ({again[0][0]} ventas) vuelve a la cola, primera.")
-    print("Posibles réplicas (marca famosa en el título):", ", ".join(f"fila {n}: {g(rows[n - 1], NAME)[:50]}" for n in fake) or "ninguna")
+    print("Posibles réplicas (marca famosa en el título):", ", ".join(f"fila {n}: {g(rows[n - 1], NAME)[:120]}" for n in fake) or "ninguna")
     print(f"\nCola: {len(pend)} relojes Pendiente ordenados; {len(cells)} cambios. Primeros:",
           ", ".join(f"fila {n} ({s:.1f})" for s, n, _ in pend[:8]))
     if not WRITE:
