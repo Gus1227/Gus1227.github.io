@@ -140,6 +140,8 @@ def main():
     out = os.path.join(ROOT, "r", f"{pid}.mp4")
     build(r, out)
     print("URL: https://gus1227.github.io/r/" + pid + ".mp4")
+    last = os.path.join(ROOT, "r", "ultimo.json")  # what reel_publicar.py and the Instagram step post: the newest Reel
+    json.dump({"fila": n, "pid": pid, "url": f"https://gus1227.github.io/r/{pid}.mp4"}, open(last, "w"))
     if os.environ.get("REEL", "no").lower() in ("si", "sí", "1"):
         run = lambda *a: subprocess.run(["git", *a], cwd=ROOT)
         keep = sorted((os.path.join(ROOT, "r", f) for f in os.listdir(os.path.join(ROOT, "r"))), key=os.path.getmtime)
@@ -151,8 +153,6 @@ def main():
         st = json.load(open(STATE_FILE)) if os.path.exists(STATE_FILE) else {}
         st["reels"] = (st.get("reels", []) + [pid])[-500:]  # this watch has its Reel now
         json.dump(st, open(STATE_FILE, "w"), indent=1)
-        last = os.path.join(ROOT, "r", "ultimo.json")  # what the Instagram step posts: the newest Reel
-        json.dump({"fila": n, "pid": pid, "url": f"https://gus1227.github.io/r/{pid}.mp4"}, open(last, "w"))
         run("add", out, STATE_FILE, last)
         run("commit", "-qm", f"bot: reel fila {n}")
         run("push", "-q", "origin", "HEAD:main")
