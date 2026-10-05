@@ -81,6 +81,8 @@ jobs:
             meta-ig) META=instagram python3 bot/meta.py ;;
             meta-fb-si) META=facebook PUBLICAR=si python3 bot/meta.py ;;
             meta-ig-si) META=instagram PUBLICAR=si python3 bot/meta.py ;;
+            rendimiento) python3 bot/rendimiento.py ;;
+            rendimiento-si) RENDIMIENTO=si python3 bot/rendimiento.py ;;
             revisar) python3 bot/revisar.py ;;
             revisar-si) REVISAR=si python3 bot/revisar.py ;;
             ali-*) ALI_HACER="${FILA#ali-}" python3 bot/ali.py ;;
