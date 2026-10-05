@@ -89,14 +89,14 @@ def text_layer(d, head, spec, price, hook=("", "")):
         ":shadowcolor=black@0.8:shadowx=2:shadowy=2" + (f":enable='gte(t,{end})'" if end else ""))  # after the hook
 
     def card(name, text, t0, t1, dim):
-        """Two centered lines of the same size, alone on the dimmed photo, soft fade in and out."""
+        """Two centered lines of the same size in the black band above the photo (the watch stays clean), soft fade."""
         lines = text.split("\n")
         fs = min(68, int(960 / (0.62 * max(map(len, lines)))))  # always fits the width
-        lh, mid = int(fs * 1.45), (H - 1000) // 2 - 60 + 500  # line height; middle of the photo
+        lh, mid = int(fs * 1.45), ((H - 1000) // 2 - 60) // 2 + 10  # line height; middle of the band above the photo
         top = mid - lh * len(lines) // 2
         on = f"between(t,{t0},{t1})"
         fade = f"if(lt(t,{t0 + 0.25}),(t-{t0})/0.25,if(gt(t,{t1 - 0.3}),({t1}-t)/0.3,1))"
-        out = [f"drawbox=x=0:y=0:w=iw:h=ih:color=black@{dim}:t=fill:enable='{on}'"]
+        out = []
         for i, line in enumerate(lines):
             f = os.path.join(d, f"{name}{i}.txt")
             open(f, "w").write(line)
