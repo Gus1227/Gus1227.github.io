@@ -58,7 +58,8 @@ def media(r, g):
     for u in (g(r, IMG) + " " + g(r, EXTRA)).split():
         if u not in pics:
             pics.append(u)
-    return [u + "_800x800.jpg" for u in pics[:10]], g(r, VIDEO)
+    from fotos import limpias  # only clean photos, no infographics with text
+    return [u + "_800x800.jpg" for u in limpias(pics, g(r, BRAND))[:10]], g(r, VIDEO)
 
 
 def headline(r, g):
