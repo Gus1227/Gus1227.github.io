@@ -31,6 +31,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           pip install cryptography
+          sudo apt-get install -y -q tesseract-ocr || (sudo apt-get update -q && sudo apt-get install -y -q tesseract-ocr) || true
           git config user.name "kabuzio-bot"
           git config user.email "kabuzio-bot@users.noreply.github.com"
       - name: Publicar el siguiente reloj

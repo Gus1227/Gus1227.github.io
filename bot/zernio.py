@@ -43,10 +43,11 @@ def tiktok():
     for u in (g(r, IMG) + " " + g(r, EXTRA)).split():
         if u not in pics:
             pics.append(u)
-    pics = pics[:10]
+    from fotos import limpias  # only clean photos, no infographics with text
+    pics = limpias(pics, g(r, BRAND))[:10]
     from textos import headline, kind, specs, tag
     head, feats = headline(g(r, NAME), g(r, BRAND)), specs(g(r, NAME), 3)
-    tags = " ".join(t for t in ("#ad #watches #watchtok #quietluxury", tag(g(r, BRAND)), tag(kind(g(r, NAME))) or "",
+    tags = " ".join(t for t in ("#ad #watches #watchtok #quietluxury", tag(g(r, BRAND)), (tag(kind(g(r, NAME))) if kind(g(r, NAME)) != "Diver" else "") or "",
                                 "#automaticwatch" if "Automatic" in head else "", "#kabuzio") if t)
     desc = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(r, PRICE)}\n\n"
             f"👆 Tap the link in our bio to get it · new watches every day\n\n{tags}")

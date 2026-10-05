@@ -61,7 +61,8 @@ def text_layer(d, head, spec, price):
 def build(r, out):
     from textos import headline, specs
     g = lambda i: (r[i] if i < len(r) else "").strip()
-    pics = list(dict.fromkeys((g(IMG) + " " + g(EXTRA)).split()))[:MAX_PHOTOS]
+    from fotos import limpias  # only clean photos, no infographics with text
+    pics = limpias(list(dict.fromkeys((g(IMG) + " " + g(EXTRA)).split())), g(BRAND_M))[:MAX_PHOTOS]
     head = headline(g(NAME), g(BRAND_M))[:34]
     spec = ""
     for f in specs(g(NAME), 3):  # whole specs only, never cut in the middle

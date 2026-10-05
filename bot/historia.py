@@ -8,7 +8,8 @@ import os, random, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.dirname(__file__))
 from reel import H, SANS, SERIF, W, ff, get
-from telegram import IMG, NAME, PRICE, STATE, TAB, BRAND_M, SALES, google_token, num, sheets
+from fotos import limpias
+from telegram import EXTRA, IMG, NAME, PRICE, STATE, TAB, BRAND_M, SALES, google_token, num, sheets
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
@@ -40,7 +41,8 @@ def info(r):
     g = lambda i: (r[i] if i < len(r) else "").strip()
     head = headline(g(NAME), g(BRAND_M))[:34]
     return head, " · ".join(specs(g(NAME), 2)), f"${num(g(PRICE)):.2f}", \
-        (lambda u: u if u.endswith(".jpg") else u + "_800x800.jpg")(g(IMG).split()[0])
+        (lambda u: u if u.endswith(".jpg") else u + "_800x800.jpg")(
+        limpias(list(dict.fromkeys((g(IMG) + " " + g(EXTRA)).split())), g(BRAND_M))[0])
 
 
 def main():

@@ -99,7 +99,7 @@ def caption(r):
     g = lambda i: html.escape(raw(i), quote=False)
     p, name = num(g(PRICE)), raw(NAME)
     band = "#under50" if p < 50 else "#50to100" if p < 100 else "#over100"
-    kind = {"Diver": "#diver", "Chronograph": "#chronograph"}.get(kind_of(name), "")
+    kind = {"Chronograph": "#chronograph"}.get(kind_of(name), "")
     if not kind and re.search(r"automatic|mechanical|tourbillon|skeleton", name.lower()):
         kind = "#automatic"
     feats = "".join(f"◦ {html.escape(f)}\n" for f in specs(name))
@@ -120,7 +120,8 @@ def photos(r):
     for u in (g(IMG) + " " + g(EXTRA)).split():
         if u not in out:
             out.append(u)
-    return out[:10]
+    from fotos import limpias  # only clean photos, no infographics with text
+    return limpias(out, g(BRAND_M))[:10]
 
 
 def quiet():

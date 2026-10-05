@@ -64,6 +64,8 @@ def headline(title, brand):
     t = (title or "").lower()
     auto = "Automatic" if re.search(r"automatic|mechanical|self.?wind|nh3[45]|pt5000", t) else ""
     k = kind(title)
+    if k == "Diver":  # Cheche (2026-10-05): we never sell them as diving watches
+        k = ""
     parts = [nice_brand(brand), auto if k not in ("Tourbillon",) else "", k or "Watch"]
     out = " ".join(p for p in parts if p)
     return out if out != "Watch" else "Kabuzio Pick"

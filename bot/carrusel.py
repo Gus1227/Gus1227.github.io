@@ -12,12 +12,12 @@ from telegram import IMG, NAME, PRICE, STATE, TAB, BRAND_M, SALES, google_token,
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 SIZE = (1080, 1350)
 SITE = "https://gus1227.github.io/c/"
-THEMES = [  # (key, regex on the title, cover title, cover subtitle, hashtags)
-    ("diver", r"\bdiv(e|er|ers|ing)\b|200m|300m|20bar|30bar", "The Diver Edit", "Built for depth, worn every day", "#diverwatch #divewatch"),
-    ("automatic", r"automatic|mechanical|nh3[458]|pt5000|sw200|miyota", "Automatic Picks", "Powered by your wrist", "#automaticwatch #mechanicalwatch"),
-    ("chrono", r"chronograph|vk6[34]", "Chronographs", "Precision you can see", "#chronograph"),
-    ("sapphire", r"sapphire.*316\s?l|316\s?l.*sapphire", "Sapphire & 316L", "The materials that matter", "#sapphirecrystal #316l"),
-    ("field", r"pilot|aviat|flieger|field", "Pilot & Field", "Clean dials, honest tools", "#fieldwatch #pilotwatch"),
+THEMES = [  # (key, regex on the title, cover title, cover subtitle, hashtags) — collector language, no diving claims
+    ("coveted", r"\bdiv(e|er|ers|ing)\b|200m|300m|20bar|30bar", "The Most Coveted", "The pieces everyone is asking about", "#watchcollector #wristcheck"),
+    ("automatic", r"automatic|mechanical|nh3[458]|pt5000|sw200|miyota", "Collector's Picks", "Mechanical character for every day", "#automaticwatch #watchcollector"),
+    ("chrono", r"chronograph|vk6[34]", "Worth a Second Look", "Details that reward attention", "#chronograph #wristcheck"),
+    ("sapphire", r"sapphire.*316\s?l|316\s?l.*sapphire", "The Essentials", "Sapphire, steel and nothing extra", "#sapphirecrystal #watchcollector"),
+    ("classic", r"pilot|aviat|flieger|field|dress", "Quiet Classics", "Clean dials that never date", "#classicwatch #quietluxury"),
 ]
 STATE_FILE = os.path.join(os.path.dirname(__file__), "estado.json")
 
@@ -28,7 +28,9 @@ def main():
     pub = [r for r in rows[1:] if g(r, STATE) == "Publicado" and g(r, IMG) and num(g(r, PRICE)) >= 60]
     st = json.load(open(STATE_FILE)) if os.path.exists(STATE_FILE) else {}
     want = os.environ.get("CARRUSEL", "").strip()
-    order = [t for t in THEMES if t[0] == want] or THEMES[[t[0] for t in THEMES].index(st.get("carrusel", THEMES[-1][0])) + 1:] + THEMES
+    keys = [t[0] for t in THEMES]
+    last = keys.index(st["carrusel"]) if st.get("carrusel") in keys else -1
+    order = [t for t in THEMES if t[0] == want] or THEMES[last + 1:] + THEMES
     for key, rx, title, sub, tags in order:
         pool = [r for r in pub if re.search(rx, g(r, NAME).lower())]
         # Cheche's rule (2026-10-03): a multi-watch post is ONE brand; other brands only fill the gaps
