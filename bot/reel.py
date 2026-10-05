@@ -7,7 +7,7 @@
 import json, os, re, subprocess, sys, tempfile, urllib.request
 
 sys.path.insert(0, os.path.dirname(__file__))
-from telegram import EXTRA, IMG, NAME, PRICE, PRIO, STATE, TAB, VIDEO, BRAND_M, google_token, num, sheets
+from telegram import EXTRA, IMG, NAME, PRICE, PRIO, SALES, STATE, TAB, VIDEO, BRAND_M, google_token, num, sheets
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "estado.json")
@@ -38,10 +38,13 @@ HOOKS = [(r"moon.?phase|\bmoon\b", "Nobody talks about\nthis detail.", "A moonph
 HOOK_S, ANSWER_S = 2.0, 4.6  # hook until 2.0 s, its answer until 4.6 s, then name and price
 
 
-def hook_for(name, k):
+def hook_for(name, k, sales=0):
     """(hook, answer) number k among the pairs that fit this watch (k = how many Reels were made before)."""
     t = " " + name.lower() + " "
-    ok = [(h, a) for need, h, a in HOOKS if need and re.search(need, t)] or [(h, a) for need, h, a in HOOKS if not need]
+    ok = [(h, a) for need, h, a in HOOKS if need and re.search(need, t)]
+    if sales >= 1000:  # value without talking about price: how many people already bought it
+        ok.append(("You didn't know\nabout this one.", f"{int(sales):,}+ people\nalready wear it."))
+    ok = ok or [(h, a) for need, h, a in HOOKS if not need]
     return ok[k % len(ok)]
 
 
@@ -155,7 +158,7 @@ def build(r, out, k=0):
             t += durs[i - 1] - FADE
             chain.append(f"{last}[{i}:v]xfade=transition={FX[i % len(FX)]}:duration={FADE}:offset={t:.2f}[x{i}]")
             last = f"[x{i}]"
-        hook = hook_for(g(NAME), k)
+        hook = hook_for(g(NAME), k, num(g(SALES)))
         chain.append(f"{last}{text_layer(d, head, spec, price, hook)}[v]")
         ins = [a for c in clips for a in ("-i", c)]
         ff(*ins, "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo", "-filter_complex", ";".join(chain),
