@@ -42,12 +42,13 @@ def main():
     g = lambda r, i: (r[i] if i < len(r) else "").strip()
 
     by_pid = {g(r, PID).lstrip("'"): (n, r) for n, r in enumerate(rows[1:], start=2) if g(r, PID)}
-    net, brand, bands, watch, other = Counter(), Counter(), Counter(), Counter(), Counter()
+    net, brand, bands, watch, other, country = Counter(), Counter(), Counter(), Counter(), Counter(), Counter()
     money = defaultdict(float)
     for s in sales:
         pid, tid = g(s, col.get("product_id", 9)), g(s, col.get("tracking_id", 5))
         com = num(g(s, col.get("estimated_paid_commission", 7)))
         net[NETS.get(tid, tid or "?")] += 1
+        country[g(s, col.get("ship_to_country", 11)) or "?"] += 1
         money[NETS.get(tid, tid or "?")] += com
         if pid in by_pid:
             r = by_pid[pid][1]
@@ -61,6 +62,7 @@ def main():
     table = [["Kabuzio · Rendimiento (últimos pedidos de AliExpress)", "", ""], ["Pedidos en total", len(sales), ""], [],
              ["Por red", "Pedidos", "Comisión $"]]
     table += [[k, v, round(money[k], 2)] for k, v in net.most_common()]
+    table += [[], ["Por país", "Pedidos", ""]] + [[k, v, ""] for k, v in country.most_common(15)]
     table += [[], ["Por marca (relojes de la hoja)", "Pedidos", ""]] + [[k, v, ""] for k, v in brand.most_common(15)]
     table += [[], ["Por precio", "Pedidos", ""]] + [[k, v, ""] for k, v in bands.most_common()]
     table += [[], ["Relojes más vendidos", "Pedidos", "Fila"]]
