@@ -57,6 +57,7 @@ def turn(slot):
         run("telegram.py")
     run("revisar.py", REVISAR="si")
     run("marcas.py", MARCAS="si")  # new rows take the first word of the title as brand: tidy it before posting
+    run("textos.py", TEXTOS="si")  # headline + specs (AN, AO) that Make uses for Instagram and Facebook
     if slot.hour % 6:  # 8 pins a day (no pin at 00, 06, 12, 18 UTC)
         if run("zernio.py", REDES="pinterest", PIN=str(st["pin"])):
             st["pin"] += 1

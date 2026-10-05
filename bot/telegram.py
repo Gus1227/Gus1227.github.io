@@ -12,6 +12,7 @@ PUBLISH = os.environ.get("PUBLICAR", "no").lower() in ("si", "sí", "yes", "true
 # column indexes (A = 0)
 NAME, PRICE, OLD, IMG, LINK, TITLE, TAGS, STATE, DATE, RATING = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 TG_ID, COUPON, VIDEO, EXTRA, LINK_TG, PRIO = 18, 19, 21, 22, 32, 38
+BRAND_M, SALES = 12, 13
 
 
 # ---------- Google Sheets (service account, no extra libraries but cryptography) ----------
@@ -92,26 +93,25 @@ def num(s):
 
 
 def caption(r):
-    g = lambda i: html.escape((r[i] if i < len(r) else "").strip(), quote=False)
-    p, old, name = num(g(PRICE)), num(g(OLD)), g(NAME)
-    low = name.lower()
+    """Quiet-luxury post: what the watch is, the features its title really lists, price, proof, link."""
+    from textos import headline, kind as kind_of, specs
+    raw = lambda i: (r[i] if i < len(r) else "").strip()
+    g = lambda i: html.escape(raw(i), quote=False)
+    p, name = num(g(PRICE)), raw(NAME)
     band = "#under50" if p < 50 else "#50to100" if p < 100 else "#over100"
-    kind = ""
-    for words, tag in ((("chronograph",), "#chronograph"), (("dive",), "#diver"), (("smart",), "#smartwatch"),
-                       (("automatic", "mechanical", "tourbillon", "skeleton"), "#automatic"), (("quartz",), "#quartz")):
-        if any(w in low for w in words):
-            kind = tag
-            break
-    off = ""
-    if old > p:
-        off = " #70off" if p <= old * 0.3 else " #50off" if p <= old * 0.5 else ""
-    save = f" 🔻-{round((old - p) / old * 100)}%" if old > p else ""
+    kind = {"Diver": "#diver", "Chronograph": "#chronograph"}.get(kind_of(name), "")
+    if not kind and re.search(r"automatic|mechanical|tourbillon|skeleton", name.lower()):
+        kind = "#automatic"
+    feats = "".join(f"◦ {html.escape(f)}\n" for f in specs(name))
+    sold = num(raw(SALES))
+    proof = " · ".join(x for x in (f"{int(sold):,}+ sold" if sold >= 50 else "", g(RATING).strip(" ✅")) if x)
     link = html.escape(good_link(r))
-    coupon = f"🎟 Coupon: {g(COUPON)}" if g(COUPON) else ""
+    coupon = f"\nCoupon: <code>{g(COUPON)}</code>" if g(COUPON) else ""
     tags = re.sub(r"\s*#\s*$", "", g(TAGS))  # "#Watches #" when the watch has no brand
-    return (f"<b>{g(TITLE)}</b>\n\n{tags} {band} {kind}{off}\n📦 {name}\n"
-            f"💰 Now: <b>{g(PRICE)}</b> (was <s>{g(OLD)}</s>){save}\n✅{g(RATING)}\n"
-            f"👉 <a href=\"{link}\">Get it here</a>\n{coupon}\n#deal #aliexpress #Kabuzio")
+    return (f"<b>{html.escape(headline(name, raw(BRAND_M)))}</b>\n<i>{html.escape(name[:110])}</i>\n\n"
+            f"{feats}{chr(10) if feats else ''}<b>{g(PRICE)}</b>{' · ' + proof if proof else ''}\n"
+            f"Buyer Protection · Worldwide shipping{coupon}\n\n"
+            f"<a href=\"{link}\">View the piece →</a>\n\n{tags} {band} {kind} #Kabuzio")
 
 
 def photos(r):

@@ -44,9 +44,13 @@ def tiktok():
         if u not in pics:
             pics.append(u)
     pics = pics[:10]
-    brand = f"#{g(r, BRAND).lower()}" if g(r, BRAND) else ""
-    desc = (f"⌚ {g(r, NAME)}\n💰 Now {g(r, PRICE)}\n\n👆 Tap the link in our bio to get it · new watches every day\n\n"
-            f"#ad #watches #watchtok {brand} #kabuzio")
+    from textos import headline, kind, specs, tag
+    head, feats = headline(g(r, NAME), g(r, BRAND)), specs(g(r, NAME), 3)
+    tags = " ".join(t for t in ("#ad #watches #watchtok #quietluxury", tag(g(r, BRAND)), tag(kind(g(r, NAME))) or "",
+                                "#automaticwatch" if "Automatic" in head else "", "#kabuzio") if t)
+    desc = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(r, PRICE)}\n\n"
+            f"👆 Tap the link in our bio to get it · new watches every day\n\n{tags}")
+    title = f"{head} · {' · '.join(feats[:2])}" if feats else head
     video = g(r, VIDEO)
     print(f"TikTok fila {n}: {g(r, NAME)}\nfotos: {len(pics)}, video: {'sí' if video else 'no'}\n---\n{desc}\n---")
     if not PUBLISH:
@@ -56,7 +60,7 @@ def tiktok():
     accs = accs.get("accounts", accs) if isinstance(accs, dict) else accs
     acc = next(a["_id"] for a in accs if str(a.get("platform", "")).lower() == "tiktok")
     if pics:
-        res = zernio("/posts", {"content": f"⌚ {g(r, NAME)[:80]}",
+        res = zernio("/posts", {"content": title[:90],
                                 "mediaItems": [{"type": "image", "url": u + "_800x800.jpg"} for u in pics],
                                 "platforms": [{"platform": "tiktok", "accountId": acc}],
                                 "tiktokSettings": {"privacy_level": "PUBLIC_TO_EVERYONE", "allow_comment": True,

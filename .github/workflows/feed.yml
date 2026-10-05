@@ -13,7 +13,9 @@ jobs:
       - name: Build feed.xml from the catalog
         run: |
           python3 - <<'PY'
-          import csv, io, urllib.request, html, re, datetime, os, json
+          import csv, io, urllib.request, html, re, datetime, os, json, sys, hashlib
+          sys.path.insert(0, "bot")
+          from textos import headline, specs
           CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/pub?gid=596242979&single=true&output=csv"
           SITE = "https://gus1227.github.io/"
           rows = list(csv.DictReader(io.StringIO(urllib.request.urlopen(CSV, timeout=60).read().decode("utf-8"))))
@@ -33,7 +35,16 @@ jobs:
               brand = (r.get("Marca") or "").strip()
               brand = "" if brand in ("", "Sin marca") else re.sub(r"([a-z])([A-Z])", r"\1 \2", brand)
               tags = " ".join(t for t in (r.get("Categoria") or "").split() if t.startswith("#"))
-              desc = f"{name} – now {price} on AliExpress. ⌚ From the best watch catalog on AliExpress, hand-picked by Kabuzio. 👉 See it on our website or Telegram: linktr.ee/Kabuzio_Deal {tags} #watches #watchdeals"
+              # Pinterest is a search engine: say what the watch is and what it is made of (only what the title lists)
+              head = headline(name, r.get("Marca"))
+              head = "Men's Watch" if head == "Kabuzio Pick" else head if head.endswith("Watch") else head + " Watch"
+              feats = specs(name)
+              title = (f"{head} – {', '.join(feats[:2])}" if feats else head)[:100]
+              desc = (f"{head}. {'. '.join(feats) + '. ' if feats else ''}{price} on AliExpress with Buyer Protection and worldwide shipping. "
+                      f"Hand-picked by Kabuzio: more pieces every day at linktr.ee/Kabuzio_Deal {tags} #menswatches #watchesofinstagram #quietluxury"
+                      + (" #automaticwatch" if "Automatic" in head else ""))
+              slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:60].rstrip("-")
+              page = f"{SITE}w/{slug}-{hashlib.sha1(link.encode()).hexdigest()[:6]}.html"  # same address as bot/paginas.py
               sales = int(re.sub(r"\D", "", r.get("Ventas") or "") or 0)
               pics = [img] + (r.get("Fotos_extra") or "").split()
               seen = []
@@ -53,7 +64,7 @@ jobs:
                           print("no image", key, ex)
                           continue
                   pic = f"{SITE}{f}"
-                  pins.append((n, -sales, key, {"k": key, "t": f"{name} – {price}"[:100], "d": desc[:500], "l": f"{SITE}?w={wid}&src=pin", "i": pic}))
+                  pins.append((n, -sales, key, {"k": key, "t": title, "d": desc[:500], "l": page + "?src=pin", "i": pic}))
                   items.append((n, -sales, key, f"""<title>{e(name)} – {e(price)}</title><link>{SITE}?w={wid}&amp;src=pin</link>@@PUB@@<guid isPermaLink="false">{key}</guid><description>{e(desc)}</description><enclosure url="{e(pic)}" type="image/jpeg" length="0"/><media:content url="{e(pic)}" medium="image"/>"""))
           # main photos of best sellers first, then 2nd photos, and so on
           items.sort(key=lambda t: (t[0], t[1]))

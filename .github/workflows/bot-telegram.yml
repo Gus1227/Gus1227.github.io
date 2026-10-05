@@ -72,6 +72,8 @@ jobs:
             top-si) TOP=si python3 bot/top.py ;;
             marcas) python3 bot/marcas.py ;;
             marcas-si) MARCAS=si python3 bot/marcas.py ;;
+            textos) python3 bot/textos.py && python3 bot/telegram.py && REDES=tiktok python3 bot/zernio.py ;;
+            textos-si) TEXTOS=si python3 bot/textos.py ;;
             revisar) python3 bot/revisar.py ;;
             revisar-si) REVISAR=si python3 bot/revisar.py ;;
             ali-*) ALI_HACER="${FILA#ali-}" python3 bot/ali.py ;;
