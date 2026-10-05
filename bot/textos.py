@@ -38,9 +38,11 @@ def specs(title, limit=4):
     out = [name for rx, name in SPECS if re.search(rx, t)]
     mv = next((name for rx, name in MOVEMENTS if re.search(rx, t)), "")
     if mv and "Automatic movement" in out and mv not in ("VH31 sweep", "VK meca-quartz"):
-        out[out.index("Automatic movement")] = f"Automatic {mv}"
+        out[out.index("Automatic movement")] = f"{mv} automatic movement"
     elif mv:
         out.append(f"{mv} movement")
+    if "316L stainless steel" not in out and "Titanium case" not in out and "stainless" in t:
+        out.insert(1 if out[:1] == ["Sapphire crystal"] else 0, "Stainless steel case")
     w = water(t)
     if w:
         out.insert(min(3, len(out)), w)
