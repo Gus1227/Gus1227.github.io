@@ -17,24 +17,31 @@ MAX_OWN, FOTOS_WEB = 6, 29  # AD = Fotos_web: photo order from the editor, «ree
 FX = ["fade", "smoothleft", "fadeblack", "smoothup"]  # quiet transitions, they take turns
 SERIF = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
 SANS = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-# Hooks for the first 2 seconds (Cheche, 2026-10-05, from a «10 hooks» video). One per Reel, they take turns.
-# A hook with a condition is only used when the watch's title really has it (no invented specs).
-HOOKS = [("Nobody talks about\nthis detail.", None),
-         ("I wish I knew this\nbefore my first automatic", r"automatic|mechanical"),
-         ("Stop scrolling.\nLook at this dial.", None),
-         ("Ever noticed how\nthe second hand sweeps?", r"automatic|mechanical"),
-         ("Here's the truth about\nsapphire crystal.", r"sapphire"),
-         ("Let me save you\nhours of searching.", None),
-         ("This one might\nsurprise you.", None),
-         ("Your next watch\nis right here.", None),
-         ("Great watches don't\nneed a famous name.", None),
-         ("Just found this piece.\nHad to show you.", None)]
-HOOK_S = 2.2
+# Hook + answer (Cheche, 2026-10-05): the first 2 seconds promise a detail, the next seconds show it, so nobody is
+# left waiting. Each pair is used only when the watch's title really has that detail (no invented specs).
+# (regex on the title or None, hook, answer). They take turns, detail pairs first.
+HOOKS = [(r"moon.?phase|\bmoon\b", "Nobody talks about\nthis detail.", "A moonphase dial.\nIt follows the moon."),
+         (r"tourbillon", "Watch the heart\nof this piece.", "A tourbillon,\nturning in plain sight."),
+         (r"skeleton", "See right\nthrough it.", "A skeleton dial:\nthe movement on show."),
+         (r"meteorite", "This dial came\nfrom space.", "A real\nmeteorite dial."),
+         (r"\bgmt\b|nh34", "One watch.\nTwo time zones.", "A GMT hand\nfor the traveller."),
+         (r"chronograph", "Look at\nthe subdials.", "A working chronograph:\nstart, stop, reset."),
+         (r"sapphire|saphire", "Look closer\nat the glass.", "Sapphire crystal.\nBuilt to resist scratches."),
+         (r"automatic|self.?wind|mechanical|nh3[458]|pt5000", "This watch has\nno battery.", "Automatic movement:\npowered by your wrist."),
+         (r"titanium", "Lighter than\nit looks.", "Titanium case:\nstrong and light."),
+         (r"ceramic", "Look at\nthe bezel.", "Ceramic bezel:\nit keeps its shine."),
+         (r"bgw.?9|c3 |super.?lum|luminous", "Wait until\nthe lights go off.", "Luminous hands:\nreadable in the dark."),
+         (r"316\s?l", "Made to\nlast.", "316L stainless steel,\nthe same as fine watches."),
+         (None, "Your next watch\nis right here.", ""),
+         (None, "Stop scrolling.\nLook at this dial.", ""),
+         (None, "Just found this piece.\nHad to show you.", "")]
+HOOK_S, ANSWER_S = 2.0, 4.6  # hook until 2.0 s, its answer until 4.6 s, then name and price
 
 
 def hook_for(name, k):
-    """The k-th hook that fits this watch (k = how many Reels were made before)."""
-    ok = [h for h, need in HOOKS if not need or re.search(need, name.lower())]
+    """(hook, answer) number k among the pairs that fit this watch (k = how many Reels were made before)."""
+    t = " " + name.lower() + " "
+    ok = [(h, a) for need, h, a in HOOKS if need and re.search(need, t)] or [(h, a) for need, h, a in HOOKS if not need]
     return ok[k % len(ok)]
 
 
@@ -67,25 +74,34 @@ def video_clip(src, out):
        f"fps={FPS},format=yuv420p,setsar=1", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", out)
 
 
-def text_layer(d, head, spec, price, hook=""):
+def text_layer(d, head, spec, price, hook=("", "")):
+    hook, answer = hook
     files = {}
-    h1, _, h2 = hook.partition("\n")
-    for k, v in {"brand": "K A B U Z I O", "head": head, "spec": spec, "price": price, "cta": "Link in bio",
-                 "h1": h1, "h2": h2}.items():
+    for k, v in {"brand": "K A B U Z I O", "head": head, "spec": spec, "price": price, "cta": "Link in bio"}.items():
         files[k] = os.path.join(d, k + ".txt")
         open(files[k], "w").write(v)
+    end = (ANSWER_S if answer else HOOK_S) if hook else 0
     t = lambda k, font, size, y, color="white": (
         f"drawtext=fontfile={font}:textfile={files[k]}:fontsize={size}:fontcolor={color}:x=(w-text_w)/2:y={y}"
-        ":shadowcolor=black@0.8:shadowx=2:shadowy=2" + (f":enable='gte(t,{HOOK_S})'" if hook else ""))  # after the hook
-    # the hook: alone on the dimmed photo, two centered lines of the same size, soft fade in and out
-    fs = min(68, int(960 / (0.62 * max(len(h1), len(h2), 1))))  # always fits the width
-    lh, mid = int(fs * 1.45), (H - 1000) // 2 - 60 + 500  # line height; middle of the photo
-    top = mid - (lh if h2 else lh // 2)
-    fade = f"if(lt(t,0.25),t/0.25,if(gt(t,{HOOK_S - 0.3}),({HOOK_S}-t)/0.3,1))"
-    hk = lambda k, y: (f"drawtext=fontfile={SERIF}:textfile={files[k]}:fontsize={fs}:fontcolor=white:alpha='{fade}'"
-                       f":x=(w-text_w)/2:y={y}:shadowcolor=black@0.6:shadowx=2:shadowy=2:enable='lt(t,{HOOK_S})'")
-    hooks = ([f"drawbox=x=0:y=0:w=iw:h=ih:color=black@0.6:t=fill:enable='lt(t,{HOOK_S})'",  # the whole frame dims a little
-              hk("h1", top + (lh - fs) // 2)] + ([hk("h2", top + lh + (lh - fs) // 2)] if h2 else [])) if hook else []
+        ":shadowcolor=black@0.8:shadowx=2:shadowy=2" + (f":enable='gte(t,{end})'" if end else ""))  # after the hook
+
+    def card(name, text, t0, t1, dim):
+        """Two centered lines of the same size, alone on the dimmed photo, soft fade in and out."""
+        lines = text.split("\n")
+        fs = min(68, int(960 / (0.62 * max(map(len, lines)))))  # always fits the width
+        lh, mid = int(fs * 1.45), (H - 1000) // 2 - 60 + 500  # line height; middle of the photo
+        top = mid - lh * len(lines) // 2
+        on = f"between(t,{t0},{t1})"
+        fade = f"if(lt(t,{t0 + 0.25}),(t-{t0})/0.25,if(gt(t,{t1 - 0.3}),({t1}-t)/0.3,1))"
+        out = [f"drawbox=x=0:y=0:w=iw:h=ih:color=black@{dim}:t=fill:enable='{on}'"]
+        for i, line in enumerate(lines):
+            f = os.path.join(d, f"{name}{i}.txt")
+            open(f, "w").write(line)
+            out.append(f"drawtext=fontfile={SERIF}:textfile={f}:fontsize={fs}:fontcolor=white:alpha='{fade}'"
+                       f":x=(w-text_w)/2:y={top + i * lh + (lh - fs) // 2}:shadowcolor=black@0.6:shadowx=2:shadowy=2:enable='{on}'")
+        return out
+
+    hooks = (card("hook", hook, 0, HOOK_S, 0.6) + (card("ans", answer, HOOK_S, ANSWER_S, 0.45) if answer else [])) if hook else []
     return ",".join(hooks + [t("brand", SERIF, 34, 120, "0xBBBBBB"), t("head", SERIF, min(58, int(58 * 30 / max(len(head), 1))), 200), t("spec", SANS, 32, 290, "0xCCCCCC"),
                      t("price", SERIF, 72, H - 330), t("cta", SANS, 36, H - 225, "0xCCCCCC")])
 
