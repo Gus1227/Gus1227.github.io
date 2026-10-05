@@ -3,6 +3,7 @@
 # What it already did is kept in bot/estado.json (pushed to the repo), so a second run never posts twice.
 #   every 2 h: AliExpress data + Revisar tab; Telegram 2 a day (08, 18 UTC); Pinterest 8 a day; TikTok 3 a day (06, 12, 18 UTC)
 #   1 Reel a day (16 UTC) on Instagram, Facebook, TikTok and Pinterest
+#   Instagram: 3 Stories a day (10, 14, 20 UTC) and a themed carousel Mon/Wed/Fri/Sun (12 UTC)
 #   with estado.json "meta": true also Facebook (16, 22 UTC) and Instagram (18, 00 UTC)
 import datetime, json, os, subprocess, sys, time, urllib.request
 
@@ -71,6 +72,17 @@ def turn(slot):
     if slot.hour == 16:  # 19:00 in Israel: refresh the pinned Top 3 in Telegram
         run("top.py", TOP="si")
     day = slot.strftime("%Y-%m-%d")
+    stories = {10: "dia", 14: "duelo", 20: "top"}  # 13:00, 17:00 and 23:00 Israel
+    if slot.hour in stories and st.get("historia") != key:
+        st["historia"] = key
+        save(st, f"bot: historia {key}")
+        if run("historia.py", HISTORIA=stories[slot.hour], HISTORIA_SI="si"):
+            run("ig_extra.py", IG_EXTRA="historia:" + stories[slot.hour])
+    if slot.hour == 12 and slot.weekday() in (0, 2, 4, 6) and st.get("carrusel_dia") != day:  # Mon, Wed, Fri, Sun 15:00 Israel
+        st["carrusel_dia"] = day
+        save(st, f"bot: carrusel {day}")
+        if run("carrusel.py", CARRUSEL_SI="si"):
+            run("ig_extra.py", IG_EXTRA="carrusel")
     if slot.hour == 16 and st.get("reel") != day:  # 1 Reel a day (19:00 Israel): Cheche's 🎬 queue first, else the best seller
         st["reel"] = day
         save(st, f"bot: reel {day}")  # mark first: never two Reels the same day

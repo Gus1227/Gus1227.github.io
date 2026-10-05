@@ -35,7 +35,7 @@ jobs:
           APT="sudo DEBIAN_FRONTEND=noninteractive timeout 300 apt-get install -y -q --no-install-recommends tesseract-ocr fonts-dejavu-core"
           $APT || (sudo timeout 120 apt-get update -q && $APT) || true
           # ffmpeg only for Reels (it is big)
-          if [ "${{ inputs.red }}" = "reel" ] || [[ "${{ inputs.fila }}" == reel* || "${{ inputs.fila }}" == ejemplo* || "${{ inputs.fila }}" == carrusel* || "${{ inputs.fila }}" == historias* ]]; then
+          if [ "${{ inputs.red }}" = "reel" ] || [[ "${{ inputs.fila }}" == reel* || "${{ inputs.fila }}" == ejemplo* || "${{ inputs.fila }}" == carrusel* || "${{ inputs.fila }}" == historias* || "${{ inputs.fila }}" == ig-* ]]; then
             sudo DEBIAN_FRONTEND=noninteractive timeout 600 apt-get install -y -q --no-install-recommends ffmpeg || (sudo timeout 120 apt-get update -q && sudo DEBIAN_FRONTEND=noninteractive timeout 600 apt-get install -y -q --no-install-recommends ffmpeg)
           fi
           git config user.name "kabuzio-bot"
@@ -115,6 +115,9 @@ jobs:
             carrusel-si) CARRUSEL_SI=si python3 bot/carrusel.py ;;
             historias) python3 bot/historia.py ;;
             historias-si) HISTORIA_SI=si python3 bot/historia.py ;;
+            ig-historia-*) HISTORIA="${FILA#ig-historia-}" HISTORIA_SI=si python3 bot/historia.py && IG_EXTRA="historia:${FILA#ig-historia-}" PUBLICAR=si python3 bot/ig_extra.py ;;
+            ig-carrusel) CARRUSEL_SI=si python3 bot/carrusel.py && IG_EXTRA=carrusel PUBLICAR=si python3 bot/ig_extra.py ;;
+            ig-prueba) IG_EXTRA=historia:dia python3 bot/ig_extra.py && IG_EXTRA=carrusel python3 bot/ig_extra.py ;;
             reel) python3 bot/reel.py ;;
             reel-si) REEL=si python3 bot/reel.py ;;
             reel-[0-9]*) REEL=si REEL_FILA="${FILA#reel-}" python3 bot/reel.py ;;
