@@ -5,12 +5,16 @@
 #      a number below 50 typed by Cheche always wins.
 #   3. compliance: a «Pendiente» watch whose title names a famous brand (Rolex, Omega...) is set to «Réplica»,
 #      out of the queue and the web. «Seiko NH35 movement» and similar are real parts and do not count.
+#   4. repeat what sells: once a day, the best-selling watch last posted 14+ days ago goes back to «Pendiente»
+#      at the front of the queue (AM 49) and its network marks (Q Instagram, R TikTok, U Facebook) are cleared,
+#      so every network posts it again.
 # RENDIMIENTO=si writes; anything else only prints.
-import math, os, re, sys
+import datetime, math, os, re, sys
 from collections import Counter, defaultdict
 
 sys.path.insert(0, os.path.dirname(__file__))
 from revisar import FAMOUS
+from top import when
 from telegram import NAME, PRICE, STATE, TAB, PRIO, BRAND_M, SALES, google_token, sheets
 
 WRITE = os.environ.get("RENDIMIENTO", "no").lower() in ("si", "sí", "1")
@@ -90,6 +94,13 @@ def main():
     pend.sort(key=lambda t: (-t[0], t[1]))
     cells = [(f"AM{n}", str(AUTO + i)) for i, (_, n, cur) in enumerate(pend) if cur != str(AUTO + i)]
     cells += [(f"H{n}", "Réplica") for n in fake]
+    old = datetime.datetime.utcnow() - datetime.timedelta(days=14)
+    again = [(v, by_pid[p][0]) for p, v in watch.most_common() if g(by_pid[p][1], STATE) == "Publicado"
+             and (when(g(by_pid[p][1], 8)) or old) <= old]
+    if again:
+        n = again[0][1]
+        cells += [(f"H{n}", "Pendiente"), (f"AM{n}", str(AUTO - 1))] + [(f"{c}{n}", "") for c in "QRU"]
+        print(f"Repetir: fila {n} ({again[0][0]} ventas) vuelve a la cola, primera.")
     print("Posibles réplicas (marca famosa en el título):", ", ".join(f"fila {n}: {g(rows[n - 1], NAME)[:50]}" for n in fake) or "ninguna")
     print(f"\nCola: {len(pend)} relojes Pendiente ordenados; {len(cells)} cambios. Primeros:",
           ", ".join(f"fila {n} ({s:.1f})" for s, n, _ in pend[:8]))
