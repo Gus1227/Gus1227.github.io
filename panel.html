@@ -237,23 +237,26 @@ function slots(n) {
 function schedule(n) {
   const S = slots(n), q = pending(), list = [];
   let pi = EST.pin || 0, lastTg = rows().filter(x => g(x.r, "H") === "Publicado").sort((a, b) => (b.t || 0) - (a.t || 0))[0];
-  S.forEach((t, i) => {
-    const items = [], w = q[i];
-    if (w) { items.push({net: "telegram", x: w}); lastTg = w; }
-    while (PINS[pi] && PINS[pi].off) pi++;
-    if (PINS[pi]) { items.push({net: "pinterest", pin: PINS[pi], n: pi}); pi++; }
-    if (new Date(t).getUTCHours() % 8 === 4 && lastTg) items.push({net: "tiktok", x: lastTg});
-    list.push({t, items});
+  let qi = 0;
+  S.forEach(t => {
+    const items = [], h = new Date(t).getUTCHours();
+    if ([8, 18].includes(h) && q[qi]) { items.push({net: "telegram", x: q[qi]}); lastTg = q[qi]; qi++; }  // 2 al día
+    if (h % 6) {                                                     // 8 pines al día
+      while (PINS[pi] && PINS[pi].off) pi++;
+      if (PINS[pi]) { items.push({net: "pinterest", pin: PINS[pi], n: pi}); pi++; }
+    }
+    if ([6, 12, 18].includes(h) && lastTg) items.push({net: "tiktok", x: lastTg});  // 3 al día
+    if (items.length) list.push({t, items});
   });
-  // Make: Instagram cada 8 h (21:25, 05:25, 13:25 UTC), Facebook 4 veces al día (aprox.)
+  // Make: Instagram 20:00 y 03:00 hora de Israel; Facebook hacia las 18:53 y 00:53 hora de Londres
   const end = S[S.length - 1], tgs = list.filter(s => s.items[0] && s.items[0].net === "telegram");
   let w = rows().filter(x => g(x.r, "H") === "Publicado").sort((a, b) => (b.t || 0) - (a.t || 0))[0];
+  const hourIn = (t, tz) => +new Date(t).toLocaleString("en-GB", {timeZone: tz, hour: "2-digit", hour12: false}) % 24;
   for (let t = S[0] - 7200000; t < end; t += 3600000) {
-    const h = new Date(t).getUTCHours(), slot = tgs.filter(s => s.t <= t).pop();
+    const slot = tgs.filter(s => s.t <= t).pop();
     if (slot) w = slot.items[0].x;
-    if ([21, 5, 13].includes(h) && w) addMake(list, t + 25 * 60000, {net: "instagram", x: w, make: 1});
-    const lon = +new Date(t).toLocaleString("en-GB", {timeZone: "Europe/London", hour: "2-digit", hour12: false});
-    if ([8, 12, 16, 20].includes(lon) && w) addMake(list, t, {net: "facebook", x: w, make: 1});
+    if ([20, 3].includes(hourIn(t, "Asia/Jerusalem")) && w) addMake(list, t, {net: "instagram", x: w, make: 1});
+    if ([18, 0].includes(hourIn(t, "Europe/London")) && w) addMake(list, t + 53 * 60000, {net: "facebook", x: w, make: 1});
   }
   return list.sort((a, b) => a.t - b.t).filter(s => s.t > Date.now() - 100 * 60000);
 }
@@ -313,11 +316,11 @@ function resumen() {
   const pubToday = pub.filter(x => x.t && x.t >= d0).length;
   const igErr = count("Q", "err");
   const P = [
-    ["✈️ Telegram", pub.length, `${pubToday} hoy`, next("telegram"), "1 cada 2 h", bot],
+    ["✈️ Telegram", pub.length, `${pubToday} hoy`, next("telegram"), "2 al día", bot],
     ["🎵 TikTok", count("R", "ok"), "fotos + video", next("tiktok"), "3 al día", bot],
-    ["📌 Pinterest", EST.pin ?? "—", `de ${PINS.filter(p => !p.off).length} pines`, next("pinterest"), "1 cada 2 h", bot],
-    ["📸 Instagram", count("Q", "ok"), igErr ? `<span style="color:var(--bad)">${igErr} con error</span>` : "carrusel", next("instagram"), "3 al día", make],
-    ["📘 Facebook", count("U", "ok"), "fotos + video", next("facebook"), "4 al día", make],
+    ["📌 Pinterest", EST.pin ?? "—", `de ${PINS.filter(p => !p.off).length} pines`, next("pinterest"), "8 al día", bot],
+    ["📸 Instagram", count("Q", "ok"), igErr ? `<span style="color:var(--bad)">${igErr} con error</span>` : "carrusel", next("instagram"), "2 al día · Israel y América", make],
+    ["📘 Facebook", count("U", "ok"), "fotos + video", next("facebook"), "2 al día · Israel y América", make],
   ];
 
   $("main").innerHTML = `
@@ -372,7 +375,7 @@ async function saveMetric() {
 }
 
 function cola() {
-  const sch = schedule(24), byDay = {};
+  const sch = schedule(25), byDay = {};
   sch.forEach(s => { const k = new Date(s.t).toLocaleDateString("es", {weekday: "long", day: "numeric", month: "long"}); (byDay[k] = byDay[k] || []).push(s); });
   const item = it => {
     if (it.net === "pinterest") return `<div class="it"><span class="net">${NETS.pinterest}</span><img src="${esc(it.pin.i)}" loading="lazy"><div class="x"><div class="nm">${esc(it.pin.t)}</div><div class="mt">pin #${it.n}</div></div><span class="chip prog">Programado</span></div>`;
