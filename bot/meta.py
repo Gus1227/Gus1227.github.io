@@ -191,9 +191,9 @@ def musica(query=None):
 
 
 def musica_prueba():
-    for q in MOODS:
-        found = graph("/ig_audio", {"audio_type": "music", "user_id": IG, "search_query": q}).get("data", [])
-        print(q, len(found), json.dumps(found[:2])[:400])
+    for q in ("",) + MOODS:  # "" = trending
+        p = {"audio_type": "music", "user_id": IG, **({"search_query": q} if q else {})}
+        print(q or "(tendencias)", json.dumps(graph("/ig_audio", p))[:600])
 
 
 if __name__ == "__main__":
