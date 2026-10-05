@@ -13,9 +13,9 @@ from telegram import IMG, NAME, PRICE, STATE, TAB, BRAND_M, SALES, google_token,
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
 
-def card(d, lines, out, pics):
+def card(d, lines, out, pics, size=(W, H)):
     """lines: [(text, font, size, y, color)]; pics: [(file, x, y, size)] on black."""
-    ins, chain = [], [f"color=black:s={W}x{H}[bg]"]
+    ins, chain = [], [f"color=black:s={size[0]}x{size[1]}[bg]"]
     last = "[bg]"
     for i, (f, x, y, s) in enumerate(pics):
         ins += ["-i", f]
