@@ -1,6 +1,6 @@
 # Kabuzio: «quiet luxury» copy for every network, built from what the AliExpress title really says.
 # Only features found in the title are named (sapphire, 316L, automatic, NH35...): nothing is invented.
-# Used by telegram.py, zernio.py and feed.yml (Pinterest). Also writes Ofertas AN (headline) and AO (specs)
+# Used by telegram.py, zernio.py and feed.yml (Pinterest). Also writes Ofertas «Titular» and «Specs» columns
 # so Make (Instagram, Facebook) can use the same text: TEXTOS=si writes; anything else only prints.
 import os, re, sys
 
@@ -76,20 +76,28 @@ def main():
     from telegram import TAB, google_token, sheets
     write = os.environ.get("TEXTOS", "no").lower() in ("si", "sí", "1")
     tok = google_token()
-    rows = sheets(tok, f"values/{TAB}!A1:AO5000").get("values", [])
-    head = rows[0] + [""] * (41 - len(rows[0]))
-    if head[39] not in ("", "Titular") or head[40] not in ("", "Specs"):
-        raise SystemExit(f"AN/AO ya se usan: {head[39]!r} {head[40]!r}")
+    rows = sheets(tok, f"values/{TAB}!A1:CZ5000").get("values", [])
+    head = [h.strip() for h in rows[0]]
+    # own columns, found by their header; the first time they go after the last used header
+    col = lambda i: (chr(64 + i // 26) if i >= 26 else "") + chr(65 + i % 26)
+    if "Titular" in head and "Specs" in head:
+        ch, cs = head.index("Titular"), head.index("Specs")
+    else:
+        ch = len(head)
+        cs = ch + 1
+    print("columnas:", col(ch), col(cs))
     g = lambda r, i: (r[i] if i < len(r) else "").strip()
-    data = [{"range": f"{TAB}!AN1:AO1", "values": [["Titular", "Specs"]]}] if head[39:41] != ["Titular", "Specs"] else []
+    data = [] if "Titular" in head else [{"range": f"{TAB}!{col(ch)}1:{col(cs)}1", "values": [["Titular", "Specs"]]}]
     for n, r in enumerate(rows[1:], start=2):
         if not g(r, 0):
             continue
         h, s = headline(g(r, 0), g(r, 12)), " · ".join(specs(g(r, 0)))
-        if n < 8:
+        if n < 12:
             print(f"{n}: {g(r, 0)[:90]}\n    -> {h} | {s}")
-        if [g(r, 39), g(r, 40)] != [h, s]:
-            data.append({"range": f"{TAB}!AN{n}:AO{n}", "values": [[h, s]]})
+        if g(r, ch) != h:
+            data.append({"range": f"{TAB}!{col(ch)}{n}", "values": [[h]]})
+        if g(r, cs) != s:
+            data.append({"range": f"{TAB}!{col(cs)}{n}", "values": [[s]]})
     print(len(data), "filas por escribir")
     if write and data:
         sheets(tok, "values:batchUpdate", {"valueInputOption": "RAW", "data": data}, method="POST")
