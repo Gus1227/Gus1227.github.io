@@ -1,16 +1,16 @@
 {
- "actualizado": "2026-10-05T06:05+00:00",
+ "actualizado": "2026-10-05T08:06+00:00",
  "telegram": {
   "seguidores": 3
  },
  "tiktok": {
-  "seguidores": 0,
+  "seguidores": 2,
   "usuario": "kabuzio_deal",
-  "likes": 7,
-  "videos": 8
+  "likes": 10,
+  "videos": 12
  },
  "pinterest": {
-  "seguidores": null,
+  "seguidores": 0,
   "usuario": "kabuziodeal",
   "likes": null,
   "videos": null
@@ -23,8 +23,8 @@
   },
   "2026-10-05": {
    "telegram": 3,
-   "tiktok": 0,
-   "pinterest": null
+   "tiktok": 2,
+   "pinterest": 0
   }
  }
 }
