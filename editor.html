@@ -111,13 +111,14 @@ function rowToItem(r,i){
   const photos=[...new Set([g("img"),...g("fotos").split(/\s+/)])].filter(u=>/^https:\/\//.test(u));
   const video=/^https:\/\//.test(g("video"))?g("video"):"";
   const all=defMedia(photos,video);
-  const fw=g("fotosweb").split(/\s+/).filter(t=>t==="video"?!!video:all.includes(t));
+  const tk=g("fotosweb").split(/\s+/),fw=tk.filter(t=>t==="video"?!!video:all.includes(t));
   const o=parseFloat(g("orden"));
   const it={row:i+1,name:g("name"),price:g("price"),estado:g("estado"),pid:g("pid"),sales:+g("ventas").replace(/\D/g,"")||0,video,all,
-    marca:g("marca"),orden:isFinite(o)?o:null,oculto:/^s[ií]/i.test(g("oculto")),media:fw.length?fw:all.slice(),estilo:g("estilo"),nombre:g("nombre")};
+    marca:g("marca"),orden:isFinite(o)?o:null,oculto:/^s[ií]/i.test(g("oculto")),media:fw.length?fw:all.slice(),estilo:g("estilo"),nombre:g("nombre"),reel:tk.includes("reel")};
   it.orig=snap(it);return it}
-function snap(it){return JSON.stringify([it.marca,it.orden,it.oculto,it.media.join(" "),it.estilo,it.nombre,it.price])}
-function fwOut(it){const d=it.all.join(" "),m=it.media.join(" ");return m===d?"":m}
+function snap(it){return JSON.stringify([it.marca,it.orden,it.oculto,it.media.join(" "),it.estilo,it.nombre,it.price,it.reel])}
+// «reel» at the end of Fotos_web = Cheche picked this watch for a Reel (the web ignores the word)
+function fwOut(it){const d=it.all.join(" "),m=it.media.join(" "),b=m===d?"":m;return it.reel?(b?b+" reel":"reel"):b}
 function sortItems(){items.sort((a,b)=>(a.orden??1e9)-(b.orden??1e9)||b.sales-a.sales||b.row-a.row)}
 const firstImg=it=>it.media.find(t=>t!=="video")||it.all.find(t=>t!=="video")||"";
 const dirty=()=>orderChanged||items.some(it=>snap(it)!==it.orig);
@@ -167,7 +168,7 @@ function render(){
   const vis=visible();
   $("grid").innerHTML=vis.length?vis.map(it=>{const n=items.indexOf(it)+1,im=firstImg(it);return `<div class="card${sel.has(it.row)?" pk":""}${it.oculto?" off":""}${snap(it)!==it.orig?" chg":""}" data-row="${it.row}">
    <div class="ph"><img loading="lazy" referrerpolicy="no-referrer" src="${esc(im)}_220x220.jpg" onerror="this.onerror=null;this.src='${esc(im)}'" alt=""><span class="pos">${n}</span><button class="ck" data-a="ck" title="Seleccionar">${sel.has(it.row)?"✓":""}</button>${it.oculto?'<span class="hid">Oculto</span>':""}</div>
-   <div class="inf"><div class="br">${esc(nice(it.marca)||"Sin marca")}${it.estilo?" · "+esc(it.estilo):""}</div><div class="nm">${esc(it.nombre||it.name)}</div><div class="pr">${esc(it.price)} · ${it.media.length} ${it.media.length===1?"foto":"fotos"}</div></div>
+   <div class="inf"><div class="br">${it.reel?"🎬 ":""}${esc(nice(it.marca)||"Sin marca")}${it.estilo?" · "+esc(it.estilo):""}</div><div class="nm">${esc(it.nombre||it.name)}</div><div class="pr">${esc(it.price)} · ${it.media.length} ${it.media.length===1?"foto":"fotos"}</div></div>
    <div class="acts"><button data-a="top" title="Poner primero">⬆</button><button data-a="up" title="Subir uno">↑</button><button data-a="down" title="Bajar uno">↓</button><button data-a="hide" title="Ocultar o mostrar">👁</button><button data-a="edit" title="Editar">✏️</button></div></div>`}).join(""):'<div class="empty">No hay relojes con esa búsqueda.</div>';
   $("grid").querySelectorAll(".ck").forEach(b=>{b.onpointerdown=e=>e.stopPropagation();b.onclick=e=>{e.stopPropagation();const r=+b.closest(".card").dataset.row;sel.has(r)?sel.delete(r):sel.add(r);render()}});
   $("grid").querySelectorAll(".card").forEach(c=>c.addEventListener("click",e=>{if(!pick)return;e.preventDefault();e.stopPropagation();const it=items.find(x=>x.row==c.dataset.row);if(!it||sel.has(it.row))return toast("Toca un reloj que no esté seleccionado");moveGroup(it)},true));
@@ -184,7 +185,8 @@ function edit(it){
     $("pl").innerHTML=list.map(({t,on},j)=>`<div class="pt${t==="video"?" vid":""}${on?"":" no"}" data-t="${esc(t)}">${t==="video"?"▶":`<img referrerpolicy="no-referrer" src="${esc(t)}_220x220.jpg" onerror="this.onerror=null;this.src='${esc(t)}'" alt="">`}${on?`<b>${j+1}</b>`:""}<button data-t="${esc(t)}">${on?"Quitar":"Poner"}</button></div>`).join("");
     $("pl").querySelectorAll("button").forEach(b=>b.onclick=e=>{e.stopPropagation();const t=b.dataset.t;if(media.includes(t)){if(media.length<2)return toast("Debe quedar al menos 1 foto");media=media.filter(x=>x!==t);off.push(t)}else{off=off.filter(x=>x!==t);media.push(t)}draw()})};
   $("box").innerHTML=`<h2><span>Editar reloj</span><button id="mx" aria-label="Cerrar">×</button></h2>
-   <div class="f"><span>Fotos</span><div class="ph-list" id="pl"></div><small>Arrastra para cambiar el orden. La 1ª es la portada. «Quitar» la esconde solo en la web.</small></div>
+   <div class="f"><span>Fotos</span><div class="ph-list" id="pl"></div><small>Arrastra para cambiar el orden. La 1ª es la portada. «Quitar» la esconde en la web y en el Reel.</small></div>
+   <label class="f" style="display:flex;gap:10px;align-items:center;cursor:pointer"><input type="checkbox" id="er"${it.reel?" checked":""} style="width:22px;height:22px"><span style="margin:0">🎬 Hacer un Reel con este reloj (con estas fotos, en este orden)</span></label>
    <div class="f"><span>Nombre en la web</span><input id="en" value="${esc(it.nombre)}" placeholder="${esc(it.name)}"><small>Vacío = nombre original de AliExpress.</small></div>
    <div class="f"><span>Precio (USD)</span><input id="ep" inputmode="decimal" value="${esc(it.price)}" placeholder="$99.99"><small>Precio actual en AliExpress. Cambia la web y los próximos posts.</small></div>
    <div class="f"><span>Marca</span><input id="eb" list="bl" value="${esc(nice(it.marca))}"><datalist id="bl">${brands.map(b=>`<option value="${esc(nice(b))}">`).join("")}</datalist><small>Cambia también los hashtags de los posts.</small></div>
@@ -195,7 +197,7 @@ function edit(it){
   const close=()=>$("md").classList.remove("on");
   $("mx").onclick=$("cn").onclick=close;$("md").onclick=e=>{if(e.target.id==="md")close()};
   $("rf").onclick=()=>{media=it.all.slice();off=[];draw()};
-  $("ok").onclick=()=>{const pv=$("ep").value.trim();if(pv){const n=parseFloat(pv.replace(/[^0-9.]/g,""));if(!(n>0))return toast("Escribe un precio válido, por ejemplo 99.99");it.price="$"+n.toFixed(2)}it.media=media;it.nombre=$("en").value.trim();const b=$("eb").value.trim().replace(/\s+/g,"");if(b)it.marca=b;it.estilo=$("es").value;close();render()};
+  $("ok").onclick=()=>{const pv=$("ep").value.trim();if(pv){const n=parseFloat(pv.replace(/[^0-9.]/g,""));if(!(n>0))return toast("Escribe un precio válido, por ejemplo 99.99");it.price="$"+n.toFixed(2)}it.media=media;it.nombre=$("en").value.trim();const b=$("eb").value.trim().replace(/\s+/g,"");if(b)it.marca=b;it.estilo=$("es").value;it.reel=$("er").checked;close();render()};
   $("md").classList.add("on")}
 
 async function loadReports(){try{const r=await call("reports");reps=(Array.isArray(r)?r:[]).slice(1).map((v,i)=>({row:i+2,v})).filter(x=>x.v.some(Boolean));const n=reps.filter(x=>x.v[8]!=="Resuelto").length;const b=$("rpb");if(b)b.textContent="📩 Reportes"+(n?" ("+n+")":"");if(b&&n)b.classList.add("dark")}catch(e){}}
@@ -214,7 +216,7 @@ async function save(){
     const where=it=>{const r=fresh[it.row-1];const same=r=>r&&(it.pid?String(r[C.pid]||"").trim()===it.pid:String(r[C.name]||"").trim()===it.name);if(same(r))return it.row;const i=fresh.findIndex(same);return i<0?0:i+1};
     const data=[];let lost=0;
     items.forEach((it,i)=>{const o=JSON.parse(it.orig),ord=orderChanged?i+1:it.orden;
-      const ch=it.price!==o[6]||it.marca!==o[0]||ord!==o[1]||it.oculto!==o[2]||it.media.join(" ")!==o[3]||it.estilo!==o[4]||it.nombre!==o[5];if(!ch)return;
+      const ch=it.price!==o[6]||it.marca!==o[0]||ord!==o[1]||it.oculto!==o[2]||it.media.join(" ")!==o[3]||it.estilo!==o[4]||it.nombre!==o[5]||it.reel!==o[7];if(!ch)return;
       const r=where(it);if(!r){lost++;return}
       if(it.price!==o[6])data.push({range:"Ofertas!B"+(r+1),values:[[it.price]]});
       if(it.marca!==o[0])data.push({range:"Ofertas!M"+(r+1),values:[[it.marca]]});

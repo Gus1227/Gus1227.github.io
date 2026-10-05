@@ -2,16 +2,18 @@
 # the AliExpress video first (if any), then the photos with a slow zoom on black, and quiet text:
 # KABUZIO on top, the clean headline and real specs, the price and «Link in bio» at the bottom.
 # The file goes to r/<product id>.mp4 in this repo, so GitHub Pages serves it to Instagram, Facebook and TikTok.
-#   REEL_FILA=<row>  that row;  empty = the next «Pendiente» of the queue (same order as Telegram)
+#   REEL_FILA=<row>  that row;  empty = the next watch Cheche ticked «🎬 Reel» in the editor (once per watch)
 #   REEL=si          also commit and push the file
-import os, subprocess, sys, tempfile, urllib.request
+import json, os, subprocess, sys, tempfile, urllib.request
 
 sys.path.insert(0, os.path.dirname(__file__))
 from telegram import EXTRA, IMG, NAME, PRICE, PRIO, STATE, TAB, VIDEO, BRAND_M, google_token, num, sheets
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "estado.json")
 W, H, FPS = 1080, 1920, 30
 PHOTO_S, VIDEO_S, MAX_PHOTOS, KEEP, FADE = 3.6, 5, 4, 30, 0.7
+MAX_OWN, FOTOS_WEB = 6, 29  # AD = Fotos_web: photo order from the editor, «reel» = Cheche picked it
 FX = ["fade", "smoothleft", "fadeblack", "smoothup"]  # quiet transitions, they take turns
 SERIF = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
 SANS = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
@@ -58,11 +60,27 @@ def text_layer(d, head, spec, price):
                      t("price", SERIF, 72, H - 330), t("cta", SANS, 36, H - 225, "0xCCCCCC")])
 
 
+def media(r):
+    """[(«photo»|«video», url)] for the Reel. If Cheche ordered the photos in the editor (Fotos_web, AD), exactly
+    that order and only those; otherwise the clean photos (no text on them) with the video second."""
+    g = lambda i: (r[i] if i < len(r) else "").strip()
+    pics = list(dict.fromkeys((g(IMG) + " " + g(EXTRA)).split()))
+    own = [t for t in g(FOTOS_WEB).split() if t != "reel"]
+    if any("://" in t for t in own):
+        seq = [("video", g(VIDEO)) if t == "video" else ("photo", t) for t in own if t != "video" or g(VIDEO)]
+        return seq[:MAX_OWN]
+    from fotos import limpias  # only clean photos, no infographics with text
+    pics = limpias(pics, g(BRAND_M))[:MAX_PHOTOS]
+    seq = [("photo", u) for u in pics]
+    if g(VIDEO):
+        seq.insert(1, ("video", g(VIDEO)))
+    return seq
+
+
 def build(r, out):
     from textos import headline, specs
     g = lambda i: (r[i] if i < len(r) else "").strip()
-    from fotos import limpias  # only clean photos, no infographics with text
-    pics = limpias(list(dict.fromkeys((g(IMG) + " " + g(EXTRA)).split())), g(BRAND_M))[:MAX_PHOTOS]
+    seq = media(r)
     head = headline(g(NAME), g(BRAND_M))[:34]
     spec = ""
     for f in specs(g(NAME), 3):  # whole specs only, never cut in the middle
@@ -71,23 +89,18 @@ def build(r, out):
     price = f"Now ${num(g(PRICE)):.2f}" if num(g(PRICE)) else g(PRICE)
     with tempfile.TemporaryDirectory() as d:
         clips = []
-        if g(VIDEO):
+        for i, (kind, u) in enumerate(seq):  # in Cheche's order (editor) or: 1st photo, video, other photos
+            out_i = os.path.join(d, f"c{i}.mp4")
             try:
-                video_clip(get(g(VIDEO), os.path.join(d, "v.mp4")), os.path.join(d, "c0.mp4"))
-                clips.append(os.path.join(d, "c0.mp4"))
-            except Exception as e:  # a broken video never stops the Reel
-                print("Video descartado:", e)
-        for i, u in enumerate(pics):
-            try:
-                src = get(u if u.endswith(".jpg") else u + "_800x800.jpg", os.path.join(d, f"p{i}.jpg"))
-                photo_clip(src, os.path.join(d, f"c{i + 1}.mp4"), i)
-                clips.append(os.path.join(d, f"c{i + 1}.mp4"))
-            except Exception as e:
-                print("Foto descartada:", u, e)
+                if kind == "video":
+                    video_clip(get(u, os.path.join(d, f"v{i}.mp4")), out_i)
+                else:
+                    photo_clip(get(u if u.endswith(".jpg") else u + "_800x800.jpg", os.path.join(d, f"p{i}.jpg")), out_i, i)
+                clips.append(out_i)
+            except Exception as e:  # a broken photo or video never stops the Reel
+                print("Parte descartada:", u, e)
         if not clips:
             raise SystemExit("Reel: sin fotos ni video")
-        if len(clips) > 1 and clips[0].endswith("c0.mp4"):  # video second: first photo, video, other photos
-            clips[0], clips[1] = clips[1], clips[0]
         durs = [float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", c],
                                      capture_output=True, text=True).stdout.strip() or PHOTO_S) for c in clips]
         # soft crossfade between every two parts
@@ -106,15 +119,18 @@ def build(r, out):
 
 def main():
     want = os.environ.get("REEL_FILA", "").strip()
-    rows = sheets(google_token(), f"values/{TAB}!A1:AM?valueRenderOption=FORMATTED_VALUE").get("values", [])
+    rows = sheets(google_token(), f"values/{TAB}!A1:AN?valueRenderOption=FORMATTED_VALUE").get("values", [])
+    st = json.load(open(STATE_FILE)) if os.path.exists(STATE_FILE) else {}
     if want:
         n = int(want)
-    else:
-        pend = [(n, r) for n, r in enumerate(rows[1:], start=2) if len(r) > STATE and r[STATE].strip() == "Pendiente"]
-        if not pend:
-            print("Reel: no hay relojes Pendiente.")
+    else:  # the next watch Cheche ticked «🎬 Reel» in the editor that has no Reel yet
+        g = lambda r, i: (r[i] if i < len(r) else "").strip()
+        picked = [n for n, r in enumerate(rows[1:], start=2) if "reel" in g(r, FOTOS_WEB).split()
+                  and g(r, STATE) in ("Publicado", "Pendiente") and g(r, 23).lstrip("'") not in st.get("reels", [])]
+        if not picked:
+            print("Reel: no hay relojes elegidos para Reel (🎬 en el editor).")
             return
-        n = min(pend, key=lambda t: (num(t[1][PRIO]) if len(t[1]) > PRIO and t[1][PRIO].strip() else 1e9, t[0]))[0]
+        n = picked[0]
     r = rows[n - 1]
     pid = (r[23] if len(r) > 23 else "").strip().lstrip("'") or f"fila{n}"
     os.makedirs(os.path.join(ROOT, "r"), exist_ok=True)
@@ -124,12 +140,18 @@ def main():
     if os.environ.get("REEL", "no").lower() in ("si", "sí", "1"):
         run = lambda *a: subprocess.run(["git", *a], cwd=ROOT)
         keep = sorted((os.path.join(ROOT, "r", f) for f in os.listdir(os.path.join(ROOT, "r"))), key=os.path.getmtime)
+        keep = [f for f in keep if f.endswith(".mp4")]
         for f in keep[:-KEEP]:  # the repo must stay small: only the newest Reels are kept
             run("rm", "-q", "--cached", f)
             os.remove(f)
-        run("add", out)
-        run("commit", "-qm", f"bot: reel fila {n}")
         run("pull", "-q", "--rebase", "origin", "main")
+        st = json.load(open(STATE_FILE)) if os.path.exists(STATE_FILE) else {}
+        st["reels"] = (st.get("reels", []) + [pid])[-500:]  # this watch has its Reel now
+        json.dump(st, open(STATE_FILE, "w"), indent=1)
+        last = os.path.join(ROOT, "r", "ultimo.json")  # what the Instagram step posts: the newest Reel
+        json.dump({"fila": n, "pid": pid, "url": f"https://gus1227.github.io/r/{pid}.mp4"}, open(last, "w"))
+        run("add", out, STATE_FILE, last)
+        run("commit", "-qm", f"bot: reel fila {n}")
         run("push", "-q", "origin", "HEAD:main")
 
 
