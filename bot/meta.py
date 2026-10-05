@@ -167,5 +167,34 @@ def instagram():
     mark(tok, n, IG_DONE, "Sí")
 
 
+
+# ---------- music for Reels (Instagram Audio API: only audio cleared for third-party use) ----------
+MOODS = ("cinematic", "luxury", "lofi", "piano")
+
+
+def musica(query=None):
+    """audio_configuration for a REELS container (a JSON string), or "" when Meta returns nothing.
+    Use: graph(f"/{IG}/media", {"media_type": "REELS", "video_url": url, "audio_configuration": musica(), ...}, post=True)"""
+    import random
+    for q in ([query] if query else random.sample(MOODS, len(MOODS))):
+        try:
+            found = graph("/ig_audio", {"audio_type": "music", "user_id": IG, "search_query": q}).get("data", [])
+        except SystemExit as e:
+            print("Audio API:", e)
+            return ""
+        ids = [a.get("id") or a.get("audio_id") for a in found[:10] if a.get("id") or a.get("audio_id")]
+        if ids:
+            pick_id = random.choice(ids)
+            print(f"Música «{q}»: {pick_id}")
+            return json.dumps({"audio_id": pick_id, "audio_volume": 100, "video_volume": 0})
+    return ""
+
+
+def musica_prueba():
+    for q in MOODS:
+        found = graph("/ig_audio", {"audio_type": "music", "user_id": IG, "search_query": q}).get("data", [])
+        print(q, len(found), json.dumps(found[:2])[:400])
+
+
 if __name__ == "__main__":
-    {"check": check, "facebook": facebook, "instagram": instagram}[os.environ.get("META", "check")]()
+    {"check": check, "facebook": facebook, "instagram": instagram, "musica": musica_prueba}[os.environ.get("META", "check")]()

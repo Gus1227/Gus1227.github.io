@@ -98,6 +98,7 @@ jobs:
             textos-si) TEXTOS=si python3 bot/textos.py ;;
             meta) python3 bot/meta.py ;;
             meta-prueba) META=facebook python3 bot/meta.py; META=instagram python3 bot/meta.py ;;
+            meta-musica) META=musica python3 bot/meta.py ;;
             meta-fb) META=facebook python3 bot/meta.py ;;
             meta-ig) META=instagram python3 bot/meta.py ;;
             meta-fb-si) META=facebook PUBLICAR=si python3 bot/meta.py ;;
