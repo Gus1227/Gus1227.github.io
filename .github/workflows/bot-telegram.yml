@@ -65,8 +65,12 @@ jobs:
           FILA_R="${PEDIDO%%:*}"
           export REDES="${PEDIDO#*:}"
           if [ "$REDES" = "$PEDIDO" ]; then REDES=""; fi
-          if [ "$PUBLICAR" = "si" ]; then REEL=si REEL_FILA="$FILA_R" python3 bot/reel.py; else REEL_FILA="$FILA_R" python3 bot/reel.py; fi
-          python3 bot/reel_publicar.py
+          set -o pipefail
+          {
+            if [ "$PUBLICAR" = "si" ]; then REEL=si REEL_FILA="$FILA_R" python3 bot/reel.py; else REEL_FILA="$FILA_R" python3 bot/reel.py; fi
+            python3 bot/reel_publicar.py
+          } 2>&1 | tee /tmp/salida.txt || { echo "::error::$(tail -c 1500 /tmp/salida.txt | tr '\n' '¶')"; exit 1; }
+          echo "::notice::$(tail -c 1500 /tmp/salida.txt | tr '\n' '¶')"
       - name: Revisar una fila
         if: ${{ inputs.fila }}
         env:
