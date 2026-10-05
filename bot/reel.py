@@ -20,14 +20,14 @@ SANS = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 # Hooks for the first 2 seconds (Cheche, 2026-10-05, from a «10 hooks» video). One per Reel, they take turns.
 # A hook with a condition is only used when the watch's title really has it (no invented specs).
 HOOKS = [("Nobody talks about\nthis detail.", None),
-         ("I wish I knew this\nbefore my first automatic.", r"automatic|mechanical"),
+         ("I wish I knew this\nbefore my first automatic", r"automatic|mechanical"),
          ("Stop scrolling.\nLook at this dial.", None),
-         ("Ever noticed how an\nautomatic second hand sweeps?", r"automatic|mechanical"),
+         ("Ever noticed how\nthe second hand sweeps?", r"automatic|mechanical"),
          ("Here's the truth about\nsapphire crystal.", r"sapphire"),
          ("Let me save you\nhours of searching.", None),
          ("This one might\nsurprise you.", None),
          ("Your next watch\nis right here.", None),
-         ("Unpopular opinion: a great automatic\ndoesn't need a famous name.", r"automatic|mechanical"),
+         ("Great watches don't\nneed a famous name.", None),
          ("Just found this piece.\nHad to show you.", None)]
 HOOK_S = 2.2
 
@@ -76,11 +76,16 @@ def text_layer(d, head, spec, price, hook=""):
         open(files[k], "w").write(v)
     t = lambda k, font, size, y, color="white": (
         f"drawtext=fontfile={font}:textfile={files[k]}:fontsize={size}:fontcolor={color}:x=(w-text_w)/2:y={y}"
-        ":shadowcolor=black@0.8:shadowx=2:shadowy=2")  # readable over a bright video too
-    hk = lambda k, y: (  # the hook: big, in the middle, only the first seconds
-        f"drawtext=fontfile={SERIF}:textfile={files[k]}:fontsize={min(72, int(72 * 27 / max(len(h1), len(h2), 1)))}:fontcolor=white"
-        f":x=(w-text_w)/2:y={y}:box=1:boxcolor=black@0.55:boxborderw=18:enable='lt(t,{HOOK_S})'")
-    hooks = [hk("h1", H // 2 - 120)] + ([hk("h2", H // 2 - 20)] if h2 else []) if hook else []
+        ":shadowcolor=black@0.8:shadowx=2:shadowy=2" + (f":enable='gte(t,{HOOK_S})'" if hook else ""))  # after the hook
+    # the hook: alone on the dimmed photo, two centered lines of the same size, soft fade in and out
+    fs = min(68, int(960 / (0.62 * max(len(h1), len(h2), 1))))  # always fits the width
+    lh, mid = int(fs * 1.45), (H - 1000) // 2 - 60 + 500  # line height; middle of the photo
+    top = mid - (lh if h2 else lh // 2)
+    fade = f"if(lt(t,0.25),t/0.25,if(gt(t,{HOOK_S - 0.3}),({HOOK_S}-t)/0.3,1))"
+    hk = lambda k, y: (f"drawtext=fontfile={SERIF}:textfile={files[k]}:fontsize={fs}:fontcolor=white:alpha='{fade}'"
+                       f":x=(w-text_w)/2:y={y}:shadowcolor=black@0.6:shadowx=2:shadowy=2:enable='lt(t,{HOOK_S})'")
+    hooks = ([f"drawbox=x=0:y=0:w=iw:h=ih:color=black@0.6:t=fill:enable='lt(t,{HOOK_S})'",  # the whole frame dims a little
+              hk("h1", top + (lh - fs) // 2)] + ([hk("h2", top + lh + (lh - fs) // 2)] if h2 else [])) if hook else []
     return ",".join(hooks + [t("brand", SERIF, 34, 120, "0xBBBBBB"), t("head", SERIF, min(58, int(58 * 30 / max(len(head), 1))), 200), t("spec", SANS, 32, 290, "0xCCCCCC"),
                      t("price", SERIF, 72, H - 330), t("cta", SANS, 36, H - 225, "0xCCCCCC")])
 
