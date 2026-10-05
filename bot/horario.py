@@ -2,6 +2,7 @@
 # posts at every even UTC hour (minute 5) and then starts the next run itself.
 # What it already did is kept in bot/estado.json (pushed to the repo), so a second run never posts twice.
 #   every 2 h: AliExpress data + Revisar tab; Telegram 2 a day (08, 18 UTC); Pinterest 8 a day; TikTok 3 a day (06, 12, 18 UTC)
+#   1 Reel a day (16 UTC) on Instagram, Facebook, TikTok and Pinterest
 #   with estado.json "meta": true also Facebook (16, 22 UTC) and Instagram (18, 00 UTC)
 import datetime, json, os, subprocess, sys, time, urllib.request
 
@@ -69,6 +70,14 @@ def turn(slot):
         run("rendimiento.py", RENDIMIENTO="si")
     if slot.hour == 16:  # 19:00 in Israel: refresh the pinned Top 3 in Telegram
         run("top.py", TOP="si")
+    day = slot.strftime("%Y-%m-%d")
+    if slot.hour == 16 and st.get("reel") != day:  # 1 Reel a day (19:00 Israel): Cheche's 🎬 queue first, else the best seller
+        st["reel"] = day
+        save(st, f"bot: reel {day}")  # mark first: never two Reels the same day
+        last = os.path.join(HERE, "..", "r", "ultimo.json")
+        before = os.path.getmtime(last) if os.path.exists(last) else 0
+        if run("reel.py", REEL="si", REEL_AUTO="si") and os.path.exists(last) and os.path.getmtime(last) > before:
+            run("reel_publicar.py", REDES="instagram,facebook,tiktok,pinterest")
     if st.get("meta"):  # Facebook and Instagram by the Meta API (replaces Make 7725903 and 7728023)
         if slot.hour in (16, 22):  # 17:00 and 23:00 London: Europe evening, Americas afternoon
             run("meta.py", META="facebook")

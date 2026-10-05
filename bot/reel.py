@@ -4,6 +4,7 @@
 # The file goes to r/<product id>.mp4 in this repo, so GitHub Pages serves it to Instagram, Facebook and TikTok.
 #   REEL_FILA=<row>  that row;  empty = the next watch Cheche ticked «🎬 Reel» in the editor (once per watch)
 #   REEL=si          also commit and push the file
+#   REEL_AUTO=si     if no watch is ticked 🎬, the best seller without a Reel (the daily automatic Reel)
 import json, os, re, subprocess, sys, tempfile, urllib.request
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -180,6 +181,12 @@ def main():
             return (int(m.group(1)) if m.group(1) else 9999) if m else 0
         picked = sorted((pos(r), n) for n, r in enumerate(rows[1:], start=2) if pos(r)
                         and g(r, STATE) in ("Publicado", "Pendiente") and g(r, 23).lstrip("'") not in st.get("reels", []))
+        if not picked and os.environ.get("REEL_AUTO", "no").lower() in ("si", "sí", "1"):
+            # the daily Reel with no 🎬 left: the best seller (AliExpress orders) that has no Reel yet
+            sold = lambda r: num(g(r, SALES)) / (100 if g(r, SALES).endswith("%") else 1)
+            picked = sorted((-sold(r), n) for n, r in enumerate(rows[1:], start=2)
+                            if g(r, STATE) == "Publicado" and num(g(r, PRICE)) >= 60 and g(r, IMG)
+                            and g(r, 23).lstrip("'") not in st.get("reels", []))
         if not picked:
             print("Reel: no hay relojes elegidos para Reel (🎬 en el editor).")
             return

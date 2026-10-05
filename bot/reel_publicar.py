@@ -52,9 +52,27 @@ def page_of(r):
     return f"https://gus1227.github.io/w/{slug}-{hashlib.sha1(link.encode()).hexdigest()[:6]}.html"
 
 
+def trending():
+    """audio_configuration with one of Instagram's trending songs right now, or "" if Meta gives none."""
+    import random
+    from meta import IG, graph
+    try:
+        res = graph("/ig_audio", {"audio_type": "music", "user_id": IG})  # no search = trending
+    except SystemExit as e:
+        print("Audio API:", e)
+        return ""
+    ids = [a.get("audio_id") or a.get("id") for a in (res.get("audio") or res.get("data") or [])[:10]
+           if (a.get("audio_id") or a.get("id")) and a.get("duration_in_ms", 30000) >= 15000]
+    if not ids:
+        return ""
+    pick = random.choice(ids)
+    print("Música en tendencia:", pick)
+    return json.dumps({"audio_id": pick, "audio_volume": 100, "video_volume": 0})
+
+
 def instagram(url, cap):
     from meta import IG, graph, musica, wait_ready
-    cfg = musica()  # Instagram music (Audio API), "" if Meta gives none
+    cfg = trending() or musica()  # Instagram music (Audio API): trending first (Cheche), else a quiet mood
     cid = graph(f"/{IG}/media", {"media_type": "REELS", "video_url": url, "caption": cap, "share_to_feed": "true",
                                  **({"audio_configuration": cfg} if cfg else {})}, post=True)["id"]
     if not wait_ready(cid):

@@ -18,8 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: pip install cryptography
-      - name: OCR para quitar fotos con texto (bot/fotos.py)
-        run: sudo apt-get install -y -q tesseract-ocr || (sudo apt-get update -q && sudo apt-get install -y -q tesseract-ocr) || true
+      - name: OCR para quitar fotos con texto (bot/fotos.py) y ffmpeg para el Reel diario
+        run: |
+          sudo rm -f /var/lib/man-db/auto-update  # man-db makes apt-get hang for many minutes on the runners
+          APT="sudo DEBIAN_FRONTEND=noninteractive timeout 600 apt-get install -y -q --no-install-recommends tesseract-ocr ffmpeg fonts-dejavu-core"
+          $APT || (sudo timeout 120 apt-get update -q && $APT) || true
       - run: |
           git config user.name "kabuzio-bot"
           git config user.email "kabuzio-bot@users.noreply.github.com"
