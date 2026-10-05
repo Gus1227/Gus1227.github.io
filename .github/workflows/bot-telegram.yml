@@ -64,9 +64,10 @@ jobs:
         run: |
           FILA_R="${PEDIDO%%:*}"
           export REDES="${PEDIDO#*:}"
-          [ "$REDES" = "$PEDIDO" ] && REDES=""
+          if [ "$REDES" = "$PEDIDO" ]; then REDES=""; fi
           if [ "$PUBLICAR" = "si" ]; then REEL=si REEL_FILA="$FILA_R" python3 bot/reel.py; else REEL_FILA="$FILA_R" python3 bot/reel.py; fi
           python3 bot/reel_publicar.py
+      - name: Revisar una fila
         if: ${{ inputs.fila }}
         env:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
