@@ -18,7 +18,7 @@ def sold(v):
 
 def kind(name):
     n = name.lower()
-    for words, k in ((("chronograph",), "Chronograph"), (("dive", "diver"), "Diver"), (("tourbillon",), "Tourbillon"),
+    for words, k in ((("chronograph",), "Chronograph"), (("dive", "diver"), "Sport"), (("tourbillon",), "Tourbillon"),
                      (("skeleton",), "Skeleton"), (("automatic", "mechanical"), "Automatic"), (("quartz",), "Quartz")):
         if any(w in n for w in words):
             return k

@@ -108,7 +108,7 @@ def caption(r):
     link = html.escape(good_link(r))
     coupon = f"\nCoupon: <code>{g(COUPON)}</code>" if g(COUPON) else ""
     tags = re.sub(r"\s*#\s*$", "", g(TAGS))  # "#Watches #" when the watch has no brand
-    return (f"<b>{html.escape(headline(name, raw(BRAND_M)))}</b>\n<i>{html.escape(name[:110])}</i>\n\n"
+    return (f"<b>{html.escape(headline(name, raw(BRAND_M)))}</b>\n\n"  # clean name only, never the AliExpress keyword title
             f"{feats}{chr(10) if feats else ''}<b>{g(PRICE)}</b>{' · ' + proof if proof else ''}\n"
             f"Buyer Protection · Worldwide shipping{coupon}\n\n"
             f"<a href=\"{link}\">View the piece →</a>\n\n{tags} {band} {kind} #Kabuzio #ad")

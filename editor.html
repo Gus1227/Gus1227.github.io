@@ -92,8 +92,8 @@ body.pick .card:not(.pk):hover{outline:3px dashed var(--ok);outline-offset:-1px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script>
 const HOOK="https://script.google.com/macros/s/AKfycbz09-5xnxih0ZKrXQdMNXKkPXba4uM_PD7b3gdA0ArLazAeDd8dpQJ5y5xYE86YnqLUSQ/exec"; // Apps Script de la hoja (antes Make 7755360)
-const STYLES=["Chronograph","Diver","Smartwatch","Automatic","Quartz","Other"];
-const TYPES=[["chronograph","Chronograph"],["dive","Diver"],["smart","Smartwatch"],["automatic","Automatic"],["mechanical","Automatic"],["tourbillon","Automatic"],["skeleton","Automatic"],["quartz","Quartz"]];
+const STYLES=["Chronograph","Sport","Smartwatch","Automatic","Quartz","Other"];
+const TYPES=[["chronograph","Chronograph"],["dive","Sport"],["smart","Smartwatch"],["automatic","Automatic"],["mechanical","Automatic"],["tourbillon","Automatic"],["skeleton","Automatic"],["quartz","Quartz"]];
 const C={name:0,price:1,img:3,estado:7,marca:12,ventas:13,video:21,fotos:22,pid:23,orden:27,oculto:28,fotosweb:29,estilo:30,nombre:31};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
