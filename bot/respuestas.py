@@ -32,8 +32,10 @@ def watch_of(caption, rows):
     from telegram import PRICE
     g = lambda r, i: (r[i] if i < len(r) else "").strip()
     first = (caption or "").split("\n")[0].strip().lower()
+    from textos import headline
     for r in reversed(rows[1:]):
-        if g(r, 40) and g(r, 40).lower() == first and g(r, PRICE) and g(r, PRICE) in (caption or ""):
+        head = g(r, 40) or headline(g(r, 0), g(r, 12))  # AO, or the same headline meta.py builds when AO is empty
+        if head and head.lower() == first and g(r, PRICE) and g(r, PRICE) in (caption or ""):
             return r
     return None
 
