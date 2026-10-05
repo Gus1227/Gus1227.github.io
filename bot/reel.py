@@ -17,6 +17,25 @@ MAX_OWN, FOTOS_WEB = 6, 29  # AD = Fotos_web: photo order from the editor, «ree
 FX = ["fade", "smoothleft", "fadeblack", "smoothup"]  # quiet transitions, they take turns
 SERIF = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
 SANS = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+# Hooks for the first 2 seconds (Cheche, 2026-10-05, from a «10 hooks» video). One per Reel, they take turns.
+# A hook with a condition is only used when the watch's title really has it (no invented specs).
+HOOKS = [("Nobody talks about\nthis detail.", None),
+         ("I wish I knew this\nbefore my first automatic.", r"automatic|mechanical"),
+         ("Stop scrolling.\nLook at this dial.", None),
+         ("Ever noticed how an\nautomatic second hand sweeps?", r"automatic|mechanical"),
+         ("Here's the truth about\nsapphire crystal.", r"sapphire"),
+         ("Let me save you\nhours of searching.", None),
+         ("This one might\nsurprise you.", None),
+         ("Your next watch\nis right here.", None),
+         ("Unpopular opinion: a great automatic\ndoesn't need a famous name.", r"automatic|mechanical"),
+         ("Just found this piece.\nHad to show you.", None)]
+HOOK_S = 2.2
+
+
+def hook_for(name, k):
+    """The k-th hook that fits this watch (k = how many Reels were made before)."""
+    ok = [h for h, need in HOOKS if not need or re.search(need, name.lower())]
+    return ok[k % len(ok)]
 
 
 def ff(*a):
@@ -48,15 +67,21 @@ def video_clip(src, out):
        f"fps={FPS},format=yuv420p,setsar=1", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", out)
 
 
-def text_layer(d, head, spec, price):
+def text_layer(d, head, spec, price, hook=""):
     files = {}
-    for k, v in {"brand": "K A B U Z I O", "head": head, "spec": spec, "price": price, "cta": "Link in bio"}.items():
+    h1, _, h2 = hook.partition("\n")
+    for k, v in {"brand": "K A B U Z I O", "head": head, "spec": spec, "price": price, "cta": "Link in bio",
+                 "h1": h1, "h2": h2}.items():
         files[k] = os.path.join(d, k + ".txt")
         open(files[k], "w").write(v)
     t = lambda k, font, size, y, color="white": (
         f"drawtext=fontfile={font}:textfile={files[k]}:fontsize={size}:fontcolor={color}:x=(w-text_w)/2:y={y}"
         ":shadowcolor=black@0.8:shadowx=2:shadowy=2")  # readable over a bright video too
-    return ",".join([t("brand", SERIF, 34, 120, "0xBBBBBB"), t("head", SERIF, min(58, int(58 * 30 / max(len(head), 1))), 200), t("spec", SANS, 32, 290, "0xCCCCCC"),
+    hk = lambda k, y: (  # the hook: big, in the middle, only the first seconds
+        f"drawtext=fontfile={SERIF}:textfile={files[k]}:fontsize={min(72, int(72 * 27 / max(len(h1), len(h2), 1)))}:fontcolor=white"
+        f":x=(w-text_w)/2:y={y}:box=1:boxcolor=black@0.55:boxborderw=18:enable='lt(t,{HOOK_S})'")
+    hooks = [hk("h1", H // 2 - 120)] + ([hk("h2", H // 2 - 20)] if h2 else []) if hook else []
+    return ",".join(hooks + [t("brand", SERIF, 34, 120, "0xBBBBBB"), t("head", SERIF, min(58, int(58 * 30 / max(len(head), 1))), 200), t("spec", SANS, 32, 290, "0xCCCCCC"),
                      t("price", SERIF, 72, H - 330), t("cta", SANS, 36, H - 225, "0xCCCCCC")])
 
 
@@ -77,7 +102,7 @@ def media(r):
     return seq
 
 
-def build(r, out):
+def build(r, out, k=0):
     from textos import headline, specs
     g = lambda i: (r[i] if i < len(r) else "").strip()
     seq = media(r)
@@ -109,12 +134,13 @@ def build(r, out):
             t += durs[i - 1] - FADE
             chain.append(f"{last}[{i}:v]xfade=transition={FX[i % len(FX)]}:duration={FADE}:offset={t:.2f}[x{i}]")
             last = f"[x{i}]"
-        chain.append(f"{last}{text_layer(d, head, spec, price)}[v]")
+        hook = hook_for(g(NAME), k)
+        chain.append(f"{last}{text_layer(d, head, spec, price, hook)}[v]")
         ins = [a for c in clips for a in ("-i", c)]
         ff(*ins, "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo", "-filter_complex", ";".join(chain),
            "-map", "[v]", "-map", f"{len(clips)}:a", "-shortest", "-c:v", "libx264", "-preset", "medium", "-crf", "21",
            "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", out)
-    print(f"Reel listo: {out} ({len(clips)} partes) · {head} · {spec} · {price}")
+    print(f"Reel listo: {out} ({len(clips)} partes) · gancho: {hook!r} · {head} · {spec} · {price}")
 
 
 def main():
@@ -138,7 +164,7 @@ def main():
     pid = (r[23] if len(r) > 23 else "").strip().lstrip("'") or f"fila{n}"
     os.makedirs(os.path.join(ROOT, "r"), exist_ok=True)
     out = os.path.join(ROOT, "r", f"{pid}.mp4")
-    build(r, out)
+    build(r, out, len(st.get("reels", [])))
     print("URL: https://gus1227.github.io/r/" + pid + ".mp4")
     last = os.path.join(ROOT, "r", "ultimo.json")  # what reel_publicar.py and the Instagram step post: the newest Reel
     json.dump({"fila": n, "pid": pid, "url": f"https://gus1227.github.io/r/{pid}.mp4"}, open(last, "w"))
