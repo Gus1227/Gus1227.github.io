@@ -11,7 +11,7 @@ on:
       red:
         description: "¿En qué red publicar?"
         type: choice
-        options: ["telegram", "tiktok", "pinterest"]
+        options: ["telegram", "tiktok", "pinterest", "reel"]
         default: "telegram"
       reloj:
         description: "Número de fila de un reloj concreto (vacío = el siguiente de la cola)"
@@ -43,7 +43,7 @@ jobs:
         run: python3 bot/telegram.py
         if: ${{ !inputs.fila && inputs.red == 'telegram' }}
       - name: TikTok y Pinterest (Zernio)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.red != 'telegram' && !inputs.fila }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.red != 'telegram' && inputs.red != 'reel' && !inputs.fila }}
         env:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
@@ -52,7 +52,21 @@ jobs:
           PUBLICAR: ${{ inputs.publicar }}
           FILA_PUB: ${{ inputs.reloj }}
         run: python3 bot/zernio.py
-      - name: Revisar una fila
+      - name: Reel elegido en el editor (reloj = «fila:redes», p. ej. «12:instagram,tiktok»)
+        if: ${{ inputs.red == 'reel' && !inputs.fila }}
+        env:
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
+          META_TOKEN: ${{ secrets.META_TOKEN }}
+          PUBLICAR: ${{ inputs.publicar }}
+          PEDIDO: ${{ inputs.reloj }}
+        run: |
+          FILA_R="${PEDIDO%%:*}"
+          export REDES="${PEDIDO#*:}"
+          [ "$REDES" = "$PEDIDO" ] && REDES=""
+          if [ "$PUBLICAR" = "si" ]; then REEL=si REEL_FILA="$FILA_R" python3 bot/reel.py; else REEL_FILA="$FILA_R" python3 bot/reel.py; fi
+          python3 bot/reel_publicar.py
         if: ${{ inputs.fila }}
         env:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}

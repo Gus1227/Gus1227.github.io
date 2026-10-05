@@ -204,7 +204,22 @@ function edit(it){
 
 // ---------- Reels: Cheche's own queue, separate from the web order ----------
 let reelsDone=[];
-async function loadReelsDone(){try{const r=await fetch("bot/estado.json?"+Date.now(),{cache:"no-store"});reelsDone=((await r.json()).reels)||[]}catch(e){reelsDone=[]}render();reelBtn()}
+async function loadReelsDone(){try{const r=await fetch("bot/estado.json?"+Date.now(),{cache:"no-store"});reelsDone=((await r.json()).reels)||[]}catch(e){reelsDone=[]}try{const r=await fetch("r/publicados.json?"+Date.now(),{cache:"no-store"});reelsPub=r.ok?await r.json():{}}catch(e){reelsPub={}}render();reelBtn()}
+let reelsPub={};
+const RNETS=[["instagram","📸 Instagram"],["facebook","📘 Facebook"],["tiktok","🎵 TikTok"],["pinterest","📌 Pinterest"],["telegram","✈️ Telegram"]];
+const reelWhere=it=>{const p=reelsPub[String(it.pid||"").replace(/^'/,"")]||{};return RNETS.filter(n=>p[n[0]]).map(n=>n[1].split(" ")[0]).join(" ")};
+function pickNets(it){
+  if(snap(it)!==it.orig){toast("Primero toca Guardar cambios y luego publica.",5000);return}
+  $("box").innerHTML=`<h2><span>📤 Publicar Reel</span><button id="mx" aria-label="Cerrar">×</button></h2><p style="font-size:14px">${esc(it.nombre||it.name).slice(0,70)}</p><p style="font-size:13px;color:var(--muted)">Elige dónde sale. El bot hace el video y lo publica en unos 5 minutos.</p>`+
+   RNETS.map(n=>`<label style="display:flex;gap:10px;align-items:center;padding:8px 0;font-size:15px"><input type="checkbox" value="${n[0]}" checked> ${n[1]}</label>`).join("")+
+   `<div style="display:flex;gap:8px;margin-top:12px"><button class="btn dark" id="pgo">Publicar</button><button class="btn" id="pback">Volver</button></div>`;
+  $("mx").onclick=()=>$("md").classList.remove("on");$("pback").onclick=showReels;
+  $("pgo").onclick=async()=>{const nets=[...$("box").querySelectorAll("input:checked")].map(x=>x.value);if(!nets.length){toast("Elige al menos una red.");return}
+    $("pgo").disabled=true;$("pgo").textContent="Enviando…";
+    try{const b=new URLSearchParams({k:KEY,a:"publish",d:JSON.stringify({red:"reel",fila:(it.row+1)+":"+nets.join(",")})});const r=await fetch(HOOK,{method:"POST",body:b});const j=await r.json();if(j.error)throw new Error(j.error);
+      toast("✓ Enviado. El Reel sale en unos 5 minutos en: "+nets.join(", "),8000);$("md").classList.remove("on");setTimeout(loadReelsDone,360000)}
+    catch(e){$("pgo").disabled=false;$("pgo").textContent="Publicar";toast("No se pudo: "+e.message,7000)}};
+  $("md").classList.add("on")}
 const reelQueue=()=>items.filter(x=>x.reel).sort((a,b)=>a.reel-b.reel);
 const reelDone=it=>!!it.pid&&reelsDone.includes(String(it.pid).replace(/^'/,""));
 const reelPos=it=>reelQueue().indexOf(it)+1;
@@ -214,10 +229,11 @@ function reelSummary(){const q=reelQueue(),p=q.filter(x=>!reelDone(x)).length;re
 function toggleReel(it){if(it.reel){it.reel=0;renumber();toast("Quitado de Reels. "+reelSummary(),4000)}else{renumber();it.reel=reelQueue().length+1;toast(`🎬 Reel nº ${it.reel}. `+reelSummary()+". Toca Guardar cambios.",5000)}render();reelBtn()}
 function showReels(){
   renumber();const q=reelQueue();
-  $("box").innerHTML=`<h2><span>🎬 Reels</span><button id="mx" aria-label="Cerrar">×</button></h2><p style="font-size:13px;color:var(--muted)">${esc(reelSummary())}. El bot hace primero el nº 1. Este orden es solo para los Reels: la web no cambia. Al terminar, toca <b>Guardar cambios</b>.</p>`+
-   (q.length?q.map((x,i)=>`<div class="rq"><span class="n">${i+1}</span><img referrerpolicy="no-referrer" src="${esc(firstImg(x))}_220x220.jpg" alt=""><div class="x"><div>${esc(x.nombre||x.name).slice(0,60)}</div><div class="s${reelDone(x)?" ok":""}">${reelDone(x)?"✓ Hecho":"Por hacer"} · ${x.media.length} ${x.media.length===1?"foto":"fotos"}</div></div><button data-q="up" data-r="${x.row}" aria-label="Subir">↑</button><button data-q="down" data-r="${x.row}" aria-label="Bajar">↓</button><button data-q="del" data-r="${x.row}" aria-label="Quitar">✕</button></div>`).join(""):'<p class="rp">Aún no elegiste relojes. Toca 🎬 debajo de un reloj.</p>');
+  $("box").innerHTML=`<h2><span>🎬 Reels</span><button id="mx" aria-label="Cerrar">×</button></h2><p style="font-size:13px;color:var(--muted)">${esc(reelSummary())}. El bot hace primero el nº 1. Con 📤 lo publicas ya y eliges las redes. Este orden es solo para los Reels: la web no cambia. Al terminar, toca <b>Guardar cambios</b>.</p>`+
+   (q.length?q.map((x,i)=>`<div class="rq"><span class="n">${i+1}</span><img referrerpolicy="no-referrer" src="${esc(firstImg(x))}_220x220.jpg" alt=""><div class="x"><div>${esc(x.nombre||x.name).slice(0,60)}</div><div class="s${reelDone(x)?" ok":""}">${reelDone(x)?"✓ Hecho":"Por hacer"} · ${x.media.length} ${x.media.length===1?"foto":"fotos"}${reelWhere(x)?" · Salió en: "+reelWhere(x):""}</div></div><button data-q="pub" data-r="${x.row}" aria-label="Publicar">📤</button><button data-q="up" data-r="${x.row}" aria-label="Subir">↑</button><button data-q="down" data-r="${x.row}" aria-label="Bajar">↓</button><button data-q="del" data-r="${x.row}" aria-label="Quitar">✕</button></div>`).join(""):'<p class="rp">Aún no elegiste relojes. Toca 🎬 debajo de un reloj.</p>');
   $("mx").onclick=()=>$("md").classList.remove("on");$("md").onclick=e=>{if(e.target.id==="md")$("md").classList.remove("on")};
   $("box").querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{const it=items.find(x=>x.row==b.dataset.r),q=reelQueue(),i=q.indexOf(it);
+    if(b.dataset.q==="pub"){pickNets(it);return}
     if(b.dataset.q==="del")it.reel=0;
     if(b.dataset.q==="up"&&i>0){q.splice(i,1);q.splice(i-1,0,it);q.forEach((x,j)=>x.reel=j+1)}
     if(b.dataset.q==="down"&&i<q.length-1){q.splice(i,1);q.splice(i+1,0,it);q.forEach((x,j)=>x.reel=j+1)}
