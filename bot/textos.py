@@ -102,6 +102,10 @@ def main():
             data.append({"range": f"{TAB}!{col(cs)}{n}", "values": [[s]]})
     print(len(data), "filas por escribir")
     if write and data:
+        props = next(x["properties"] for x in sheets(tok, "?fields=sheets.properties")["sheets"] if x["properties"]["title"] == TAB)
+        if props["gridProperties"]["columnCount"] < cs + 1:  # the sheet ends before our columns: add them
+            sheets(tok, ":batchUpdate", {"requests": [{"appendDimension": {"sheetId": props["sheetId"], "dimension": "COLUMNS",
+                   "length": cs + 1 - props["gridProperties"]["columnCount"]}}]}, method="POST")
         sheets(tok, "values:batchUpdate", {"valueInputOption": "RAW", "data": data}, method="POST")
         print("Escrito.")
 
