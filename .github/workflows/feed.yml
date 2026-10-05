@@ -10,12 +10,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Pillow (2:3 pin images) and OCR (photos without text)
+        run: pip install -q pillow && sudo apt-get install -y -qq tesseract-ocr >/dev/null
       - name: Build feed.xml from the catalog
         run: |
           python3 - <<'PY'
           import csv, io, urllib.request, html, re, datetime, os, json, sys, hashlib
           sys.path.insert(0, "bot")
           from textos import headline, specs
+          from PIL import Image, ImageDraw, ImageFont
+          import fotos
+          fotos.CACHE = "pins/texto.json"  # own OCR cache (bot/fotos.json belongs to the bot clock)
+          SERIF, SANS = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+
+          def tall(f, head, feats):
+              # Pinterest likes 2:3 (1000x1500): the photo on white with a quiet name under it. No price (it changes).
+              im = Image.open(f).convert("RGB")
+              if im.size == (1000, 1500):
+                  return
+              im.thumbnail((920, 920))
+              out = Image.new("RGB", (1000, 1500), "white")
+              out.paste(im, ((1000 - im.width) // 2, 230 + (920 - im.height) // 2))
+              d = ImageDraw.Draw(out)
+              def line(t, font, size, y, color):
+                  while size > 20 and d.textlength(t, font=ImageFont.truetype(font, size)) > 900:
+                      size -= 2
+                  fnt = ImageFont.truetype(font, size)
+                  d.text(((1000 - d.textlength(t, font=fnt)) / 2, y), t, font=fnt, fill=color)
+              line("K A B U Z I O", SERIF, 34, 110, "#777777")
+              line(head, SERIF, 54, 1200, "#111111")
+              line(" · ".join(feats[:3]), SANS, 32, 1290, "#555555")
+              line("Hand-picked on AliExpress", SANS, 28, 1380, "#999999")
+              out.save(f, "JPEG", quality=85, optimize=True)
           CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/pub?gid=596242979&single=true&output=csv"
           SITE = "https://gus1227.github.io/"
           rows = list(csv.DictReader(io.StringIO(urllib.request.urlopen(CSV, timeout=60).read().decode("utf-8"))))
@@ -40,6 +66,8 @@ jobs:
               head = "Men's Watch" if head == "Kabuzio Pick" else head if head.endswith("Watch") else head + " Watch"
               feats = specs(name)
               title = (f"{head} – {', '.join(feats[:2])}" if feats else head)[:100]
+              # each extra pin of the same watch goes after another search (Pinterest = search engine)
+              ANGLES = ["", "Men's Watch Gift Idea", "Everyday Watch for Men", "Collector's Pick", "Classic Men's Style", "Wrist Watch Inspiration"]
               desc = (f"{head}. {'. '.join(feats) + '. ' if feats else ''}{price} on AliExpress with Buyer Protection and worldwide shipping. "
                       f"Hand-picked by Kabuzio: more pieces every day at linktr.ee/Kabuzio_Deal {tags} #menswatches #watchesofinstagram #quietluxury #ad"
                       + (" #automaticwatch" if "Automatic" in head else ""))
@@ -51,7 +79,10 @@ jobs:
               for u in pics:
                   if u.startswith("https://") and u not in seen:
                       seen.append(u)
+              clean = set(fotos.limpias(seen[:6], r.get("Marca")))  # no infographics with text (Cheche, 2026-10-05)
               for n, u in enumerate(seen[:6]):
+                  if u not in clean:
+                      continue
                   key = wid if n == 0 else f"{wid}-{n}"
                   f = f"pins/{key}.jpg"
                   if not os.path.exists(f):
@@ -63,8 +94,11 @@ jobs:
                       except Exception as ex:
                           print("no image", key, ex)
                           continue
+                  tall(f, head, feats)
                   pic = f"{SITE}{f}"
-                  pins.append((n, -sales, key, {"k": key, "t": title, "d": desc[:500], "l": page + "?src=pin", "i": pic}))
+                  t_n = f"{head} · {ANGLES[n]}"[:100] if n and ANGLES[n] else title
+                  d_n = (f"{ANGLES[n]}: " + desc)[:500] if n and ANGLES[n] else desc[:500]
+                  pins.append((n, -sales, key, {"k": key, "t": t_n, "d": d_n, "l": page + "?src=pin", "i": pic}))
                   items.append((n, -sales, key, f"""<title>{e(name)} – {e(price)}</title><link>{SITE}?w={wid}&amp;src=pin</link>@@PUB@@<guid isPermaLink="false">{key}</guid><description>{e(desc)}</description><enclosure url="{e(pic)}" type="image/jpeg" length="0"/><media:content url="{e(pic)}" medium="image"/>"""))
           # main photos of best sellers first, then 2nd photos, and so on
           items.sort(key=lambda t: (t[0], t[1]))
@@ -89,6 +123,9 @@ jobs:
               queue.append(dict(cur[q["k"]], off=0) if q["k"] in cur else dict(q, off=1))
           known = {q["k"] for q in old}
           queue += [dict(p[3], off=0) for p in pins if p[2] not in known]
+          # pins not posted yet: drop the ones that are off, so no 2-hour turn is lost on them
+          nxt = json.load(open("bot/estado.json")).get("pin", 0) + 2 if os.path.exists("bot/estado.json") else len(queue)
+          queue = queue[:nxt] + [q for q in queue[nxt:] if not q["off"]]
           for q in queue:
               q["b"] = json.dumps({"content": q["d"], "mediaItems": [{"type": "image", "url": q["i"]}], "publishNow": True,
                   "platforms": [{"platform": "pinterest", "accountId": "6ac2543ed3257a1645992aa0",
@@ -102,6 +139,9 @@ jobs:
                   if os.path.exists(f): os.remove(f)
               else:
                   open(f, "w", encoding="utf-8").write(q["b"])
+          for name in os.listdir("pins/q"):
+              if name.endswith(".json") and name[:-5].isdigit() and int(name[:-5]) >= len(queue):
+                  os.remove(f"pins/q/{name}")
           print(len(queue), "in queue")
           print(len(items), "items")
           PY
@@ -112,4 +152,7 @@ jobs:
           git config user.name "kabuzio-bot"
           git config user.email "kabuzio-bot@users.noreply.github.com"
           git add -A feed.xml pins w sitemap.xml robots.txt $(ls catalogo.csv 2>/dev/null)
-          git diff --cached --quiet || (git commit -m "Update Pinterest feed" && git push)
+          git diff --cached --quiet && exit 0
+          git commit -qm "Update Pinterest feed"
+          for i in 1 2 3 4; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && exit 0; sleep $((i * 5)); done
+          exit 1

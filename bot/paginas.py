@@ -95,6 +95,7 @@ def page(w, related):
 <link rel="canonical" href="{SITE}w/{w['id']}.html">
 <meta property="og:type" content="product"><meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:image" content="{e(w['pics'][0])}_800x800.jpg"><meta property="og:url" content="{SITE}w/{w['id']}.html">
+<meta property="og:site_name" content="Kabuzio">{f'<meta property="og:price:amount" content="{price_num}"><meta property="og:price:currency" content="USD"><meta property="product:availability" content="instock">' if price_num else ''}
 <meta name="referrer" content="no-referrer">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌚</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
