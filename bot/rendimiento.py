@@ -80,7 +80,7 @@ def main():
     for n, r in enumerate(rows[1:], start=2):
         if g(r, STATE) != "Pendiente":
             continue
-        title = re.sub(r"(seiko|citizen|miyota)\s*(japan\s*)?(nh\d+\w*\s*|\d\w*\s*)?(automatic\s*)?(movement|movt|mechanism|caliber)", "", g(r, NAME).lower())
+        title = re.sub(r"(seiko|citizen|miyota)\s*(japan\s*)?([a-z]{0,2}\d+\w*\s*)?(automatic\s*|quartz\s*|mechanical\s*|chronograph\s*)?(movement|movt|mechanism|caliber)", "", g(r, NAME).lower())
         if FAMOUS.search(title):
             fake.append(n)
             continue
@@ -94,7 +94,7 @@ def main():
     pend.sort(key=lambda t: (-t[0], t[1]))
     cells = [(f"AM{n}", str(AUTO + i)) for i, (_, n, cur) in enumerate(pend) if cur != str(AUTO + i)]
     cells += [(f"H{n}", "Réplica") for n in fake]
-    old = datetime.datetime.utcnow() - datetime.timedelta(days=14)
+    old = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None) - datetime.timedelta(days=14)
     again = [(v, by_pid[p][0]) for p, v in watch.most_common() if g(by_pid[p][1], STATE) == "Publicado"
              and (when(g(by_pid[p][1], 8)) or old) <= old]
     if again:
