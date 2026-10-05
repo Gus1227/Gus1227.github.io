@@ -11,7 +11,8 @@ from telegram import EXTRA, IMG, NAME, PRICE, PRIO, STATE, TAB, VIDEO, BRAND_M, 
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 W, H, FPS = 1080, 1920, 30
-PHOTO_S, VIDEO_S, MAX_PHOTOS, KEEP = 3.2, 5, 4, 30
+PHOTO_S, VIDEO_S, MAX_PHOTOS, KEEP, FADE = 3.6, 5, 4, 30, 0.7
+FX = ["fade", "smoothleft", "fadeblack", "smoothup"]  # quiet transitions, they take turns
 SERIF = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
 SANS = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
@@ -35,14 +36,14 @@ def photo_clip(src, out, i):
     ff("-loop", "1", "-i", src, "-t", str(PHOTO_S), "-vf",
        f"scale=2000:2000:force_original_aspect_ratio=decrease,pad=2000:2000:(ow-iw)/2:(oh-ih)/2:color=black,"
        f"zoompan=z='{zoom}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:s=1000x1000:fps={FPS},"
-       f"pad={W}:{H}:40:(oh-ih)/2-60:color=black,format=yuv420p,fade=t=in:st=0:d=0.4",
+       f"pad={W}:{H}:40:(oh-ih)/2-60:color=black,format=yuv420p,setsar=1",
        "-r", str(FPS), "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", out)
 
 
 def video_clip(src, out):
     ff("-i", src, "-t", str(VIDEO_S), "-an", "-vf",
        f"scale={W}:{H}:force_original_aspect_ratio=decrease,pad={W}:{H}:(ow-iw)/2:(oh-ih)/2-60:color=black,"
-       f"fps={FPS},format=yuv420p", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", out)
+       f"fps={FPS},format=yuv420p,setsar=1", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", out)
 
 
 def text_layer(d, head, spec, price):
@@ -51,8 +52,9 @@ def text_layer(d, head, spec, price):
         files[k] = os.path.join(d, k + ".txt")
         open(files[k], "w").write(v)
     t = lambda k, font, size, y, color="white": (
-        f"drawtext=fontfile={font}:textfile={files[k]}:fontsize={size}:fontcolor={color}:x=(w-text_w)/2:y={y}")
-    return ",".join([t("brand", SERIF, 34, 120, "0xBBBBBB"), t("head", SERIF, 58, 200), t("spec", SANS, 32, 290, "0xCCCCCC"),
+        f"drawtext=fontfile={font}:textfile={files[k]}:fontsize={size}:fontcolor={color}:x=(w-text_w)/2:y={y}"
+        ":shadowcolor=black@0.8:shadowx=2:shadowy=2")  # readable over a bright video too
+    return ",".join([t("brand", SERIF, 34, 120, "0xBBBBBB"), t("head", SERIF, min(58, int(58 * 30 / max(len(head), 1))), 200), t("spec", SANS, 32, 290, "0xCCCCCC"),
                      t("price", SERIF, 72, H - 330), t("cta", SANS, 36, H - 225, "0xCCCCCC")])
 
 
@@ -83,10 +85,20 @@ def build(r, out):
                 print("Foto descartada:", u, e)
         if not clips:
             raise SystemExit("Reel: sin fotos ni video")
-        lst = os.path.join(d, "list.txt")
-        open(lst, "w").write("".join(f"file '{c}'\n" for c in clips))
-        ff("-f", "concat", "-safe", "0", "-i", lst, "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
-           "-vf", text_layer(d, head, spec, price), "-shortest", "-c:v", "libx264", "-preset", "medium", "-crf", "21",
+        if len(clips) > 1 and clips[0].endswith("c0.mp4"):  # video second: first photo, video, other photos
+            clips[0], clips[1] = clips[1], clips[0]
+        durs = [float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", c],
+                                     capture_output=True, text=True).stdout.strip() or PHOTO_S) for c in clips]
+        # soft crossfade between every two parts
+        chain, last, t = [], "[0:v]", 0.0
+        for i in range(1, len(clips)):
+            t += durs[i - 1] - FADE
+            chain.append(f"{last}[{i}:v]xfade=transition={FX[i % len(FX)]}:duration={FADE}:offset={t:.2f}[x{i}]")
+            last = f"[x{i}]"
+        chain.append(f"{last}{text_layer(d, head, spec, price)}[v]")
+        ins = [a for c in clips for a in ("-i", c)]
+        ff(*ins, "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo", "-filter_complex", ";".join(chain),
+           "-map", "[v]", "-map", f"{len(clips)}:a", "-shortest", "-c:v", "libx264", "-preset", "medium", "-crf", "21",
            "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", out)
     print(f"Reel listo: {out} ({len(clips)} partes) · {head} · {spec} · {price}")
 
