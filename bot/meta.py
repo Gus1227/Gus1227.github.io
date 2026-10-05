@@ -178,11 +178,13 @@ def musica(query=None):
     import random
     for q in ([query] if query else random.sample(MOODS, len(MOODS))):
         try:
-            found = graph("/ig_audio", {"audio_type": "music", "user_id": IG, "search_query": q}).get("data", [])
+            res = graph("/ig_audio", {"audio_type": "music", "user_id": IG, "search_query": q})
+            found = res.get("audio") or res.get("data") or []
         except SystemExit as e:
             print("Audio API:", e)
             return ""
-        ids = [a.get("id") or a.get("audio_id") for a in found[:10] if a.get("id") or a.get("audio_id")]
+        ids = [a.get("audio_id") or a.get("id") for a in found[:10]
+               if (a.get("audio_id") or a.get("id")) and a.get("duration_in_ms", 30000) >= 15000]
         if ids:
             pick_id = random.choice(ids)
             print(f"Música «{q}»: {pick_id}")
