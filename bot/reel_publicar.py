@@ -53,8 +53,10 @@ def page_of(r):
 
 
 def instagram(url, cap):
-    from meta import IG, graph, wait_ready
-    cid = graph(f"/{IG}/media", {"media_type": "REELS", "video_url": url, "caption": cap, "share_to_feed": "true"}, post=True)["id"]
+    from meta import IG, graph, musica, wait_ready
+    cfg = musica()  # Instagram music (Audio API), "" if Meta gives none
+    cid = graph(f"/{IG}/media", {"media_type": "REELS", "video_url": url, "caption": cap, "share_to_feed": "true",
+                                 **({"audio_configuration": cfg} if cfg else {})}, post=True)["id"]
     if not wait_ready(cid):
         raise SystemExit("Instagram: el video no quedó listo")
     return graph(f"/{IG}/media_publish", {"creation_id": cid}, post=True).get("id")
