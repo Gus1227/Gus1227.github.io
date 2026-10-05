@@ -111,7 +111,7 @@ def caption(r):
     return (f"<b>{html.escape(headline(name, raw(BRAND_M)))}</b>\n<i>{html.escape(name[:110])}</i>\n\n"
             f"{feats}{chr(10) if feats else ''}<b>{g(PRICE)}</b>{' · ' + proof if proof else ''}\n"
             f"Buyer Protection · Worldwide shipping{coupon}\n\n"
-            f"<a href=\"{link}\">View the piece →</a>\n\n{tags} {band} {kind} #Kabuzio")
+            f"<a href=\"{link}\">View the piece →</a>\n\n{tags} {band} {kind} #Kabuzio #ad")
 
 
 def photos(r):

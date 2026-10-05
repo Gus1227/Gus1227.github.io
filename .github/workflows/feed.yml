@@ -41,7 +41,7 @@ jobs:
               feats = specs(name)
               title = (f"{head} – {', '.join(feats[:2])}" if feats else head)[:100]
               desc = (f"{head}. {'. '.join(feats) + '. ' if feats else ''}{price} on AliExpress with Buyer Protection and worldwide shipping. "
-                      f"Hand-picked by Kabuzio: more pieces every day at linktr.ee/Kabuzio_Deal {tags} #menswatches #watchesofinstagram #quietluxury"
+                      f"Hand-picked by Kabuzio: more pieces every day at linktr.ee/Kabuzio_Deal {tags} #menswatches #watchesofinstagram #quietluxury #ad"
                       + (" #automaticwatch" if "Automatic" in head else ""))
               slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:60].rstrip("-")
               page = f"{SITE}w/{slug}-{hashlib.sha1(link.encode()).hexdigest()[:6]}.html"  # same address as bot/paginas.py

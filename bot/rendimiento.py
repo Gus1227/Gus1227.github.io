@@ -3,11 +3,14 @@
 #   2. sorts the «Pendiente» queue (AM Prioridad): watches like the ones that sell (same brand, same price band,
 #      many AliExpress orders) go first. Only empty cells or our own values (50 and up) are touched:
 #      a number below 50 typed by Cheche always wins.
+#   3. compliance: a «Pendiente» watch whose title names a famous brand (Rolex, Omega...) is set to «Réplica»,
+#      out of the queue and the web. «Seiko NH35 movement» and similar are real parts and do not count.
 # RENDIMIENTO=si writes; anything else only prints.
 import math, os, re, sys
 from collections import Counter, defaultdict
 
 sys.path.insert(0, os.path.dirname(__file__))
+from revisar import FAMOUS
 from telegram import NAME, PRICE, STATE, TAB, PRIO, BRAND_M, SALES, google_token, sheets
 
 WRITE = os.environ.get("RENDIMIENTO", "no").lower() in ("si", "sí", "1")
@@ -67,9 +70,13 @@ def main():
         print(" | ".join(str(c) for c in line))
 
     # ---- 2. queue order ----
-    pend = []
+    pend, fake = [], []
     for n, r in enumerate(rows[1:], start=2):
         if g(r, STATE) != "Pendiente":
+            continue
+        title = re.sub(r"(seiko|citizen|miyota)\s*(japan\s*)?(nh\d+\w*\s*|\d\w*\s*)?(automatic\s*)?(movement|movt|mechanism|caliber)", "", g(r, NAME).lower())
+        if FAMOUS.search(title):
+            fake.append(n)
             continue
         cur = g(r, PRIO)
         if cur and num(cur) < AUTO:
@@ -80,6 +87,8 @@ def main():
         pend.append((score, n, cur))
     pend.sort(key=lambda t: (-t[0], t[1]))
     cells = [(f"AM{n}", str(AUTO + i)) for i, (_, n, cur) in enumerate(pend) if cur != str(AUTO + i)]
+    cells += [(f"H{n}", "Réplica") for n in fake]
+    print("Posibles réplicas (marca famosa en el título):", ", ".join(f"fila {n}: {g(rows[n - 1], NAME)[:50]}" for n in fake) or "ninguna")
     print(f"\nCola: {len(pend)} relojes Pendiente ordenados; {len(cells)} cambios. Primeros:",
           ", ".join(f"fila {n} ({s:.1f})" for s, n, _ in pend[:8]))
     if not WRITE:
