@@ -106,10 +106,10 @@ jobs:
           print(len(items), "items")
           PY
       - name: One page per watch for Google (w/, sitemap.xml)
-        run: python3 bot/paginas.py
+        run: python3 bot/paginas.py && python3 bot/catalogo.py
       - name: Save feed.xml
         run: |
           git config user.name "kabuzio-bot"
           git config user.email "kabuzio-bot@users.noreply.github.com"
-          git add -A feed.xml pins w sitemap.xml robots.txt
+          git add -A feed.xml pins w sitemap.xml robots.txt $(ls catalogo.csv 2>/dev/null)
           git diff --cached --quiet || (git commit -m "Update Pinterest feed" && git push)

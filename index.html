@@ -12,7 +12,7 @@
 <meta name="google-site-verification" content="bVK_AJYx3p-TveOXDtgYgv46v3MJ4PCqOR_nrGLvAH0" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌚</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{--ink:#111;--muted:#737373;--line:#ececec;--soft:#f5f5f4;--bg:#fff}
 *{box-sizing:border-box;margin:0}
@@ -146,7 +146,8 @@ function render(){
   $("grid").innerHTML=l.length?l.map(x=>`<div class="card${x.wid===W?" hit":""}" id="w-${esc(x.wid)}"><a class="cl" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener"><div class="ph">${x.o>=newest?'<span class="badge">NEW</span>':""}<img loading="lazy" referrerpolicy="no-referrer" src="${esc(x.img)}_480x480.jpg" onerror="this.onerror=null;this.src='${esc(x.img)}'" alt="${esc(x.name)}">${media(x).length>1?`<span class="more" role="button" data-o="${x.o}" data-j="0">${media(x).some(it=>it.t==="v")?"▶ ":""}${media(x).filter(it=>it.t==="i").length} photo${media(x).filter(it=>it.t==="i").length>1?"s":""}</span>`:""}</div>${thumbs(x)}<div class="brand">${esc(x.brand)}</div><div class="name">${esc(x.name)}</div><div class="price">${esc(x.priceText)}</div></a><a class="cta" href="${esc(x.link)}" target="_blank" rel="nofollow sponsored noopener">View deal</a><button class="rep" type="button" data-r="${x.o}">Report a problem</button></div>`).join(""):'<div class="empty">No watches match. Try another filter.</div>';
 }
 $("grid").innerHTML=Array(8).fill('<div class="card sk"><div class="ph"></div></div>').join("");
-fetch(CSV).then(r=>r.text()).then(t=>{
+// fast: the copy of the catalog on this same site (refreshed by the bot every 2 h); Google Sheets only if it is missing
+fetch("catalogo.csv",{cache:"no-cache"}).then(r=>{if(!r.ok)throw 0;return r.text()}).then(t=>{if(t.length<200)throw 0;return t}).catch(()=>fetch(CSV).then(r=>r.text())).then(t=>{
   items=parseCSV(t).map((r,i)=>{const nw=String(pick(r,"Nombre_web",13)||"").trim(),name=nw||String(pick(r,"Producto",0)||"").replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/&amp;/g,"&"),br=pick(r,"Marca",5);return{i,o:i,wid:String(pick(r,"Enlace",3)||"").replace(/\/+$/,"").split("/").pop().replace(/[^A-Za-z0-9_-]/g,""),name,priceText:pick(r,"Precio",1),price:num(pick(r,"Precio",1)),img:pick(r,"Imagen_URL",2),photos:[...new Set([pick(r,"Imagen_URL",2),...String(pick(r,"Fotos_extra",6)||"").split(/\s+/)])].filter(u=>/^https:\/\//.test(u||"")),video:/^https:\/\//.test(pick(r,"Video",7)||"")?pick(r,"Video",7).trim():"",link:/^https:\/\//.test(r[SRC]||"")?r[SRC].trim():pick(r,"Enlace",3),brand:(!br||br==="Sin marca")?"Kabuzio Pick":nice(br),type:String(pick(r,"Estilo_web",12)||"").trim()||typeOf(name),ord:isFinite(parseFloat(pick(r,"Orden_web",9)))?parseFloat(pick(r,"Orden_web",9)):1e9,hide:/^s[ií]/i.test(String(pick(r,"Oculto_web",10)||"").trim()),fw:String(pick(r,"Fotos_web",11)||"").trim().split(/\s+/).filter(Boolean),sales:+String(pick(r,"Ventas",8)||"").replace(/\D/g,"")||0}}).filter(x=>x.name&&!x.hide&&/^https:\/\//.test(x.link||""));
   items.forEach(x=>{const m=media(x);x.m=m;const f=m.find(it=>it.t==="i");if(f)x.img=f.u});
   const ts=[...new Set(items.map(x=>x.type))].filter(t=>t!=="Other").sort();
