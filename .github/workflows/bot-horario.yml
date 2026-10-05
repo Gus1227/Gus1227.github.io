@@ -26,6 +26,7 @@ jobs:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
+          META_TOKEN: ${{ secrets.META_TOKEN }}
           ALI_APP_KEY: ${{ secrets.ALI_APP_KEY }}
           ALI_SECRET: ${{ secrets.ALI_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

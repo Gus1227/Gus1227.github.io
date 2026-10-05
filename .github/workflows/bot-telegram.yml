@@ -46,6 +46,7 @@ jobs:
         env:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
+          META_TOKEN: ${{ secrets.META_TOKEN }}
           REDES: ${{ inputs.red }}
           PUBLICAR: ${{ inputs.publicar }}
           FILA_PUB: ${{ inputs.reloj }}
@@ -57,6 +58,7 @@ jobs:
           FILA: ${{ inputs.fila }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
+          META_TOKEN: ${{ secrets.META_TOKEN }}
           ALI_APP_KEY: ${{ secrets.ALI_APP_KEY }}
           ALI_SECRET: ${{ secrets.ALI_SECRET }}
         run: |
@@ -74,6 +76,7 @@ jobs:
             marcas-si) MARCAS=si python3 bot/marcas.py ;;
             textos) python3 bot/textos.py && python3 bot/telegram.py && REDES=tiktok python3 bot/zernio.py ;;
             textos-si) TEXTOS=si python3 bot/textos.py ;;
+            meta) python3 bot/meta.py ;;
             revisar) python3 bot/revisar.py ;;
             revisar-si) REVISAR=si python3 bot/revisar.py ;;
             ali-*) ALI_HACER="${FILA#ali-}" python3 bot/ali.py ;;
