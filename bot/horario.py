@@ -2,6 +2,7 @@
 # posts at every even UTC hour (minute 5) and then starts the next run itself.
 # What it already did is kept in bot/estado.json (pushed to the repo), so a second run never posts twice.
 #   every 2 h: AliExpress data + Revisar tab; Telegram 2 a day (08, 18 UTC); Pinterest 8 a day; TikTok 3 a day (06, 12, 18 UTC)
+#   with estado.json "meta": true also Facebook (16, 22 UTC) and Instagram (18, 00 UTC)
 import datetime, json, os, subprocess, sys, time, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -67,6 +68,11 @@ def turn(slot):
         run("rendimiento.py", RENDIMIENTO="si")
     if slot.hour == 16:  # 19:00 in Israel: refresh the pinned Top 3 in Telegram
         run("top.py", TOP="si")
+    if st.get("meta"):  # Facebook and Instagram by the Meta API (replaces Make 7725903 and 7728023)
+        if slot.hour in (16, 22):  # 17:00 and 23:00 London: Europe evening, Americas afternoon
+            run("meta.py", META="facebook")
+        if slot.hour in (18, 0):  # 21:00 and 03:00 Israel: Israel evening, Americas evening
+            run("meta.py", META="instagram")
     tiktok = slot.hour in (6, 12, 18) and st.get("tiktok") != key
     if tiktok:
         run("zernio.py", REDES="tiktok")
