@@ -18,8 +18,11 @@ def main():
     g = lambda r, i: (r[i] if r is not None and i < len(r) else "").strip()
     page_tok = graph(f"/{PAGE}", {"fields": "access_token"})["access_token"]
     since = int((datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=DAYS)).timestamp())
-    posts = graph(f"/{PAGE}/feed", {"fields": "id,message,permalink_url,comments.limit(50){id,message,from,comments.limit(20){from}}",
-                                    "since": since, "limit": 50}, token=page_tok).get("data", [])
+    posts = graph(f"/{PAGE}/published_posts", {"fields": "id,message,permalink_url", "since": since, "limit": 50},
+                  token=page_tok).get("data", [])
+    for p in posts:
+        p["comments"] = graph(f"/{p['id']}/comments", {"fields": "id,message,from,comments.limit(20){from}", "limit": 50},
+                              token=page_tok)
     print(f"Facebook: {len(posts)} posts de los últimos {DAYS} días")
     answered = 0
     for p in posts:
