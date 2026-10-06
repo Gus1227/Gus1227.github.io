@@ -115,6 +115,8 @@ jobs:
               respuestas-si) RESPONDER=si python3 bot/respuestas.py ;;
               tt-respuestas) DEBUG=1 python3 bot/tiktok_respuestas.py ;;
               tt-respuestas-si) RESPONDER=si python3 bot/tiktok_respuestas.py ;;
+              fb-respuestas) python3 bot/fb_respuestas.py ;;
+              fb-respuestas-si) RESPONDER=si python3 bot/fb_respuestas.py ;;
               carrusel) python3 bot/carrusel.py ;;
               carrusel-si) CARRUSEL_SI=si python3 bot/carrusel.py ;;
               historias) python3 bot/historia.py ;;
