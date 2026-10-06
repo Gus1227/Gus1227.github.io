@@ -196,21 +196,26 @@ def main():
     os.makedirs(os.path.join(ROOT, "r"), exist_ok=True)
     out = os.path.join(ROOT, "r", f"{pid}.mp4")
     build(r, out, len(st.get("reels", [])))
+    from musica_libre import with_music  # Facebook, TikTok, Pinterest, Telegram: same Reel with our own music inside
+    out_m = with_music(out, os.path.join(ROOT, "r", f"{pid}-m.mp4"), pid)
     print("URL: https://gus1227.github.io/r/" + pid + ".mp4")
     last = os.path.join(ROOT, "r", "ultimo.json")  # what reel_publicar.py and the Instagram step post: the newest Reel
-    json.dump({"fila": n, "pid": pid, "url": f"https://gus1227.github.io/r/{pid}.mp4"}, open(last, "w"))
+    json.dump({"fila": n, "pid": pid, "url": f"https://gus1227.github.io/r/{pid}.mp4",
+               "url_m": f"https://gus1227.github.io/r/{pid}-m.mp4"}, open(last, "w"))
     if os.environ.get("REEL", "no").lower() in ("si", "sí", "1"):
         run = lambda *a: subprocess.run(["git", *a], cwd=ROOT)
         keep = sorted((os.path.join(ROOT, "r", f) for f in os.listdir(os.path.join(ROOT, "r"))), key=os.path.getmtime)
-        keep = [f for f in keep if f.endswith(".mp4")]
-        for f in keep[:-KEEP]:  # the repo must stay small: only the newest Reels are kept
-            run("rm", "-q", "--cached", f)
-            os.remove(f)
+        keep = [f for f in keep if f.endswith(".mp4") and not f.endswith("-m.mp4")]
+        for f in keep[:-KEEP]:  # the repo must stay small: only the newest Reels are kept (and their music copy)
+            for x in (f, f[:-4] + "-m.mp4"):
+                if os.path.exists(x):
+                    run("rm", "-q", "--cached", x)
+                    os.remove(x)
         run("pull", "-q", "--rebase", "origin", "main")
         st = json.load(open(STATE_FILE)) if os.path.exists(STATE_FILE) else {}
         st["reels"] = (st.get("reels", []) + [pid])[-500:]  # this watch has its Reel now
         json.dump(st, open(STATE_FILE, "w"), indent=1)
-        run("add", out, STATE_FILE, last)
+        run("add", out, out_m, STATE_FILE, last)
         run("commit", "-qm", f"bot: reel fila {n}")
         run("push", "-q", "origin", "HEAD:main")
 

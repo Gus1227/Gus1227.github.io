@@ -117,6 +117,7 @@ def telegram(url, r):
 def main():
     last = json.load(open(os.path.join(ROOT, "r", "ultimo.json")))
     n, pid, url = last["fila"], last["pid"], last["url"]
+    url_m = last.get("url_m") or url  # with our own music: for the networks whose API can't add a song
     rows = sheets(google_token(), f"values/{TAB}!A1:AL?valueRenderOption=FORMATTED_VALUE").get("values", [])
     r = rows[n - 1]
     ig, tt, fb, title = texts(r)
@@ -124,14 +125,14 @@ def main():
     if not PUBLISH:
         print("Modo prueba: no se publica nada.")
         return
-    if not live(url):
+    if not live(url) or not live(url_m):
         raise SystemExit("El video todavía no está en la web: prueba otra vez en unos minutos.")
     done, ok = {}, []
     for red in REDES:
         try:
-            res = {"instagram": lambda: instagram(url, ig), "facebook": lambda: facebook(url, fb),
-                   "tiktok": lambda: tiktok(url, tt), "pinterest": lambda: pinterest(url, ig, title, page_of(r) + "?src=pin"),
-                   "telegram": lambda: telegram(url, r)}[red]()
+            res = {"instagram": lambda: instagram(url, ig), "facebook": lambda: facebook(url_m, fb),
+                   "tiktok": lambda: tiktok(url_m, tt), "pinterest": lambda: pinterest(url_m, ig, title, page_of(r) + "?src=pin"),
+                   "telegram": lambda: telegram(url_m, r)}[red]()
             print(f"{red}: publicado ({res})")
             done[red] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M")
             ok.append(red)
