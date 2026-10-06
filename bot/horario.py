@@ -92,6 +92,8 @@ def turn(slot):
     run("tiktok_respuestas.py", RESPONDER="si")  # and new TikTok comments (public answer, through Zernio)
     run("fb_respuestas.py", RESPONDER="si")  # and Facebook page comments (public + private message)
     run("catalogo.py")  # the website reads this copy: fast and always fresh
+    if slot.hour == 10:  # once a day (13:00 Israel): prices, watches that no longer exist, one «Price drop» post
+        run("ali.py", ALI_HACER="revision")
     if slot.hour == 6:  # once a day, after the fresh sales: sort the queue by what sells
         run("rendimiento.py", RENDIMIENTO="si")
     if slot.hour == 16:  # 19:00 in Israel: refresh the pinned Top 3 in Telegram

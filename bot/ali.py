@@ -2,7 +2,8 @@
 #   completar: fills empty data of new rows (name, prices, photos, video, sales, rating, product id) from the link
 #   links:     one short affiliate link per network in AG:AL (kabuzioTG/IG/TT/FB/WEB/PIN), matched by source_value
 #   ventas:    orders of the last 30 days into the «Ventas» tab (one row per sub-order, updated in place)
-# Run: ALI_HACER="completar links" (default) or "ventas". Secrets: ALI_APP_KEY, ALI_SECRET.
+#   revision:  once a day, prices and watches that no longer exist (and one «Price drop» post in Telegram)
+# Run: ALI_HACER="completar links" (default), "ventas" or "revision" (PUBLICAR=si to post the price drop). Secrets: ALI_APP_KEY, ALI_SECRET.
 import datetime, hashlib, hmac, json, os, sys, time, urllib.parse, urllib.request
 from zoneinfo import ZoneInfo
 
@@ -10,6 +11,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from telegram import TAB, google_token, item_of, sheets
 
 API = "https://api-sg.aliexpress.com/sync"
+PUBLICAR = os.environ.get("PUBLICAR", "no").lower() in ("si", "sí", "yes", "true", "1")
 NETS = [("AG", "kabuzioTG"), ("AH", "kabuzioIG"), ("AI", "kabuzioTT"), ("AJ", "kabuzioFB"), ("AK", "kabuzioWEB"), ("AL", "kabuzioPIN")]
 COL = lambda c: sum((ord(ch) - 64) * 26 ** i for i, ch in enumerate(reversed(c))) - 1  # "AG" -> 32
 
@@ -109,6 +111,70 @@ def links(tok, rows):
     print("links: escritos", len(cells))
 
 
+# ---------- revision: once a day, every watch on the web against AliExpress ----------
+STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "estado.json")
+
+
+def revision(tok, rows):
+    """Price changes go to column B; a watch the API stops giving two days in a row becomes «No disponible»;
+    under 60 $ becomes «Bajo 60». A published watch that drops 10 % or more gets one «Price drop» post (max 1 a day)."""
+    from telegram import num
+    st = json.load(open(STATE_FILE))
+    faltan, hoy = st.get("faltan", {}), datetime.date.today().isoformat()
+    live = [(n, r, cell(r, "X")) for n, r in enumerate(rows[1:], start=2) if cell(r, "H") in ("Pendiente", "Publicado") and cell(r, "X")]
+    cells, drops, gone = [], [], []
+    for i in range(0, len(live), 20):
+        part = live[i:i + 20]
+        res = ali("aliexpress.affiliate.productdetail.get", product_ids=",".join(p for _, _, p in part),
+                  target_currency="USD", target_language="EN", tracking_id="kabuzioTG")
+        prods = {str(p["product_id"]): p for p in ((res.get("result") or {}).get("products") or {}).get("product", [])}
+        for n, r, pid in part:
+            p = prods.get(pid)
+            if not p or not p.get("target_sale_price"):
+                if faltan.get(pid) and faltan[pid] != hoy:  # missing yesterday too: really gone
+                    cells.append((f"H{n}", "No disponible"))
+                    gone.append(cell(r, "AO") or cell(r, "A")[:50])
+                    faltan.pop(pid)
+                else:
+                    faltan.setdefault(pid, hoy)
+                continue
+            faltan.pop(pid, None)
+            new, old = float(p["target_sale_price"]), num(cell(r, "B"))
+            if old and abs(new - old) / old >= 0.02:
+                cells.append((f"B{n}", f"${new:.2f}"))
+                if new < 60:
+                    cells.append((f"H{n}", "Bajo 60"))
+                elif new <= old * 0.9 and cell(r, "H") == "Publicado":
+                    drops.append((old - new, n, r, old, new))
+    write(tok, cells)
+    st = json.load(open(STATE_FILE))  # fresh copy: other steps may have changed it
+    st["faltan"] = faltan
+    if drops and st.get("bajada") != hoy:
+        _, n, r, old, new = max(drops)
+        if PUBLICAR:
+            st["bajada"] = hoy
+            precio_bajo(r, old, new)
+        print(f"bajada de precio: fila {n} ${old:.2f} -> ${new:.2f}")
+    json.dump(st, open(STATE_FILE, "w"), indent=1)
+    print(f"revision: {len(live)} relojes, {len(cells)} cambios, {len(gone)} ya no existen, {len(drops)} bajadas")
+    if gone:
+        import aviso
+        aviso.enviar("🧹 Gus quitó de la web " + str(len(gone)) + " reloj(es) que ya no existen en AliExpress:\n• " + "\n• ".join(gone[:10]))
+
+
+def precio_bajo(r, old, new):
+    """«Price drop» post in the Telegram channel: one photo, the clean name, old and new price, the link."""
+    import html
+    from telegram import CHAT, quiet, tg
+    link = cell(r, "AG") if "/e/" in cell(r, "AG") else cell(r, "E")
+    name = cell(r, "AO") or cell(r, "A")[:70]
+    cap = (f"📉 <b>Price drop</b>\n\n<b>{html.escape(name)}</b>\n"
+           f"Now <b>${new:.2f}</b> · was <s>${old:.2f}</s> (−{round((old - new) / old * 100)}%)\n"
+           f"Buyer Protection · Worldwide shipping\n\n<a href=\"{html.escape(link)}\">View the piece →</a>\n\n#pricedrop #Kabuzio #ad")
+    res = tg("sendPhoto", {"chat_id": CHAT, "photo": cell(r, "D"), "caption": cap, "parse_mode": "HTML", "disable_notification": quiet()})
+    print("Price drop:", "publicado" if res.get("ok") else res.get("description"))
+
+
 # ---------- ventas ----------
 FIELDS = ("created_time,paid_time,finished_time,order_status,tracking_id,paid_amount,estimated_paid_commission,"
           "estimated_finished_commission,product_id,product_title,ship_to_country,sub_order_id,order_id")
@@ -174,6 +240,8 @@ def main():
         links(tok, read_rows(tok))
     if "ventas" in hacer:
         ventas(tok)
+    if "revision" in hacer:
+        revision(tok, read_rows(tok))
 
 
 if __name__ == "__main__":
