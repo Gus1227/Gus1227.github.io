@@ -66,6 +66,7 @@ def turn(slot):
             st["pin"] += 1
     run("stats.py")
     run("respuestas.py", RESPONDER="si")  # answer new Instagram comments (public + private message with the link)
+    run("tiktok_respuestas.py", RESPONDER="si")  # and new TikTok comments (public answer, through Zernio)
     run("catalogo.py")  # the website reads this copy: fast and always fresh
     if slot.hour == 6:  # once a day, after the fresh sales: sort the queue by what sells
         run("rendimiento.py", RENDIMIENTO="si")
