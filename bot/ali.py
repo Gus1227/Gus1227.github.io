@@ -136,6 +136,9 @@ def revision(tok, rows):
             continue
         prods = {str(p["product_id"]): p for p in ((res.get("result") or {}).get("products") or {}).get("product", [])}
         print(f"revision: {i + len(part)} de {len(live)}", flush=True)
+        for p in prods.values():
+            if p.get("promo_code_info") and os.environ.get("DEBUG"):
+                print("  cupón:", p["product_id"], json.dumps(p["promo_code_info"])[:300])
         for n, r, pid in part:
             p = prods.get(pid)
             if not p or not p.get("target_sale_price"):
@@ -149,10 +152,11 @@ def revision(tok, rows):
             faltan.pop(pid, None)
             new, old = float(p["target_sale_price"]), num(cell(r, "B"))
             if old and abs(new - old) / old >= 0.02:
+                print(f"  fila {n}: ${old:.2f} -> ${new:.2f}")
                 cells.append((f"B{n}", f"${new:.2f}"))
                 if new < 60:
                     cells.append((f"H{n}", "Bajo 60"))
-                elif new <= old * 0.9 and cell(r, "H") == "Publicado":
+                elif old * 0.5 <= new <= old * 0.9 and cell(r, "H") == "Publicado":  # more than 50 % is an old wrong price, not a deal
                     drops.append((old - new, n, r, old, new))
     write(tok, cells)
     st = json.load(open(STATE_FILE))  # fresh copy: other steps may have changed it
