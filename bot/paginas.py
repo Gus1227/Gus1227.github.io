@@ -93,7 +93,12 @@ def head(lang, title, desc, path, img, extra=""):
 <meta property="og:site_name" content="Kabuzio">{extra}
 <meta name="referrer" content="no-referrer">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌚</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">"""
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+""" + GC
+
+
+# visits and clicks to AliExpress / Telegram (GoatCounter, free; Cheche's account «kabuzio»)
+GC = '<script data-goatcounter="https://kabuzio.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>\n<script>document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[href]");if(!a||!window.goatcounter||!goatcounter.count)return;var h=a.href,k=/aliexpress/.test(h)?"clic-aliexpress":/t\\.me\\//.test(h)?"clic-telegram":/linktr\\.ee/.test(h)?"clic-linktree":"";if(k)goatcounter.count({path:k+location.pathname,title:(document.getElementById("lbt")&&document.getElementById("lbt").textContent)||document.title,event:true})},true)</script>'
 
 
 def langbar(lang, path, up):
