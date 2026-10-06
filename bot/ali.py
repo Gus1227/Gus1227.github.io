@@ -252,6 +252,16 @@ def main():
         links(tok, read_rows(tok))
     if "ventas" in hacer:
         ventas(tok)
+    if "campos" in hacer:  # what the API gives for a few watches (to look for coupons)
+        rows = read_rows(tok)
+        pids = [cell(r, "X") for r in rows[1:] if cell(r, "H") == "Publicado" and cell(r, "X")][:20]
+        res = ali("aliexpress.affiliate.productdetail.get", product_ids=",".join(pids), target_currency="USD",
+                  target_language="EN", tracking_id="kabuzioTG", country="US")
+        prods = ((res.get("result") or {}).get("products") or {}).get("product", [])
+        print("campos:", sorted(prods[0].keys()) if prods else res)
+        for p in prods:
+            if p.get("promo_code_info"):
+                print("cupón:", p["product_id"], json.dumps(p["promo_code_info"])[:400])
     if "revision" in hacer:
         revision(tok, read_rows(tok))
 
