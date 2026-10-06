@@ -1,0 +1,23 @@
+name: Vigilante
+# Cada hora mira si el bot horario sigue vivo; si lleva más de 5 h sin turno, avisa a Cheche y lo relanza (bot/vigilante.py).
+on:
+  schedule:
+    - cron: "50 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+jobs:
+  mirar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git config user.name "kabuzio-bot"
+          git config user.email "kabuzio-bot@users.noreply.github.com"
+          pip install -q cryptography
+      - env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 bot/vigilante.py

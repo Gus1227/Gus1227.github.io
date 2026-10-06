@@ -5,12 +5,13 @@
 #   1 Reel a day (16 UTC) on Instagram, Facebook, TikTok and Pinterest
 #   Instagram: 3 Stories a day (10, 14, 20 UTC) and a themed carousel Mon/Wed/Fri/Sun (12 UTC)
 #   with estado.json "meta": true also Facebook (16, 22 UTC) and Instagram (18, 00 UTC)
-import datetime, json, os, subprocess, sys, time, urllib.request
+import collections, datetime, html, json, os, subprocess, sys, time, traceback, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATE = os.path.join(HERE, "estado.json")
 UTC = datetime.timezone.utc
 LIMIT = time.time() + 5.5 * 3600
+FAILS = []  # scripts that crashed this turn: Cheche gets one private message (bot/aviso.py)
 
 
 def git(*a):
@@ -36,8 +37,30 @@ def save(st, msg):
 
 def run(script, **env):
     print(f"== {script} {env}", flush=True)
-    r = subprocess.run([sys.executable, os.path.join(HERE, script)], env={**os.environ, "PUBLICAR": "si", **env})
-    return r.returncode == 0
+    p = subprocess.Popen([sys.executable, "-u", os.path.join(HERE, script)], env={**os.environ, "PUBLICAR": "si", **env},
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    tail = collections.deque(maxlen=4)
+    for line in p.stdout:
+        print(line, end="", flush=True)
+        if line.strip():
+            tail.append(line.strip()[:200])
+    if p.wait() != 0:
+        FAILS.append((script, " / ".join(tail)))
+    return p.returncode == 0
+
+
+def report(st, key):
+    """One private message per problem: when a turn fails, and once more when it works again."""
+    import aviso
+    names = sorted({s for s, _ in FAILS})
+    sig = ",".join(names)
+    if sig and sig != st.get("aviso_fallo"):
+        lines = "\n".join(f"• <b>{s}</b>: {html.escape(t[-300:])}" for s, t in FAILS)
+        aviso.enviar(f"⚠️ <b>Gus</b> · turno {key} UTC: algo falló\n{lines}\n\nEl resto del turno siguió. Avísale a Claude si se repite.")
+    elif not sig and st.get("aviso_fallo"):
+        aviso.enviar(f"✅ <b>Gus</b> · turno {key} UTC: todo vuelve a funcionar.")
+    st["aviso_fallo"] = sig
+    FAILS.clear()
 
 
 def slot_now():
@@ -100,13 +123,25 @@ def turn(slot):
     tiktok = slot.hour in (6, 12, 18) and st.get("tiktok") != key
     if tiktok:
         run("zernio.py", REDES="tiktok")
-    st = {**load(), "pin": st["pin"], **({"tiktok": key} if tiktok else {})}
+    if slot.hour == 6 and slot.weekday() == 0 and st.get("copia") != day:  # Monday: backup of the sheet to Cheche
+        st["copia"] = day
+        run("aviso.py", AVISO="copia")
+    st = {**load(), "pin": st["pin"], "copia": st.get("copia"), **({"tiktok": key} if tiktok else {})}
+    report(st, key)
     save(st, f"bot: turno {key} hecho")
 
 
 def main():
+    sys.path.insert(0, HERE)
     while True:
-        turn(slot_now())
+        try:
+            turn(slot_now())
+        except Exception:
+            FAILS.clear()
+            err = traceback.format_exc()
+            print(err, flush=True)
+            import aviso
+            aviso.enviar("⚠️ <b>Gus</b> se cayó en un turno:\n<code>" + html.escape(err[-600:]) + "</code>\nSigo con el próximo turno.")
         nxt = slot_now() + datetime.timedelta(hours=2)
         if nxt.timestamp() > LIMIT:
             break

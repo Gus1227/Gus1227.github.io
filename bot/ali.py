@@ -136,11 +136,30 @@ def ventas(tok):
         sheets(tok, ":batchUpdate", {"requests": [{"addSheet": {"properties": {"title": "Ventas"}}}]}, method="POST")
     old = sheets(tok, "values/Ventas!A1:L").get("values", [])
     by = {r[0]: r for r in old[1:] if r}
+    nuevas = [o for o in orders if str(o.get("sub_order_id")) not in by] if old else []  # first ever read: no alerts
     for o in orders:
         by[str(o.get("sub_order_id"))] = [str(o.get(h, "")) for h in HEAD]
     table = [HEAD] + sorted(by.values(), key=lambda r: r[2], reverse=True)
     sheets(tok, "values/Ventas!A1:L?valueInputOption=RAW", {"values": table}, method="PUT")
     print("ventas:", len(orders), "en 30 días,", len(table) - 1, "en total")
+    if nuevas:
+        aviso_venta(nuevas, len(table) - 1)
+
+
+RED = {"kabuzioTG": "Telegram", "kabuzioIG": "Instagram", "kabuzioTT": "TikTok", "kabuzioFB": "Facebook",
+       "kabuzioWEB": "la web", "kabuzioPIN": "Pinterest"}
+
+
+def aviso_venta(nuevas, total):
+    """Private message to Cheche for every new sale (bot/aviso.py)."""
+    import html
+    import aviso
+    for o in nuevas[:10]:
+        com = o.get("estimated_paid_commission") or o.get("estimated_finished_commission") or "?"
+        aviso.enviar(f"💰 <b>¡Venta nueva!</b>\n{html.escape(str(o.get('product_title', ''))[:90])}\n"
+                     f"Pagó ${o.get('paid_amount', '?')} · tu comisión ≈ ${com}\n"
+                     f"Vino de: {RED.get(o.get('tracking_id'), o.get('tracking_id') or '?')} · país: {o.get('ship_to_country', '?')}\n"
+                     f"Ventas en total: {total}")
 
 
 def main():

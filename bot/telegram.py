@@ -16,14 +16,14 @@ BRAND_M, SALES = 12, 13
 
 
 # ---------- Google Sheets (service account, no extra libraries but cryptography) ----------
-def google_token():
+def google_token(scope="https://www.googleapis.com/auth/spreadsheets"):
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import padding
     sa = json.loads(os.environ["GOOGLE_SA_JSON"])
     b64 = lambda b: base64.urlsafe_b64encode(b).rstrip(b"=")
     now = int(time.time())
     head = b64(json.dumps({"alg": "RS256", "typ": "JWT"}).encode())
-    claim = b64(json.dumps({"iss": sa["client_email"], "scope": "https://www.googleapis.com/auth/spreadsheets",
+    claim = b64(json.dumps({"iss": sa["client_email"], "scope": scope,
                             "aud": "https://oauth2.googleapis.com/token", "iat": now, "exp": now + 3600}).encode())
     key = serialization.load_pem_private_key(sa["private_key"].encode(), password=None)
     sig = b64(key.sign(head + b"." + claim, padding.PKCS1v15(), hashes.SHA256()))

@@ -129,6 +129,9 @@ jobs:
               reel-si) REEL=si python3 bot/reel.py ;;
               reel-[0-9]*) REEL=si REEL_FILA="${FILA#reel-}" python3 bot/reel.py ;;
               ejemplo-[0-9]*) REEL_FILA="${FILA#ejemplo-}" python3 bot/reel.py && cp "$(ls -t r/*.mp4 | head -1)" /tmp/ejemplo.mp4 && mkdir -p ejemplo && mv /tmp/ejemplo.mp4 ejemplo/reel.mp4 && git add ejemplo/reel.mp4 && git commit -qm "bot: reel de ejemplo" && git pull -q --rebase --autostash origin main && git push -q origin HEAD:main ;;
+              aviso) AVISO=buscar python3 bot/aviso.py ;;
+              aviso-prueba) AVISO=prueba python3 bot/aviso.py ;;
+              copia) AVISO=copia python3 bot/aviso.py ;;
               rendimiento) python3 bot/rendimiento.py ;;
               rendimiento-si) RENDIMIENTO=si python3 bot/rendimiento.py ;;
               revisar) python3 bot/revisar.py ;;
