@@ -6,7 +6,7 @@ import datetime, json, os, random, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from meta import PAGE, graph
-from respuestas import DAYS, DONE_FILE, MAX_PER_RUN, TEXTS, WRITE, fill, report, rule, watch_of
+from respuestas import DAYS, DONE_FILE, MAX_PER_RUN, TEXTS, WRITE, compose, report, rule, watch_of
 
 
 def main():
@@ -43,8 +43,8 @@ def main():
                 continue
             if r is None and ru["id"] in ("precio", "marca"):  # unknown watch: no price or brand to give
                 ru = next(x for x in TEXTS["reglas"] if x["id"] == "link")
-            public = fill(random.choice(ru["comentario"]), r, g).replace("our bio", "the post")
-            private = fill(TEXTS["dm_tras_comentario"] if ru["id"] in ("elogio", "otro") else random.choice(ru["mensaje"]), r, g)
+            ru, public, private = compose(ru, r, g)
+            public = public.replace("our bio", "the post")
             print(f"{who.get('name', 'alguien')}: {c.get('message', '')[:80]}\n  [{ru['id']}] público: {public}\n  privado: {private[:120]}")
             if WRITE:
                 try:

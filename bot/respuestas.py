@@ -50,6 +50,22 @@ def fill(text, r, g):
             .replace("BRAND", re.sub(r"([a-z])([A-Z])", r"\1 \2", g(r, 12)) if r is not None and g(r, 12) else "piece"))
 
 
+def compose(ru, r, g):
+    """Public and private answer; when the watch has a coupon, the private message carries its code."""
+    cup = de(r) if r is not None else None
+    if ru["id"] == "cupon" and not cup:
+        ru = {**ru, "comentario": TEXTS["por_defecto"]["comentario"], "mensaje": [TEXTS["cupon_no_hay"]]}
+    elif cup and ru["id"] in ("elogio", "otro"):  # the post asks to comment: any comment gets the code
+        ru = TEXTS["reglas"][0]
+    public = fill(random.choice(ru["comentario"]), r, g)
+    private = fill(TEXTS["dm_tras_comentario"] if ru["id"] in ("elogio", "otro") else random.choice(ru["mensaje"]), r, g)
+    if cup:
+        if ru["id"] != "cupon":
+            private += TEXTS["cupon_extra"]
+        private = private.replace("{code}", cup["codigo"]).replace("{value}", corto(cup["valor"]))
+    return ru, public, private
+
+
 def report(tok, user, text, perma):
     from telegram import sheets
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M")
@@ -86,17 +102,7 @@ def main():
                 print(f"spam, no respondo: @{c.get('username')}: {c.get('text', '')[:80]}")
                 seen.add(c["id"]); done.append(c["id"])
                 continue
-            cup = de(r) if r is not None else None
-            if ru["id"] == "cupon" and not cup:
-                ru = {**ru, "comentario": TEXTS["por_defecto"]["comentario"], "mensaje": [TEXTS["cupon_no_hay"]]}
-            elif cup and ru["id"] in ("elogio", "otro"):  # the post asks to comment: any comment gets the code
-                ru = TEXTS["reglas"][0]
-            public = fill(random.choice(ru["comentario"]), r, g)
-            private = fill(TEXTS["dm_tras_comentario"] if ru["id"] in ("elogio", "otro") else random.choice(ru["mensaje"]), r, g)
-            if cup:
-                if ru["id"] != "cupon":
-                    private += TEXTS["cupon_extra"]
-                private = private.replace("{code}", cup["codigo"]).replace("{value}", corto(cup["valor"]))
+            ru, public, private = compose(ru, r, g)
             print(f"@{c.get('username')}: {c.get('text', '')[:80]}\n  [{ru['id']}] público: {public}\n  privado: {private[:120]}")
             if WRITE:
                 try:
