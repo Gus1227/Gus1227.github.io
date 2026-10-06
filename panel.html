@@ -248,15 +248,15 @@ function schedule(n) {
     if ([6, 12, 18].includes(h) && lastTg) items.push({net: "tiktok", x: lastTg});  // 3 al día
     if (items.length) list.push({t, items});
   });
-  // Make: Instagram 20:00 y 03:00 hora de Israel; Facebook hacia las 18:53 y 00:53 hora de Londres
+  // Instagram 18 y 00 UTC, Facebook 16 y 22 UTC (bot/meta.py): el último reloj publicado en Telegram que aún no salió allí
   const end = S[S.length - 1], tgs = list.filter(s => s.items[0] && s.items[0].net === "telegram");
   let w = rows().filter(x => g(x.r, "H") === "Publicado").sort((a, b) => (b.t || 0) - (a.t || 0))[0];
-  const hourIn = (t, tz) => +new Date(t).toLocaleString("en-GB", {timeZone: tz, hour: "2-digit", hour12: false}) % 24;
-  for (let t = S[0] - 7200000; t < end; t += 3600000) {
+  for (const t of slots(n)) {
     const slot = tgs.filter(s => s.t <= t).pop();
     if (slot) w = slot.items[0].x;
-    if ([20, 3].includes(hourIn(t, "Asia/Jerusalem")) && w) addMake(list, t, {net: "instagram", x: w, make: 1});
-    if ([18, 0].includes(hourIn(t, "Europe/London")) && w) addMake(list, t + 53 * 60000, {net: "facebook", x: w, make: 1});
+    const h = new Date(t).getUTCHours();
+    if ([18, 0].includes(h) && w) addMake(list, t, {net: "instagram", x: w});
+    if ([16, 22].includes(h) && w) addMake(list, t, {net: "facebook", x: w});
   }
   return list.sort((a, b) => a.t - b.t).filter(s => s.t > Date.now() - 100 * 60000);
 }
@@ -312,15 +312,14 @@ function resumen() {
   const botKey = lastSlot.toISOString().slice(0, 13), prevKey = new Date(lastSlot - 7200000).toISOString().slice(0, 13);
   const botOk = EST.hecho === botKey || (EST.hecho === prevKey && Date.now() - lastSlot < 20 * 60000);
   const bot = botOk ? `<span class="chip ok">● al día</span>` : `<span class="chip warn">● atrasado</span>`;
-  const make = `<span class="chip prog">● Make</span>`;
   const pubToday = pub.filter(x => x.t && x.t >= d0).length;
   const igErr = count("Q", "err");
   const P = [
     ["✈️ Telegram", pub.length, `${pubToday} hoy`, next("telegram"), "2 al día", bot],
     ["🎵 TikTok", count("R", "ok"), "fotos + video", next("tiktok"), "3 al día", bot],
     ["📌 Pinterest", EST.pin ?? "—", `de ${PINS.filter(p => !p.off).length} pines`, next("pinterest"), "8 al día", bot],
-    ["📸 Instagram", count("Q", "ok"), igErr ? `<span style="color:var(--bad)">${igErr} con error</span>` : "carrusel", next("instagram"), "2 al día · Israel y América", make],
-    ["📘 Facebook", count("U", "ok"), "fotos + video", next("facebook"), "2 al día · Israel y América", make],
+    ["📸 Instagram", count("Q", "ok"), igErr ? `<span style="color:var(--bad)">${igErr} con error</span>` : "carrusel", next("instagram"), "2 al día · Israel y América", bot],
+    ["📘 Facebook", count("U", "ok"), "fotos + video", next("facebook"), "2 al día · Israel y América", bot],
   ];
 
   $("main").innerHTML = `

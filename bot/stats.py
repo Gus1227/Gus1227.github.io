@@ -31,6 +31,14 @@ def zernio():
     return out
 
 
+def meta():
+    from meta import IG, PAGE, graph
+    ig = graph(f"/{IG}", {"fields": "followers_count,media_count,username"})
+    fb = graph(f"/{PAGE}", {"fields": "followers_count,fan_count"})
+    return {"instagram": {"seguidores": ig.get("followers_count"), "usuario": ig.get("username"), "videos": ig.get("media_count")},
+            "facebook": {"seguidores": fb.get("followers_count", fb.get("fan_count"))}}
+
+
 def main():
     old = json.load(open(OUT)) if os.path.exists(OUT) else {}
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -43,6 +51,10 @@ def main():
         st.update(zernio())
     except Exception as e:
         print("Zernio:", e)
+    try:
+        st.update(meta())
+    except (Exception, SystemExit) as e:
+        print("Meta:", e)
     hist = old.get("historial", {})
     hist[now.strftime("%Y-%m-%d")] = {k: v.get("seguidores") for k, v in st.items() if isinstance(v, dict)}
     st["historial"] = dict(sorted(hist.items())[-90:])
