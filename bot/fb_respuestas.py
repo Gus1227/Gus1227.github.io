@@ -67,4 +67,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit as e:
+        if "pages_read_user_content" not in str(e):
+            raise
+        print("Facebook: falta el permiso pages_read_user_content en META_TOKEN; no se leen comentarios todavía.")
