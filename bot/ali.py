@@ -121,7 +121,7 @@ def revision(tok, rows):
     from telegram import num
     st = json.load(open(STATE_FILE))
     faltan, hoy = st.get("faltan", {}), datetime.date.today().isoformat()
-    live = [(n, r, cell(r, "X")) for n, r in enumerate(rows[1:], start=2) if cell(r, "H") in ("Pendiente", "Publicado") and cell(r, "X")]
+    live = [(n, r, cell(r, "X")) for n, r in enumerate(rows[1:], start=2) if cell(r, "H") in ("Pendiente", "Publicado") and cell(r, "X").isdigit()]
     cells, drops, gone = [], [], []
     skipped, seen = 0, []
     for i in range(0, len(live), 20):
@@ -129,7 +129,7 @@ def revision(tok, rows):
         time.sleep(3)
         try:
             res = ali("aliexpress.affiliate.productdetail.get", product_ids=",".join(p for _, _, p in part),
-                      target_currency="USD", target_language="EN", tracking_id="kabuzioTG", country="US")
+                      target_currency="USD", target_language="EN", tracking_id="kabuzioTG")
         except SystemExit as e:  # AliExpress busy: these watches wait for tomorrow, never marked as gone
             print(e)
             skipped += len(part)
@@ -140,7 +140,8 @@ def revision(tok, rows):
         for n, r, pid in part:
             p = prods.get(pid)
             if not p or not p.get("target_sale_price"):
-                if faltan.get(pid) and faltan[pid] != hoy:  # missing yesterday too: really gone
+                first = faltan.get(pid)
+                if first and (datetime.date.fromisoformat(hoy) - datetime.date.fromisoformat(first)).days >= 2:  # 3 days missing: really gone
                     cells.append((f"H{n}", "No disponible"))
                     gone.append(cell(r, "AO") or cell(r, "A")[:50])
                     faltan.pop(pid)
@@ -172,7 +173,7 @@ def revision(tok, rows):
             precio_bajo(r, old, new)
         print(f"bajada de precio: fila {n} ${old:.2f} -> ${new:.2f}")
     json.dump(st, open(STATE_FILE, "w"), indent=1)
-    print(f"revision: {len(live)} relojes, {len(cells)} cambios, {len(gone)} ya no existen, {len(drops)} bajadas, {skipped} sin revisar")
+    print(f"revision: {len(live)} relojes, {len(faltan)} sin datos hoy, {len(cells)} cambios, {len(gone)} ya no existen, {len(drops)} bajadas, {skipped} sin revisar")
     if gone:
         import aviso
         aviso.enviar("🧹 Gus quitó de la web " + str(len(gone)) + " reloj(es) que ya no existen en AliExpress:\n• " + "\n• ".join(gone[:10]))
