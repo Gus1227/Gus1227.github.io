@@ -14,11 +14,16 @@ def watch_of(content, rows):
     """Sheet row of the watch in this TikTok: the caption starts with its headline (zernio.py and reel_publicar.py)."""
     from textos import headline
     g = lambda r, i: (r[i] if i < len(r) else "").strip()
-    first = (content or "").split("\n")[0].split(" · ")[0].strip().lower()
+    from telegram import PRICE
+    text = " ".join((content or "").split()).lower()  # TikTok gives the caption back without line breaks
+    best = None
     for r in reversed(rows[1:]):
-        head = g(r, 40) or headline(g(r, 0), g(r, 12))
-        if head and head.lower() == first:
-            return r
+        head = (g(r, 40) or headline(g(r, 0), g(r, 12))).lower()
+        if head and text.startswith(head) and (not g(r, PRICE) or g(r, PRICE).lower() in text):
+            if best is None or len(head) > len(best[0]):
+                best = (head, r)
+    if best:
+        return best[1]
     return None
 
 
