@@ -136,7 +136,7 @@ jobs:
               rendimiento-si) RENDIMIENTO=si python3 bot/rendimiento.py ;;
               revisar) python3 bot/revisar.py ;;
               revisar-si) REVISAR=si python3 bot/revisar.py ;;
-              ali-*) ALI_HACER="${FILA#ali-}" python3 bot/ali.py ;;
+              ali-*) ALI_HACER="${FILA#ali-}" python3 bot/ali.py && if [ -n "$(git status --porcelain bot/cupones.json bot/estado.json)" ]; then git add bot/cupones.json bot/estado.json && git commit -qm "bot: revisión a mano" && git pull -q --rebase origin main && git push -q origin HEAD:main; fi ;;
               cabecera) python3 -c "import sys;sys.path.insert(0,'bot');import telegram as t;r=t.sheets(t.google_token(),'values/Ofertas!A1:AZ1')['values'][0];print(len(r),list(enumerate(r)))" ;;
               *) python3 bot/revisar_fila.py ;;
             esac

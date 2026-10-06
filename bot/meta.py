@@ -131,7 +131,8 @@ def instagram():
     pics, video = media(r, g)
     head, feats = headline(r, g)
     brand = g(r, BRAND).lstrip("#").lower()
-    caption = (f"{head}\n{feats + chr(10) if feats else ''}\n💰 Now {g(r, PRICE)}\n\n"
+    from cupones import linea_ig
+    caption = (f"{head}\n{feats + chr(10) if feats else ''}\n💰 Now {g(r, PRICE)}\n{linea_ig(r)}\n"
                f"👆 Tap the link in our bio to get it · new watches every day\nAd · affiliate link\n.\n"
                f"#watchesofinstagram #watchdeals #quietluxury {('#' + brand) if brand else ''} #kabuzio")
     items = [("IMAGE", u) for u in pics[:1]] + ([("VIDEO", video)] if video else []) + [("IMAGE", u) for u in pics[1:]]

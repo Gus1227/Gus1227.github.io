@@ -8,6 +8,7 @@ import datetime, json, os, random, re, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from meta import GRAPH, IG, PAGE, graph  # noqa: F401  (GRAPH kept for reference)
+from cupones import corto, de
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TEXTS = json.load(open(os.path.join(HERE, "respuestas.json"), encoding="utf-8"))
@@ -85,8 +86,17 @@ def main():
                 print(f"spam, no respondo: @{c.get('username')}: {c.get('text', '')[:80]}")
                 seen.add(c["id"]); done.append(c["id"])
                 continue
+            cup = de(r) if r is not None else None
+            if ru["id"] == "cupon" and not cup:
+                ru = {**ru, "comentario": TEXTS["por_defecto"]["comentario"], "mensaje": [TEXTS["cupon_no_hay"]]}
+            elif cup and ru["id"] in ("elogio", "otro"):  # the post asks to comment: any comment gets the code
+                ru = TEXTS["reglas"][0]
             public = fill(random.choice(ru["comentario"]), r, g)
             private = fill(TEXTS["dm_tras_comentario"] if ru["id"] in ("elogio", "otro") else random.choice(ru["mensaje"]), r, g)
+            if cup:
+                if ru["id"] != "cupon":
+                    private += TEXTS["cupon_extra"]
+                private = private.replace("{code}", cup["codigo"]).replace("{value}", corto(cup["valor"]))
             print(f"@{c.get('username')}: {c.get('text', '')[:80]}\n  [{ru['id']}] público: {public}\n  privado: {private[:120]}")
             if WRITE:
                 try:

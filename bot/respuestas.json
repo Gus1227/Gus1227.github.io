@@ -4,6 +4,25 @@
  "web": "https://gus1227.github.io",
  "reglas": [
   {
+   "id": "cupon",
+   "claves": [
+    "coupon",
+    "code",
+    "cupon",
+    "cupón",
+    "promo",
+    "discount",
+    "descuento"
+   ],
+   "comentario": [
+    "Sent you the code by DM 📩 Enjoy!",
+    "Check your messages 📩 the code is there."
+   ],
+   "mensaje": [
+    "Here's your coupon code: {code} ({value}). Use it at checkout on AliExpress: {link}\nIt ships worldwide with buyer protection."
+   ]
+  },
+  {
    "id": "precio",
    "claves": [
     "price",
@@ -200,5 +219,7 @@
   "crypto",
   "investment"
  ],
- "dm_tras_comentario": "Hi! Thanks for your comment on our post ⌚ Here's the watch: {link}\nIt ships worldwide with AliExpress buyer protection. Want me to suggest similar pieces?"
+ "dm_tras_comentario": "Hi! Thanks for your comment on our post ⌚ Here's the watch: {link}\nIt ships worldwide with AliExpress buyer protection. Want me to suggest similar pieces?",
+ "cupon_extra": "\n\n🎟 Your coupon code: {code} ({value}). Use it at checkout.",
+ "cupon_no_hay": "Thanks for asking! There's no extra coupon for this one right now, but here it is with buyer protection and worldwide shipping: {link}"
 }

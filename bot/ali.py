@@ -123,22 +123,20 @@ def revision(tok, rows):
     faltan, hoy = st.get("faltan", {}), datetime.date.today().isoformat()
     live = [(n, r, cell(r, "X")) for n, r in enumerate(rows[1:], start=2) if cell(r, "H") in ("Pendiente", "Publicado") and cell(r, "X")]
     cells, drops, gone = [], [], []
-    skipped = 0
+    skipped, seen = 0, []
     for i in range(0, len(live), 20):
         part = live[i:i + 20]
         time.sleep(3)
         try:
             res = ali("aliexpress.affiliate.productdetail.get", product_ids=",".join(p for _, _, p in part),
-                      target_currency="USD", target_language="EN", tracking_id="kabuzioTG")
+                      target_currency="USD", target_language="EN", tracking_id="kabuzioTG", country="US")
         except SystemExit as e:  # AliExpress busy: these watches wait for tomorrow, never marked as gone
             print(e)
             skipped += len(part)
             continue
         prods = {str(p["product_id"]): p for p in ((res.get("result") or {}).get("products") or {}).get("product", [])}
         print(f"revision: {i + len(part)} de {len(live)}", flush=True)
-        for p in prods.values():
-            if p.get("promo_code_info") and os.environ.get("DEBUG"):
-                print("  cupón:", p["product_id"], json.dumps(p["promo_code_info"])[:300])
+        seen += prods.values()
         for n, r, pid in part:
             p = prods.get(pid)
             if not p or not p.get("target_sale_price"):
@@ -158,6 +156,12 @@ def revision(tok, rows):
                     cells.append((f"H{n}", "Bajo 60"))
                 elif old * 0.5 <= new <= old * 0.9 and cell(r, "H") == "Publicado":  # more than 50 % is an old wrong price, not a deal
                     drops.append((old - new, n, r, old, new))
+    import cupones
+    cup = cupones.guardar(seen)
+    for n, r, pid in live:  # the coupon code in T (Telegram shows it); a code Cheche wrote by hand stays
+        if pid in cup and not cell(r, "T"):
+            cells.append((f"T{n}", cup[pid]["codigo"]))
+    print("cupones:", sum(1 for _, _, pid in live if pid in cup), "relojes con cupón")
     write(tok, cells)
     st = json.load(open(STATE_FILE))  # fresh copy: other steps may have changed it
     st["faltan"] = faltan

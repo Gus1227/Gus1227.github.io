@@ -32,7 +32,8 @@ def texts(r):
     g = lambda i: (r[i] if i < len(r) else "").strip()
     head, feats = headline(g(NAME), g(BRAND_M)), specs(g(NAME), 3)
     brand = tag(g(BRAND_M)) or ""
-    ig = (f"{head}\n{' · '.join(feats) + chr(10) if feats else ''}\n💰 Now {g(PRICE)}\n\n"
+    from cupones import linea_ig
+    ig = (f"{head}\n{' · '.join(feats) + chr(10) if feats else ''}\n💰 Now {g(PRICE)}\n{linea_ig(r)}\n"
           f"👆 Tap the link in our bio to get it · new watches every day\nAd · affiliate link\n.\n"
           f"#watchesofinstagram #watchdeals #quietluxury #reels {brand} #kabuzio")
     tt = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(PRICE)}\n\n"

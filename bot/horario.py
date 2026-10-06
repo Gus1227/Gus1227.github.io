@@ -25,7 +25,7 @@ def load():
 
 def save(st, msg):
     json.dump(st, open(STATE, "w"), indent=1)
-    git("add", *[f for f in (STATE, os.path.join(HERE, "..", "stats.json"), os.path.join(HERE, "..", "catalogo.csv"), os.path.join(HERE, "fotos.json"), os.path.join(HERE, "respondidos.json")) if os.path.exists(f)])
+    git("add", *[f for f in (STATE, os.path.join(HERE, "..", "stats.json"), os.path.join(HERE, "..", "catalogo.csv"), os.path.join(HERE, "fotos.json"), os.path.join(HERE, "respondidos.json"), os.path.join(HERE, "cupones.json")) if os.path.exists(f)])
     git("commit", "-qm", msg)
     for _ in range(4):
         if git("push", "-q", "origin", "HEAD:main").returncode == 0:
