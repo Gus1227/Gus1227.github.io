@@ -1,6 +1,10 @@
 # Kabuzio: one page per watch (w/<id>.html) + sitemap.xml + robots.txt, so Google can show each watch
 # to people searching for it. Reads the same public «Catalogo» CSV as the website. Run by feed.yml.
-import csv, glob, hashlib, html, io, json, os, re, urllib.request
+import csv, glob, hashlib, html, io, json, os, re, sys, urllib.request
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from idiomas import LANGS, T, prefix, w as tr
+from textos import specs
 
 CSV = ("https://docs.google.com/spreadsheets/d/e/2PACX-1vQRH7X54O1GzNSUWnIgBT1545CXdQMaZ7HOzKOyJC6mZKyXG9gxJ9T5DBbAv0WzbkZXOdHrW8ubzUwS/"
        "pub?gid=596242979&single=true&output=csv")
@@ -13,7 +17,8 @@ nice = lambda b: re.sub(r"([a-z])([A-Z])", r"\1 \2", b)
 def sold(v):
     """«2,451» or «2451.00» -> 2451"""
     m = re.search(r"\d[\d,]*(\.\d+)?", str(v or ""))
-    return int(float(m.group().replace(",", ""))) if m else 0
+    n = float(m.group().replace(",", "")) if m else 0
+    return int(n / 100 if str(v or "").strip().endswith("%") else n)  # the sheet cell is formatted as a percent
 
 
 def kind(name):
@@ -46,7 +51,9 @@ def watches():
         brand = (r.get("Marca") or "").strip()
         out.append({"id": wid, "name": name, "price": (r.get("Precio") or "").strip(), "link": link, "pics": pics[:8],
                     "brand": "" if brand in ("", "Sin marca") else nice(brand), "kind": (r.get("Estilo_web") or "").strip() or kind(name),
-                    "sales": sold(r.get("Ventas")), "video": (r.get("Video") or "").strip()})
+                    "sales": sold(r.get("Ventas")), "video": (r.get("Video") or "").strip(),
+                    "raw": (r.get("Producto") or name).strip(),
+                    "pin": (r.get("Link_PIN") or "").strip() if (r.get("Link_PIN") or "").startswith("https://") else ""})
     return [w for w in out if w["id"] and w["pics"]]
 
 
@@ -64,20 +71,47 @@ main{max-width:1100px;margin:0 auto;padding:24px 16px 60px;display:grid;gap:32px
 p.d{margin-top:20px;line-height:1.6;color:#333;font-size:15px}.rel{max-width:1100px;margin:0 auto;padding:0 16px 60px}.rel h2{font-size:18px;margin-bottom:14px}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}@media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}}
 .grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:var(--soft)}.grid b{display:block;font-size:13px;font-weight:500;margin-top:6px;line-height:1.35}.grid span{font-size:13px;color:var(--muted)}
-footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 16px;border-top:1px solid var(--line)}"""
+footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 16px;border-top:1px solid var(--line)}
+.lg{display:flex;gap:8px;font-size:11px;color:var(--muted)}.lg a.on{color:var(--ink);font-weight:700}@media(max-width:560px){.lg{display:none}}
+.fe{list-style:none;padding:0;margin-top:14px;display:flex;flex-wrap:wrap;gap:6px}.fe li{border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px}"""
 
 
-def page(w, related):
+def alternates(path):
+    """hreflang links: the same page in every language (path without language prefix, e.g. «w/x.html»)."""
+    out = "".join(f'<link rel="alternate" hreflang="{l}" href="{SITE}{prefix(l)}{path}">' for l in LANGS)
+    return out + f'<link rel="alternate" hreflang="x-default" href="{SITE}{path}">'
+
+
+def head(lang, title, desc, path, img, extra=""):
+    return f"""<!doctype html>
+<html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{e(title)} | Kabuzio</title>
+<meta name="description" content="{e(desc)}">
+<link rel="canonical" href="{SITE}{prefix(lang)}{path}">{alternates(path)}
+<meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
+<meta property="og:image" content="{e(img)}"><meta property="og:url" content="{SITE}{prefix(lang)}{path}">
+<meta property="og:site_name" content="Kabuzio">{extra}
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌚</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">"""
+
+
+def langbar(lang, path, up):
+    return "".join(f'<a href="{up}{prefix(l)}{path}"{" class=on" if l == lang else ""}>{l.upper()}</a>' for l in LANGS)
+
+
+def page(w, related, lang="en"):
+    t = T[lang]
+    up = "../" * (1 + (lang != "en"))  # from w/ (or es/w/) back to the site root
     title = f"{w['name'][:70]} – {w['price']}"
-    what = " ".join(x for x in (w["brand"], w["kind"], "watch") if x)
-    sold = f", {w['sales']}+ sold" if w["sales"] else ""
-    desc = (f"{what[0].upper() + what[1:]} for {w['price']} on AliExpress"
-            f"{sold}. "
-            "Hand-picked by Kabuzio. Buyer Protection and worldwide shipping.")
+    what = " ".join(x for x in (w["brand"], tr(lang, w["kind"]), t["watch"]) if x)
+    desc = t["desc"].format(what=what[0].upper() + what[1:], price=w["price"],
+                            sold=t["soldshort"].format(n=w["sales"]) if w["sales"] else "")
     price_num = re.sub(r"[^0-9.]", "", w["price"])
+    path = f"w/{w['id']}.html"
     ld = {"@context": "https://schema.org", "@type": "Product", "name": w["name"], "image": [p + "_800x800.jpg" for p in w["pics"]],
           "description": desc, "sku": w["id"],
-          "offers": {"@type": "Offer", "url": f"{SITE}w/{w['id']}.html", "priceCurrency": "USD", "price": price_num,
+          "offers": {"@type": "Offer", "url": f"{SITE}{prefix(lang)}{path}", "priceCurrency": "USD", "price": price_num,
                      "availability": "https://schema.org/InStock"}}
     if w["brand"]:
         ld["brand"] = {"@type": "Brand", "name": w["brand"]}
@@ -88,29 +122,35 @@ def page(w, related):
                    f'onclick="document.getElementById(\'big\').src=\'{e(p)}_800x800.jpg\'">' for i, p in enumerate(w["pics"]))
     rel = "".join(f'<a href="{r["id"]}.html"><img src="{e(r["pics"][0])}_350x350.jpg" alt="{e(r["name"])}" loading="lazy">'
                   f'<b>{e(r["name"][:60])}</b><span>{e(r["price"])}</span></a>' for r in related)
-    return f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{e(title)} | Kabuzio</title>
-<meta name="description" content="{e(desc)}">
-<link rel="canonical" href="{SITE}w/{w['id']}.html">
-<meta property="og:type" content="product"><meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
-<meta property="og:image" content="{e(w['pics'][0])}_800x800.jpg"><meta property="og:url" content="{SITE}w/{w['id']}.html">
-<meta property="og:site_name" content="Kabuzio">{f'<meta property="og:price:amount" content="{price_num}"><meta property="og:price:currency" content="USD"><meta property="product:availability" content="instock">' if price_num else ''}
-<meta name="referrer" content="no-referrer">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌚</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    feats = "".join(f"<li>{e(tr(lang, f))}</li>" for f in specs(w["raw"]))
+    price_meta = (f'<meta property="og:type" content="product"><meta property="og:price:amount" content="{price_num}">'
+                  f'<meta property="og:price:currency" content="USD"><meta property="product:price:amount" content="{price_num}">'
+                  f'<meta property="product:price:currency" content="USD"><meta property="product:availability" content="instock">'
+                  + (f'<meta property="product:brand" content="{e(w["brand"])}">' if w["brand"] else "")) if price_num else ""
+    return head(lang, title, desc, path, w["pics"][0] + "_800x800.jpg", price_meta) + f"""
 <script type="application/ld+json">{ldjs}</script>
 <style>{CSS}</style></head><body>
-<nav class="nav"><div><a class="logo" href="../">KABUZIO</a><a class="back" href="../">← All watches</a></div></nav>
+<nav class="nav"><div><a class="logo" href="{up}">KABUZIO</a><span class="lg">{langbar(lang, path, up)}</span><a class="back" href="{up}">{t['all']}</a></div></nav>
 <main><div><img id="big" class="big" src="{e(w['pics'][0])}_800x800.jpg" alt="{e(w['name'])}"><div class="th">{pics}</div></div>
-<div><div class="br">{e(w['brand'] or 'Kabuzio Pick')}{' · ' + e(w['kind']) if w['kind'] else ''}</div><h1>{e(w['name'])}</h1>
-<div class="pr">{e(w['price'])}</div>{f'<div class="meta">🔥 {w["sales"]}+ sold on AliExpress</div>' if w['sales'] else ''}
-<a class="cta" href="{e(w['link'])}" rel="nofollow sponsored">View deal on AliExpress</a>
-<ul class="trust"><li>🛡️ AliExpress Buyer Protection</li><li>🌍 Worldwide shipping</li><li>✅ Hand-picked best sellers</li></ul>
-<p class="d">{e(desc)} More watches every day on our <a href="https://linktr.ee/Kabuzio_Deal"><u>Telegram and social pages</u></a>.</p>
-<p class="d" style="font-size:12px;color:#999">Affiliate link: we may earn a commission at no extra cost to you.</p></div></main>
-{f'<section class="rel"><h2>You may also like</h2><div class="grid">{rel}</div></section>' if rel else ''}
-<footer>© Kabuzio · <a href="../">Watch deals</a></footer></body></html>"""
+<div><div class="br">{e(w['brand'] or t['pick'])}{' · ' + e(tr(lang, w['kind'])) if w['kind'] else ''}</div><h1>{e(w['name'])}</h1>
+<div class="pr">{e(w['price'])}</div>{f'<div class="meta">🔥 {t["sold"].format(n=w["sales"])}</div>' if w['sales'] else ''}
+{f'<ul class="fe">{feats}</ul>' if feats else ''}
+<a class="cta" id="cta" href="{e(w['link'])}" rel="nofollow sponsored">{t['cta']}</a>
+<ul class="trust"><li>🛡️ {t['bp']}</li><li>🌍 {t['ship']}</li><li>✅ {t['picked']}</li></ul>
+<p class="d">{e(desc)} {t['more']} <a href="https://linktr.ee/Kabuzio_Deal"><u>{t['social']}</u></a>.</p>
+<p class="d" style="font-size:12px;color:#999">{t['aff']}</p></div></main>
+{f'<section class="rel"><h2>{t["like"]}</h2><div class="grid">{rel}</div></section>' if rel else ''}
+<footer>© Kabuzio · <a href="{up}">{t['deals']}</a> · <a href="{up}{prefix(lang)}g/">{t['guides']}</a></footer>
+<script>if(/src=pin/.test(location.search)&&{json.dumps(w['pin'])})document.getElementById("cta").href={json.dumps(w['pin'])}</script></body></html>"""
+
+
+def put(rel, txt):
+    """Write a page only when it changed (fewer commits); returns its full path."""
+    f = os.path.join(ROOT, rel)
+    os.makedirs(os.path.dirname(f), exist_ok=True)
+    if not os.path.exists(f) or open(f, encoding="utf-8").read() != txt:
+        open(f, "w", encoding="utf-8").write(txt)
+    return f
 
 
 def main():
@@ -121,15 +161,17 @@ def main():
         same = [r for r in ws if r["id"] != w["id"] and r["brand"] == w["brand"]]
         other = sorted((r for r in ws if r["id"] != w["id"] and r not in same), key=lambda r: -r["sales"])
         related = (sorted(same, key=lambda r: -r["sales"]) + other)[:8]
-        f = os.path.join(ROOT, "w", f"{w['id']}.html")
-        keep.add(f)
-        txt = page(w, related)
-        if not os.path.exists(f) or open(f, encoding="utf-8").read() != txt:
-            open(f, "w", encoding="utf-8").write(txt)
-    for f in glob.glob(os.path.join(ROOT, "w", "*.html")):
-        if f not in keep:
-            os.remove(f)  # watch left the catalog
-    urls = [SITE] + [f"{SITE}w/{w['id']}.html" for w in ws]
+        for lang in LANGS:
+            keep.add(put(f"{prefix(lang)}w/{w['id']}.html", page(w, related, lang)))
+    import guias
+    paths = guias.make(ws, put)
+    keep.update(os.path.join(ROOT, p) for p in paths)
+    for lang in LANGS:
+        for sub in ("w", "g", "vs"):
+            for f in glob.glob(os.path.join(ROOT, prefix(lang) + sub, "*.html")):
+                if f not in keep:
+                    os.remove(f)  # watch (or guide) left the catalog
+    urls = [SITE] + [f"{SITE}{prefix(l)}w/{w['id']}.html" for w in ws for l in LANGS] + [SITE + p.replace("index.html", "") for p in paths]
     open(os.path.join(ROOT, "sitemap.xml"), "w").write(
         '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         + "".join(f"<url><loc>{u}</loc></url>\n" for u in urls) + "</urlset>\n")

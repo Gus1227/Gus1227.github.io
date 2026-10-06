@@ -151,7 +151,7 @@ jobs:
         run: |
           git config user.name "kabuzio-bot"
           git config user.email "kabuzio-bot@users.noreply.github.com"
-          git add -A feed.xml pins w sitemap.xml robots.txt $(ls catalogo.csv 2>/dev/null)
+          git add -A feed.xml pins w g vs es fr de pt it sitemap.xml robots.txt $(ls catalogo.csv 2>/dev/null)
           git diff --cached --quiet && exit 0
           git commit -qm "Update Pinterest feed"
           for i in 1 2 3 4; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && exit 0; sleep $((i * 5)); done
