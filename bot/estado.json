@@ -1,6 +1,6 @@
 {
  "hecho": "2026-10-06T22",
- "pin": 99,
+ "pin": 100,
  "tiktok": "2026-10-06T18",
  "carrusel": "automatic",
  "historia": "2026-10-06T20",
@@ -10,5 +10,7 @@
  ],
  "meta": true,
  "aviso_chat": 950723602,
- "faltan": {}
+ "faltan": {},
+ "copia": null,
+ "aviso_fallo": ""
 }
