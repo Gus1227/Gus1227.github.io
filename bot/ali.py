@@ -123,11 +123,19 @@ def revision(tok, rows):
     faltan, hoy = st.get("faltan", {}), datetime.date.today().isoformat()
     live = [(n, r, cell(r, "X")) for n, r in enumerate(rows[1:], start=2) if cell(r, "H") in ("Pendiente", "Publicado") and cell(r, "X")]
     cells, drops, gone = [], [], []
+    skipped = 0
     for i in range(0, len(live), 20):
         part = live[i:i + 20]
-        res = ali("aliexpress.affiliate.productdetail.get", product_ids=",".join(p for _, _, p in part),
-                  target_currency="USD", target_language="EN", tracking_id="kabuzioTG")
+        time.sleep(3)
+        try:
+            res = ali("aliexpress.affiliate.productdetail.get", product_ids=",".join(p for _, _, p in part),
+                      target_currency="USD", target_language="EN", tracking_id="kabuzioTG")
+        except SystemExit as e:  # AliExpress busy: these watches wait for tomorrow, never marked as gone
+            print(e)
+            skipped += len(part)
+            continue
         prods = {str(p["product_id"]): p for p in ((res.get("result") or {}).get("products") or {}).get("product", [])}
+        print(f"revision: {i + len(part)} de {len(live)}", flush=True)
         for n, r, pid in part:
             p = prods.get(pid)
             if not p or not p.get("target_sale_price"):
@@ -156,7 +164,7 @@ def revision(tok, rows):
             precio_bajo(r, old, new)
         print(f"bajada de precio: fila {n} ${old:.2f} -> ${new:.2f}")
     json.dump(st, open(STATE_FILE, "w"), indent=1)
-    print(f"revision: {len(live)} relojes, {len(cells)} cambios, {len(gone)} ya no existen, {len(drops)} bajadas")
+    print(f"revision: {len(live)} relojes, {len(cells)} cambios, {len(gone)} ya no existen, {len(drops)} bajadas, {skipped} sin revisar")
     if gone:
         import aviso
         aviso.enviar("🧹 Gus quitó de la web " + str(len(gone)) + " reloj(es) que ya no existen en AliExpress:\n• " + "\n• ".join(gone[:10]))
