@@ -86,7 +86,9 @@ def facebook():
     link = g(r, LINK)
     if g(r, LINK_FB) and item_of(g(r, LINK_FB)) == item_of(link):  # its own Facebook link only if it opens the same watch
         link = g(r, LINK_FB)
-    coupon = f"\nCoupon: {g(r, COUPON)}" if g(r, COUPON) else ""
+    from cupones import linea_ig
+    coupon = ("\n" + linea_ig(r).replace("DM you", "message you").rstrip()) if linea_ig(r) else f"\nCoupon: {g(r, COUPON)}" if g(r, COUPON) else ""
+    # a coupon from AliExpress is asked for in a comment (fb_respuestas.py sends it by private message)
     text = (f"{head}\n{feats + chr(10) if feats else ''}\n💰 Now {g(r, PRICE)} · Buyer Protection · Worldwide shipping\n"
             f"👉 View the piece: {link}{coupon}\n"
             f"More hand-picked pieces every day on Telegram: https://t.me/KabuzioDeal\n"
