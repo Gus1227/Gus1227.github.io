@@ -38,7 +38,10 @@ def main():
     answered = 0
     for p in posts:
         r = watch_of(p.get("content"), rows)
-        comments = zernio(f"/inbox/comments/{p['id']}?accountId={acc}&limit=50").get("data", [])
+        res = zernio(f"/inbox/comments/{p['id']}?accountId={acc}&limit=50")
+        comments = res.get("data") or res.get("comments") or []
+        if os.environ.get("DEBUG"):
+            print("post:", json.dumps(p)[:300], "\nrespuesta:", json.dumps(res)[:900])
         for c in comments:
             key = "tt:" + str(c["id"])
             who = (c.get("from") or {})
