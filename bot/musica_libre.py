@@ -1,5 +1,5 @@
 # Kabuzio bot: our own background music for the Reels on Facebook, TikTok, Pinterest and Telegram
-# (their APIs can't add music; Instagram gets a trending song instead). Generated note by note here, so it is 100 %
+# and Instagram too (since 2026-10-07: Instagram's songs in Israel were Hebrew). Generated note by note here, so it is 100 %
 # ours: no rights, no blocked videos. Calm "quiet luxury" mood: soft pad + piano arpeggio + low bass, ~72 bpm.
 #   make(out_wav, seconds, seed)   same seed = same track; reel.py uses the product id, so each Reel sounds different
 import math, os, random, struct, subprocess, wave

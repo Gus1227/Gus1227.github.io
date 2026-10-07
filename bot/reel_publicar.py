@@ -1,5 +1,5 @@
 # Kabuzio bot: publishes the newest Reel (r/ultimo.json, made by reel.py) on the networks Cheche picked in the editor.
-#   REDES=instagram,facebook,tiktok,pinterest,telegram   PUBLICAR=si (anything else only prints)
+#   REDES=instagram,facebook,tiktok,pinterest,telegram   PUBLICAR=si (anything else only prints)   REEL_PID=<id> = an older Reel
 # Where each Reel went is kept in r/publicados.json ({product id: {network: date}}), the editor shows it.
 import datetime, json, os, subprocess, sys, time, urllib.request
 
@@ -53,28 +53,12 @@ def page_of(r):
     return f"https://gus1227.github.io/w/{slug}-{hashlib.sha1(link.encode()).hexdigest()[:6]}.html"
 
 
-def trending():
-    """audio_configuration with one of Instagram's trending English songs right now, or "" if Meta gives none."""
-    import random
-    from meta import IG, graph, ids_ingles
-    try:
-        res = graph("/ig_audio", {"audio_type": "music", "user_id": IG})  # no search = trending
-    except SystemExit as e:
-        print("Audio API:", e)
-        return ""
-    ids = ids_ingles(res)  # English songs only (Cheche)
-    if not ids:
-        return ""
-    pick, name = random.choice(ids)
-    print("Música en tendencia:", name, pick)
-    return json.dumps({"audio_id": pick, "audio_volume": 100, "video_volume": 0})
-
-
 def instagram(url, cap):
-    from meta import IG, graph, musica, wait_ready
-    cfg = musica() or trending()  # Instagram music: calm mostly-instrumental moods first (trending in Israel brings Hebrew/Arabic/Spanish songs; Cheche wants none in Hebrew)
-    cid = graph(f"/{IG}/media", {"media_type": "REELS", "video_url": url, "caption": cap, "share_to_feed": "true",
-                                 **({"audio_configuration": cfg} if cfg else {})}, post=True)["id"]
+    from meta import IG, graph, wait_ready
+    # No Instagram songs any more: the Audio API in Israel kept picking Hebrew songs (Cheche, 2026-10-07).
+    # Instagram gets the same video with our own music inside (url_m), like the other networks.
+    cid = graph(f"/{IG}/media", {"media_type": "REELS", "video_url": url, "caption": cap, "share_to_feed": "true"},
+                post=True)["id"]
     if not wait_ready(cid):
         raise SystemExit("Instagram: el video no quedó listo")
     return graph(f"/{IG}/media_publish", {"creation_id": cid}, post=True).get("id")
@@ -117,8 +101,12 @@ def telegram(url, r):
 def main():
     last = json.load(open(os.path.join(ROOT, "r", "ultimo.json")))
     n, pid, url = last["fila"], last["pid"], last["url"]
-    url_m = last.get("url_m") or url  # with our own music: for the networks whose API can't add a song
+    url_m = last.get("url_m") or url  # with our own music: every network uses this one
     rows = sheets(google_token(), f"values/{TAB}!A1:AL?valueRenderOption=FORMATTED_VALUE").get("values", [])
+    if os.environ.get("REEL_PID"):  # an older Reel again (its r/<pid>-m.mp4 must exist)
+        pid = os.environ["REEL_PID"]
+        n = next(i for i, r in enumerate(rows, start=1) if len(r) > 23 and r[23].strip().lstrip("'") == pid)
+        url, url_m = (f"https://gus1227.github.io/r/{pid}{x}.mp4" for x in ("", "-m"))
     r = rows[n - 1]
     ig, tt, fb, title = texts(r)
     print(f"Reel fila {n} ({pid}) → {', '.join(REDES)}\n{url}\n---\n{ig}\n---")
@@ -130,7 +118,7 @@ def main():
     done, ok = {}, []
     for red in REDES:
         try:
-            res = {"instagram": lambda: instagram(url, ig), "facebook": lambda: facebook(url_m, fb),
+            res = {"instagram": lambda: instagram(url_m, ig), "facebook": lambda: facebook(url_m, fb),
                    "tiktok": lambda: tiktok(url_m, tt), "pinterest": lambda: pinterest(url_m, ig, title, page_of(r) + "?src=pin"),
                    "telegram": lambda: telegram(url_m, r)}[red]()
             print(f"{red}: publicado ({res})")
