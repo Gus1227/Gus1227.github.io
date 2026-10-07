@@ -65,14 +65,14 @@ def trending():
     ids = ids_ingles(res)  # English songs only (Cheche)
     if not ids:
         return ""
-    pick = random.choice(ids)
-    print("Música en tendencia:", pick)
+    pick, name = random.choice(ids)
+    print("Música en tendencia:", name, pick)
     return json.dumps({"audio_id": pick, "audio_volume": 100, "video_volume": 0})
 
 
 def instagram(url, cap):
     from meta import IG, graph, musica, wait_ready
-    cfg = trending() or musica()  # Instagram music (Audio API): trending first (Cheche), else a quiet mood
+    cfg = musica() or trending()  # Instagram music: calm mostly-instrumental moods first (trending in Israel brings Hebrew/Arabic/Spanish songs; Cheche wants none in Hebrew)
     cid = graph(f"/{IG}/media", {"media_type": "REELS", "video_url": url, "caption": cap, "share_to_feed": "true",
                                  **({"audio_configuration": cfg} if cfg else {})}, post=True)["id"]
     if not wait_ready(cid):

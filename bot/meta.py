@@ -172,7 +172,7 @@ def instagram():
 
 
 # ---------- music for Reels (Instagram Audio API: only audio cleared for third-party use) ----------
-MOODS = ("cinematic", "luxury", "lofi", "piano")
+MOODS = ("cinematic", "luxury", "lofi", "piano")  # mostly instrumental: no Hebrew or other lyrics (Cheche)
 
 
 def en_ingles(a):
@@ -186,9 +186,7 @@ def ids_ingles(res):
     """Usable audio ids (English, 15 s or more) from an /ig_audio answer."""
     ok = [a for a in (res.get("audio") or res.get("data") or [])[:25]
           if (a.get("audio_id") or a.get("id")) and a.get("duration_in_ms", 30000) >= 15000 and en_ingles(a)]
-    for a in ok:
-        print("  canción OK:", a.get("title"), "·", a.get("display_artist") or a.get("artist") or "")
-    return [a.get("audio_id") or a.get("id") for a in ok]
+    return [(a.get("audio_id") or a.get("id"), f'{a.get("title")} · {a.get("display_artist") or a.get("artist") or ""}') for a in ok]
 
 
 def musica(query=None):
@@ -203,8 +201,8 @@ def musica(query=None):
             return ""
         ids = ids_ingles(res)
         if ids:
-            pick_id = random.choice(ids)
-            print(f"Música «{q}»: {pick_id}")
+            pick_id, name = random.choice(ids)
+            print(f"Música «{q}»: {name} ({pick_id})")
             return json.dumps({"audio_id": pick_id, "audio_volume": 100, "video_volume": 0})
     return ""
 
