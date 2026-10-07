@@ -1,9 +1,21 @@
 {
+ "1005003081834694": {
+  "codigo": "PAGANI828",
+  "valor": "On order over USD 90.0 , get USD 9.00 off",
+  "minimo": "90.0",
+  "fin": "2026-10-30 23:59:59"
+ },
  "1005003423023760": {
   "codigo": "PAGANI828",
   "valor": "On order over USD 90.0 , get USD 9.00 off",
   "minimo": "90.0",
   "fin": "2026-10-30 23:59:59"
+ },
+ "1005005490146490": {
+  "codigo": "6PKX3BZOYPDA",
+  "valor": "On order over USD 80.5 , get USD 7.05 off",
+  "minimo": "80.5",
+  "fin": "2026-10-11 23:59:59"
  },
  "1005006412902605": {
   "codigo": "PAGANI828",
@@ -12,6 +24,12 @@
   "fin": "2026-10-30 23:59:59"
  },
  "1005008403899431": {
+  "codigo": "PAGANI828",
+  "valor": "On order over USD 90.0 , get USD 9.00 off",
+  "minimo": "90.0",
+  "fin": "2026-10-30 23:59:59"
+ },
+ "1005008549979851": {
   "codigo": "PAGANI828",
   "valor": "On order over USD 90.0 , get USD 9.00 off",
   "minimo": "90.0",
