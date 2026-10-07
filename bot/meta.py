@@ -175,6 +175,19 @@ def instagram():
 MOODS = ("cinematic", "luxury", "lofi", "piano")
 
 
+def en_ingles(a):
+    """Cheche: only English songs on Instagram. Instagram's music for our account (in Israel) comes with many
+    Hebrew songs, so any audio whose title/artist has letters that are not plain English (Hebrew, Arabic…) is skipped."""
+    texto = " ".join(str(v) for k, v in a.items() if isinstance(v, str) and k not in ("audio_id", "id"))
+    return all(c.isascii() for c in texto if c.isalpha())
+
+
+def ids_ingles(res):
+    """Usable audio ids (English, 15 s or more) from an /ig_audio answer."""
+    return [a.get("audio_id") or a.get("id") for a in (res.get("audio") or res.get("data") or [])[:25]
+            if (a.get("audio_id") or a.get("id")) and a.get("duration_in_ms", 30000) >= 15000 and en_ingles(a)]
+
+
 def musica(query=None):
     """audio_configuration for a REELS container (a JSON string), or "" when Meta returns nothing.
     Use: graph(f"/{IG}/media", {"media_type": "REELS", "video_url": url, "audio_configuration": musica(), ...}, post=True)"""
@@ -182,12 +195,10 @@ def musica(query=None):
     for q in ([query] if query else random.sample(MOODS, len(MOODS))):
         try:
             res = graph("/ig_audio", {"audio_type": "music", "user_id": IG, "search_query": q})
-            found = res.get("audio") or res.get("data") or []
         except SystemExit as e:
             print("Audio API:", e)
             return ""
-        ids = [a.get("audio_id") or a.get("id") for a in found[:10]
-               if (a.get("audio_id") or a.get("id")) and a.get("duration_in_ms", 30000) >= 15000]
+        ids = ids_ingles(res)
         if ids:
             pick_id = random.choice(ids)
             print(f"Música «{q}»: {pick_id}")

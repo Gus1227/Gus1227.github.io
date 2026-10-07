@@ -54,16 +54,15 @@ def page_of(r):
 
 
 def trending():
-    """audio_configuration with one of Instagram's trending songs right now, or "" if Meta gives none."""
+    """audio_configuration with one of Instagram's trending English songs right now, or "" if Meta gives none."""
     import random
-    from meta import IG, graph
+    from meta import IG, graph, ids_ingles
     try:
         res = graph("/ig_audio", {"audio_type": "music", "user_id": IG})  # no search = trending
     except SystemExit as e:
         print("Audio API:", e)
         return ""
-    ids = [a.get("audio_id") or a.get("id") for a in (res.get("audio") or res.get("data") or [])[:10]
-           if (a.get("audio_id") or a.get("id")) and a.get("duration_in_ms", 30000) >= 15000]
+    ids = ids_ingles(res)  # English songs only (Cheche)
     if not ids:
         return ""
     pick = random.choice(ids)
