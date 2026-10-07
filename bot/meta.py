@@ -184,8 +184,11 @@ def en_ingles(a):
 
 def ids_ingles(res):
     """Usable audio ids (English, 15 s or more) from an /ig_audio answer."""
-    return [a.get("audio_id") or a.get("id") for a in (res.get("audio") or res.get("data") or [])[:25]
-            if (a.get("audio_id") or a.get("id")) and a.get("duration_in_ms", 30000) >= 15000 and en_ingles(a)]
+    ok = [a for a in (res.get("audio") or res.get("data") or [])[:25]
+          if (a.get("audio_id") or a.get("id")) and a.get("duration_in_ms", 30000) >= 15000 and en_ingles(a)]
+    for a in ok:
+        print("  canción OK:", a.get("title"), "·", a.get("display_artist") or a.get("artist") or "")
+    return [a.get("audio_id") or a.get("id") for a in ok]
 
 
 def musica(query=None):

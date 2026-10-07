@@ -66,7 +66,8 @@ def tiktok():
                                 "platforms": [{"platform": "tiktok", "accountId": acc}],
                                 "tiktokSettings": {"privacy_level": "PUBLIC_TO_EVERYONE", "allow_comment": True,
                                                    "media_type": "photo", "photo_cover_index": 0, "description": desc,
-                                                   "auto_add_music": True, "content_preview_confirmed": True,
+                                                   "auto_add_music": False,  # TikTok picks songs by the account region (Israel): no Hebrew songs (Cheche)
+                                                   "content_preview_confirmed": True,
                                                    "express_consent_given": True},
                                 "publishNow": True})
         print("TikTok fotos:", json.dumps(res)[:300])
