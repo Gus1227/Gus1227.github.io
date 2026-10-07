@@ -1,5 +1,5 @@
 # Kabuzio bot: TikTok and Pinterest through the Zernio API.
-# Same posts as Make: TikTok = scenario 7728023 (photo carousel with music + video post, marks R = "Sí"),
+# Same posts as Make: TikTok = scenario 7728023 (photos as a video with our music + video post, marks R = "Sí"),
 # Pinterest = scenario 7763492 (1 pin from pins/q/<n>.json every 2 h).
 import datetime, json, os, re, sys, time, urllib.error, urllib.request
 
@@ -24,6 +24,62 @@ def zernio(path, body=None):
 
 
 # ---------- TikTok ----------
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+
+
+def slideshow(pics, name):
+    """The photos as a vertical video with our own music (no lyrics), saved in t/<name>.mp4 and pushed to the web.
+    TikTok's automatic music for photo posts picks songs for Israel (Hebrew), so Cheche wants ours instead."""
+    import subprocess
+    from musica_libre import with_music
+    os.makedirs(os.path.join(ROOT, "t"), exist_ok=True)
+    tmp, files = os.path.join(ROOT, "t", "tmp"), []
+    os.makedirs(tmp, exist_ok=True)
+    for i, u in enumerate(pics):
+        f = os.path.join(tmp, f"{i}.jpg")
+        try:
+            req = urllib.request.Request(u + "_800x800.jpg", headers={"User-Agent": "Mozilla/5.0"})
+            open(f, "wb").write(urllib.request.urlopen(req, timeout=60).read())
+            files.append(f)
+        except Exception as e:
+            print("foto falló:", u, e)
+    if not files:
+        raise SystemExit("TikTok: no se pudo bajar ninguna foto")
+    each = 2.5
+    lst = os.path.join(tmp, "list.txt")
+    open(lst, "w").write("".join(f"file '{f}'\nduration {each}\n" for f in files) + f"file '{files[-1]}'\n")
+    silent, out = os.path.join(tmp, "v.mp4"), os.path.join(ROOT, "t", f"{name}.mp4")
+    r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst,
+                        "-vf", "scale=1080:1080:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:white,fps=30,format=yuv420p",
+                        "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-t", f"{each * len(files):.1f}", silent],
+                       capture_output=True, text=True)
+    if r.returncode:
+        raise SystemExit("ffmpeg fotos: " + r.stderr[-400:])
+    with_music(silent, out, name)
+    for f in os.listdir(tmp):
+        os.remove(os.path.join(tmp, f))
+    os.rmdir(tmp)
+    run = lambda *a: subprocess.run(["git", *a], cwd=ROOT)
+    old = sorted((os.path.join(ROOT, "t", f) for f in os.listdir(os.path.join(ROOT, "t")) if f.endswith(".mp4")),
+                 key=os.path.getmtime)[:-3]  # keep the repo small: only the last 3
+    for f in old:
+        run("rm", "-q", "--cached", f)
+        os.remove(f)
+    run("add", out)
+    run("commit", "-qm", f"bot: TikTok fotos con música ({name})")
+    run("pull", "-q", "--rebase", "origin", "main")
+    run("push", "-q", "origin", "HEAD:main")
+    url = f"https://gus1227.github.io/t/{name}.mp4"
+    for _ in range(40):  # GitHub Pages needs a minute or two
+        try:
+            if urllib.request.urlopen(urllib.request.Request(url, method="HEAD"), timeout=30).status == 200:
+                return url
+        except Exception:
+            pass
+        time.sleep(15)
+    raise SystemExit("TikTok: el video de fotos no llegó a la web")
+
+
 def tiktok():
     token = google_token()
     rows = sheets(token, f"values/{TAB}!A1:CZ?valueRenderOption=FORMATTED_VALUE").get("values", [])
@@ -61,17 +117,15 @@ def tiktok():
     accs = accs.get("accounts", accs) if isinstance(accs, dict) else accs
     acc = next(a["_id"] for a in accs if str(a.get("platform", "")).lower() == "tiktok")
     if pics:
-        res = zernio("/posts", {"content": title[:90],
-                                "mediaItems": [{"type": "image", "url": u + "_800x800.jpg"} for u in pics],
+        # photos as a video with our own music (TikTok's automatic music was Hebrew; without it, no music at all)
+        res = zernio("/posts", {"content": desc, "mediaItems": [{"type": "video", "url": slideshow(pics, f"fila{n}")}],
                                 "platforms": [{"platform": "tiktok", "accountId": acc}],
                                 "tiktokSettings": {"privacy_level": "PUBLIC_TO_EVERYONE", "allow_comment": True,
-                                                   "media_type": "photo", "photo_cover_index": 0, "description": desc,
-                                                   "auto_add_music": False,  # TikTok picks songs by the account region (Israel): no Hebrew songs (Cheche)
-                                                   "content_preview_confirmed": True,
-                                                   "express_consent_given": True},
+                                                   "allow_duet": False, "allow_stitch": False,
+                                                   "content_preview_confirmed": True, "express_consent_given": True},
                                 "publishNow": True})
-        print("TikTok fotos:", json.dumps(res)[:300])
-    if video:
+        print("TikTok fotos (video con música):", json.dumps(res)[:300])
+    if video and not os.environ.get("SOLO_FOTOS"):  # SOLO_FOTOS=si: re-post only the photo video
         try:
             res = zernio("/posts", {"content": desc, "mediaItems": [{"type": "video", "url": video}],
                                     "platforms": [{"platform": "tiktok", "accountId": acc}],

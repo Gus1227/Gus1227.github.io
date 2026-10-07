@@ -35,7 +35,7 @@ jobs:
           APT="sudo DEBIAN_FRONTEND=noninteractive timeout 300 apt-get install -y -q --no-install-recommends tesseract-ocr fonts-dejavu-core"
           $APT || (sudo timeout 120 apt-get update -q && $APT) || true
           # ffmpeg only for Reels (it is big)
-          if [ "${{ inputs.red }}" = "reel" ] || [[ "${{ inputs.fila }}" == reel* || "${{ inputs.fila }}" == ejemplo* || "${{ inputs.fila }}" == carrusel* || "${{ inputs.fila }}" == historias* || "${{ inputs.fila }}" == ig-* ]]; then
+          if [ "${{ inputs.red }}" = "reel" ] || [ "${{ inputs.red }}" = "tiktok" ] || [[ "${{ inputs.fila }}" == tiktok* ]] || [[ "${{ inputs.fila }}" == reel* || "${{ inputs.fila }}" == ejemplo* || "${{ inputs.fila }}" == carrusel* || "${{ inputs.fila }}" == historias* || "${{ inputs.fila }}" == ig-* ]]; then
             sudo DEBIAN_FRONTEND=noninteractive timeout 600 apt-get install -y -q --no-install-recommends ffmpeg || (sudo timeout 120 apt-get update -q && sudo DEBIAN_FRONTEND=noninteractive timeout 600 apt-get install -y -q --no-install-recommends ffmpeg)
           fi
           git config user.name "kabuzio-bot"
@@ -109,6 +109,7 @@ jobs:
               meta-musica) META=musica python3 bot/meta.py ;;
               ig-reels) python3 -c "import sys,json;sys.path.insert(0,'bot');from meta import IG,graph;[print(m.get('timestamp'),m.get('media_product_type'),m.get('permalink'),(m.get('caption') or '')[:60].replace(chr(10),' ')) for m in graph(f'/{IG}/media',{'fields':'id,timestamp,media_product_type,permalink,caption','limit':'30'}).get('data',[])]" ;;
               reel-ig-si) REDES=instagram PUBLICAR=si python3 bot/reel_publicar.py ;;
+              tiktok-fila-*) SOLO_FOTOS=si FILA_PUB="${FILA#tiktok-fila-}" REDES=tiktok PUBLICAR=si python3 bot/zernio.py ;;
               reel-ig-pid-*) REEL_PID="${FILA#reel-ig-pid-}" REDES=instagram PUBLICAR=si python3 bot/reel_publicar.py ;;
               ig-borrar-*) python3 -c "import sys;sys.path.insert(0,'bot');from meta import graph;print(graph('/${FILA#ig-borrar-}',{'method':'delete'},post=True))" ;;
               meta-fb) META=facebook python3 bot/meta.py ;;
