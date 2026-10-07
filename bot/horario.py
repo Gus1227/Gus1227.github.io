@@ -90,6 +90,7 @@ def turn(slot):
     run("stats.py")
     run("respuestas.py", RESPONDER="si")  # answer new Instagram comments (public + private message with the link)
     run("tiktok_respuestas.py", RESPONDER="si")  # and new TikTok comments (public answer, through Zernio)
+    run("tiktok_dm.py", RESPONDER="si")  # and TikTok DMs («DM us K1234»): the watch's link in private
     run("fb_respuestas.py", RESPONDER="si")  # and Facebook page comments (public + private message)
     run("catalogo.py")  # the website reads this copy: fast and always fresh
     if slot.hour == 10:  # once a day (13:00 Israel): prices, watches that no longer exist, one «Price drop» post

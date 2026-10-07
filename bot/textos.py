@@ -129,3 +129,14 @@ def tiktok_seo(title, brand):
     tags = ["#ad", "#watches", "#menswatch", "#watchesformen", "#watchtok", "#watchcollector",
             tag(b) if b else "", f"#{k.lower()}watch" if k else "", "#automaticwatch" if auto else "", "#kabuzio"]
     return " · ".join(w for w in words if w), " ".join(dict.fromkeys(x for x in tags if x))
+
+
+def dm_code(pid):
+    """Short code for «DM us K1234»: K + last 4 digits of the product id (bot/tiktok_dm.py finds the watch by it)."""
+    d = re.sub(r"\D", "", pid or "")
+    return f"K{d[-4:]}" if len(d) >= 4 else ""
+
+
+def dm_line(pid):
+    code = dm_code(pid)
+    return f"💬 DM us «{code}» and we'll send you the link" if code else "💬 DM us and we'll send you the link"

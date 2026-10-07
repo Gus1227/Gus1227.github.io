@@ -120,6 +120,8 @@ jobs:
               respuestas-si) RESPONDER=si python3 bot/respuestas.py ;;
               tt-respuestas) DEBUG=1 python3 bot/tiktok_respuestas.py ;;
               tt-respuestas-si) RESPONDER=si python3 bot/tiktok_respuestas.py ;;
+              tt-dm) DEBUG=1 python3 bot/tiktok_dm.py ;;
+              tt-dm-si) RESPONDER=si python3 bot/tiktok_dm.py ;;
               fb-respuestas) python3 bot/fb_respuestas.py ;;
               web-check) for u in editor.html index.html catalogo.csv; do echo "$u: $(curl -s -o /dev/null -w '%{http_code}' https://gus1227.github.io/$u)"; done ;;
               fb-respuestas-si) RESPONDER=si python3 bot/fb_respuestas.py ;;
