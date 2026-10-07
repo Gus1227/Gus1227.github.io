@@ -103,9 +103,9 @@ def tiktok():
     pics = limpias(pics, g(r, BRAND))[:10]
     from textos import headline, kind, specs, tag
     head, feats = headline(g(r, NAME), g(r, BRAND)), specs(g(r, NAME), 3)
-    tags = " ".join(t for t in ("#ad #watches #watchtok #quietluxury", tag(g(r, BRAND)), (tag(kind(g(r, NAME))) if kind(g(r, NAME)) != "Diver" else "") or "",
-                                "#automaticwatch" if "Automatic" in head else "", "#kabuzio") if t)
-    desc = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(r, PRICE)}\n\n"
+    from textos import tiktok_seo
+    words, tags = tiktok_seo(g(r, NAME), g(r, BRAND))  # TikTok search keywords (Cheche)
+    desc = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(r, PRICE)}\n{words}\n\n"
             f"👆 Tap the link in our bio to get it · new watches every day\n\n{tags}")
     title = f"{head} · {' · '.join(feats[:2])}" if feats else head
     video = g(r, VIDEO)

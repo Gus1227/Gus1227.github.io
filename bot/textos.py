@@ -114,3 +114,18 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def tiktok_seo(title, brand):
+    """TikTok search words (Cheche, 2026-10-07): one line people actually type + hashtags, for every TikTok post.
+    Only words that are true for this watch; no "cheap"."""
+    t = (title or "").lower()
+    k = kind(title)
+    k = "" if k == "Diver" else k
+    auto = bool(re.search(r"automatic|mechanical|self.?wind|nh3[45]|pt5000", t))
+    b = nice_brand(brand)
+    words = [f"{'automatic ' if auto else ''}{k.lower() + ' ' if k else ''}watch for men".strip(),
+             f"{b} watch" if b else "", "men's watches", "watch gift for him", "watch collection"]
+    tags = ["#ad", "#watches", "#menswatch", "#watchesformen", "#watchtok", "#watchcollector",
+            tag(b) if b else "", f"#{k.lower()}watch" if k else "", "#automaticwatch" if auto else "", "#kabuzio"]
+    return " · ".join(w for w in words if w), " ".join(dict.fromkeys(x for x in tags if x))

@@ -36,8 +36,10 @@ def texts(r):
     ig = (f"{head}\n{' · '.join(feats) + chr(10) if feats else ''}\n💰 Now {g(PRICE)}\n{linea_ig(r)}\n"
           f"👆 Tap the link in our bio to get it · new watches every day\nAd · affiliate link\n.\n"
           f"#watchesofinstagram #watchdeals #quietluxury #reels {brand} #kabuzio")
-    tt = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(PRICE)}\n\n"
-          f"👆 Tap the link in our bio to get it · new watches every day\n\n#ad #watches #watchtok #quietluxury {brand} #kabuzio")
+    from textos import tiktok_seo
+    words, tt_tags = tiktok_seo(g(NAME), g(BRAND_M))  # TikTok search keywords (Cheche)
+    tt = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(PRICE)}\n{words}\n\n"
+          f"👆 Tap the link in our bio to get it · new watches every day\n\n{tt_tags}")
     fb = (f"{head}\n{' · '.join(feats) + chr(10) if feats else ''}💰 Now {g(PRICE)}\n\n"
           f"Get it here 👉 {g(35) or g(4)}\n{linea_ig(r).replace('DM you', 'message you')}Ad · affiliate link\n\n#Kabuzio #watches {brand}")
     title = (f"{head} · {' · '.join(feats[:2])}" if feats else head)[:100]
