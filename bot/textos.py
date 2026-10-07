@@ -138,5 +138,5 @@ def dm_code(pid):
 
 
 def dm_line(pid):
-    code = dm_code(pid)
-    return f"💬 DM us «{code}» and we'll send you the link" if code else "💬 DM us and we'll send you the link"
+    """TikTok call to action (Cheche, 2026-10-07): comment on the post, Gus answers right there with the link."""
+    return "💬 Comment «LINK» and we'll reply with it"

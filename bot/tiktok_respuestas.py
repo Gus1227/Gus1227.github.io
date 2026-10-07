@@ -1,5 +1,6 @@
 # Kabuzio bot: answers new comments on our TikTok posts through Zernio (same texts as Instagram, bot/respuestas.json).
-# TikTok has no private reply, so only the public answer under the comment («link in our bio», never a link).
+# TikTok has no private reply, so the public answer under the comment carries the watch's own link
+# (Cheche, 2026-10-07: every TikTok says «Comment LINK and we'll reply with it»).
 # Answered comment ids go to bot/respondidos.json too (prefixed «tt:»). RESPONDER=si answers; anything else only prints.
 import datetime, json, os, random, sys, urllib.parse
 
@@ -64,7 +65,13 @@ def main():
                 continue
             if r is None and ru["id"] in ("precio", "marca"):  # unknown watch: no price or brand to give
                 ru = next(x for x in TEXTS["reglas"] if x["id"] == "link")
-            public = fill(random.choice(ru["comentario"]), r, g)
+            link = (g(r, 34) or g(r, 4)) if r is not None else ""  # AI = TikTok link of the watch, else its main link
+            if link and ru["id"] != "cupon":
+                public = random.choice(["Here it is 👉 {l}", "Here's the link 👉 {l}", "Enjoy 👉 {l}"]).format(l=link)
+                if ru["id"] == "precio":
+                    public = f"It's {g(r, 1)} right now 👉 {link}"
+            else:
+                public = fill(random.choice(ru["comentario"]), r, g)
             print(f"@{who.get('username')}: {c.get('message', '')[:80]}\n  [{ru['id']}] público: {public}")
             if WRITE:
                 try:
