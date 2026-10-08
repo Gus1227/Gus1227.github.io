@@ -50,6 +50,20 @@ def fill(text, r, g):
             .replace("BRAND", re.sub(r"([a-z])([A-Z])", r"\1 \2", g(r, 12)) if r is not None and g(r, 12) else "piece"))
 
 
+def deal(r, g, link):
+    """Cheche (2026-10-08): the DM with the watch's link; over caro_desde ($400) it offers cheaper options too."""
+    from textos import headline
+    num = re.sub(r"[^0-9.]", "", g(r, 1).replace(",", ""))
+    try:
+        price = float(num)
+    except ValueError:
+        price = 0
+    shown = (f"{price:.0f}" if price == int(price) else f"{price:.2f}") if price else g(r, 1).lstrip("$")
+    text = TEXTS["dm_reloj_caro"] if price > TEXTS["caro_desde"] else TEXTS["dm_reloj"]
+    name = g(r, 40) or headline(g(r, 0), g(r, 12))
+    return text.replace("{nombre}", name).replace("{precio}", shown).replace("{link}", link)
+
+
 def compose(ru, r, g):
     """Public and private answer; when the watch has a coupon, the private message carries its code."""
     cup = de(r) if r is not None else None
@@ -58,7 +72,10 @@ def compose(ru, r, g):
     elif cup and ru["id"] in ("elogio", "otro"):  # the post asks to comment: any comment gets the code
         ru = TEXTS["reglas"][0]
     public = fill(random.choice(ru["comentario"]), r, g)
-    private = fill(TEXTS["dm_tras_comentario"] if ru["id"] in ("elogio", "otro") else random.choice(ru["mensaje"]), r, g)
+    if r is not None and ru["id"] not in ("queja", "recomendar"):  # we know the watch: «Here's your deal» DM
+        private = deal(r, g, g(r, 33) or g(r, 4) or TEXTS["linktree"])
+    else:
+        private = fill(TEXTS["dm_tras_comentario"] if ru["id"] in ("elogio", "otro") else random.choice(ru["mensaje"]), r, g)
     if cup:
         if ru["id"] != "cupon":
             private += TEXTS["cupon_extra"]

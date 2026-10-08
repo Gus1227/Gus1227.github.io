@@ -221,5 +221,9 @@
  ],
  "dm_tras_comentario": "Hi! Thanks for your comment on our post ⌚ Here's the watch: {link}\nIt ships worldwide with AliExpress buyer protection. Want me to suggest similar pieces?",
  "cupon_extra": "\n\n🎟 Your coupon code: {code} ({value}). Use it at checkout.",
- "cupon_no_hay": "Thanks for asking! There's no extra coupon for this one right now, but here it is with buyer protection and worldwide shipping: {link}"
+ "cupon_no_hay": "Thanks for asking! There's no extra coupon for this one right now, but here it is with buyer protection and worldwide shipping: {link}",
+ "dm_reloj": "Here's your deal 🔥\n{nombre} – ${precio}\n👉 {link}\n\n💸 More options for every budget!\n⌚ Tons more watches here: https://linktr.ee/Kabuzio_Deal\n\nAffiliate link",
+ "dm_reloj_caro": "Here's your deal 🔥\n{nombre} – ${precio}\n👉 {link}\n\n💸 Too pricey? We've got cheaper options too!\n⌚ Tons more here: https://linktr.ee/Kabuzio_Deal\n\nAffiliate link",
+ "caro_desde": 400,
+ "_info_dm_reloj": "Cheche (2026-10-08): el DM con el link del reloj usa dm_reloj; si el precio es MAYOR que caro_desde ($), usa dm_reloj_caro."
 }

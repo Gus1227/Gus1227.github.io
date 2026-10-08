@@ -22,14 +22,13 @@ def watch_for(text, rows):
 
 
 def answer(text, rows):
-    from textos import headline
     g = lambda r, i: (r[i] if i < len(r) else "").strip()
     r = watch_for(text, rows)
     if r is None:
         return (f"Hi! 👋 Here are all our hand-picked watches: {WEB}\n"
                 f"If you saw one in a video, send us its code (like K1234) and we'll send you its direct link.")
-    return (f"Here it is 👇\n{headline(g(r, 0), g(r, 12))} · {g(r, 1)}\n{g(r, LINK_TT) or g(r, LINK)}\n\n"
-            f"Buyer Protection · worldwide shipping on AliExpress\nAd · affiliate link")
+    from respuestas import deal
+    return deal(r, g, g(r, LINK_TT) or g(r, LINK))
 
 
 def main():
