@@ -100,7 +100,7 @@ def num(s):
 
 def caption(r):
     """Quiet-luxury post: what the watch is, the features its title really lists, price, proof, link."""
-    from textos import headline, kind as kind_of, specs
+    from textos import BEST, headline, kind as kind_of, specs
     raw = lambda i: (r[i] if i < len(r) else "").strip()
     g = lambda i: html.escape(raw(i), quote=False)
     p, name = num(g(PRICE)), raw(NAME)
@@ -116,7 +116,7 @@ def caption(r):
     tags = re.sub(r"\s*#\s*$", "", g(TAGS))  # "#Watches #" when the watch has no brand
     return (f"<b>{html.escape(headline(name, raw(BRAND_M)))}</b>\n\n"  # clean name only, never the AliExpress keyword title
             f"{feats}{chr(10) if feats else ''}<b>{g(PRICE)}</b>{' · ' + proof if proof else ''}\n"
-            f"Buyer Protection · Worldwide shipping{coupon}\n\n"
+            f"{BEST}\n{coupon.lstrip(chr(10)) + chr(10) if coupon else ''}\n"
             f"<a href=\"{link}\">View the piece →</a>\n\n{tags} {band} {kind} #Kabuzio #ad")
 
 

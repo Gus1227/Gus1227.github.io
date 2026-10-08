@@ -33,14 +33,15 @@ def texts(r):
     head, feats = headline(g(NAME), g(BRAND_M)), specs(g(NAME), 3)
     brand = tag(g(BRAND_M)) or ""
     from cupones import linea_ig
-    ig = (f"{head}\n{' · '.join(feats) + chr(10) if feats else ''}\n💰 Now {g(PRICE)}\n{linea_ig(r)}\n"
+    from textos import BEST, COMMENT
+    ig = (f"{head}\n{' · '.join(feats) + chr(10) if feats else ''}\n💰 Now {g(PRICE)}\n{COMMENT}\n{BEST}\n{linea_ig(r)}\n"
           f"👆 Tap the link in our bio to get it · new watches every day\nAd · affiliate link\n.\n"
           f"#watchesofinstagram #watchdeals #quietluxury #reels {brand} #kabuzio")
     from textos import dm_line, tiktok_seo
     words, tt_tags = tiktok_seo(g(NAME), g(BRAND_M))  # TikTok search keywords (Cheche)
-    tt = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(PRICE)}\n{words}\n\n"
-          f"{dm_line(g(23))}\n👆 Or tap the link in our bio · new watches every day\n\n{tt_tags}")
-    fb = (f"{head}\n{' · '.join(feats) + chr(10) if feats else ''}💰 Now {g(PRICE)}\n\n"
+    tt = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(PRICE)}\n{dm_line(g(23))}\n{BEST}\n{words}\n\n"
+          f"👆 Or tap the link in our bio · new watches every day\n\n{tt_tags}")
+    fb = (f"{head}\n{' · '.join(feats) + chr(10) if feats else ''}💰 Now {g(PRICE)}\n{COMMENT}\n{BEST}\n\n"
           f"Get it here 👉 {g(35) or g(4)}\n{linea_ig(r).replace('DM you', 'message you')}Ad · affiliate link\n\n#Kabuzio #watches {brand}")
     title = (f"{head} · {' · '.join(feats[:2])}" if feats else head)[:100]
     return ig, tt, fb, title

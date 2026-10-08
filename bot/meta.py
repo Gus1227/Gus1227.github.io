@@ -87,9 +87,10 @@ def facebook():
     if g(r, LINK_FB) and item_of(g(r, LINK_FB)) == item_of(link):  # its own Facebook link only if it opens the same watch
         link = g(r, LINK_FB)
     from cupones import linea_ig
+    from textos import BEST, COMMENT
     coupon = ("\n" + linea_ig(r).replace("DM you", "message you").rstrip()) if linea_ig(r) else f"\nCoupon: {g(r, COUPON)}" if g(r, COUPON) else ""
     # a coupon from AliExpress is asked for in a comment (fb_respuestas.py sends it by private message)
-    text = (f"{head}\n{feats + chr(10) if feats else ''}\n💰 Now {g(r, PRICE)} · Buyer Protection · Worldwide shipping\n"
+    text = (f"{head}\n{feats + chr(10) if feats else ''}\n💰 Now {g(r, PRICE)}\n{COMMENT}\n{BEST}\n"
             f"👉 View the piece: {link}{coupon}\n"
             f"More hand-picked pieces every day on Telegram: https://t.me/KabuzioDeal\n"
             f"Full collection: https://gus1227.github.io\n\n#watchdeals #watches #quietluxury #Kabuzio")
@@ -134,7 +135,8 @@ def instagram():
     head, feats = headline(r, g)
     brand = g(r, BRAND).lstrip("#").lower()
     from cupones import linea_ig
-    caption = (f"{head}\n{feats + chr(10) if feats else ''}\n💰 Now {g(r, PRICE)}\n{linea_ig(r)}\n"
+    from textos import BEST, COMMENT
+    caption = (f"{head}\n{feats + chr(10) if feats else ''}\n💰 Now {g(r, PRICE)}\n{COMMENT}\n{BEST}\n{linea_ig(r)}\n"
                f"👆 Tap the link in our bio to get it · new watches every day\nAd · affiliate link\n.\n"
                f"#watchesofinstagram #watchdeals #quietluxury {('#' + brand) if brand else ''} #kabuzio")
     items = [("IMAGE", u) for u in pics[:1]] + ([("VIDEO", video)] if video else []) + [("IMAGE", u) for u in pics[1:]]

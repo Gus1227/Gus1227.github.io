@@ -103,10 +103,10 @@ def tiktok():
     pics = limpias(pics, g(r, BRAND))[:10]
     from textos import headline, kind, specs, tag
     head, feats = headline(g(r, NAME), g(r, BRAND)), specs(g(r, NAME), 3)
-    from textos import dm_line, tiktok_seo
+    from textos import BEST, dm_line, tiktok_seo
     words, tags = tiktok_seo(g(r, NAME), g(r, BRAND))  # TikTok search keywords (Cheche)
-    desc = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(r, PRICE)}\n{words}\n\n"
-            f"{dm_line(g(r, 23))}\n👆 Or tap the link in our bio · new watches every day\n\n{tags}")
+    desc = (f"{head}\n{' · '.join(feats)}{chr(10) if feats else ''}{g(r, PRICE)}\n{dm_line(g(r, 23))}\n{BEST}\n{words}\n\n"
+            f"👆 Or tap the link in our bio · new watches every day\n\n{tags}")
     title = f"{head} · {' · '.join(feats[:2])}" if feats else head
     video = g(r, VIDEO)
     print(f"TikTok fila {n}: {g(r, NAME)}\nfotos: {len(pics)}, video: {'sí' if video else 'no'}\n---\n{desc}\n---")

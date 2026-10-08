@@ -139,4 +139,9 @@ def dm_code(pid):
 
 def dm_line(pid):
     """TikTok call to action (Cheche, 2026-10-07): comment on the post, Gus answers right there with the link."""
-    return "💬 Comment «LINK» and we'll reply with it"
+    return COMMENT
+
+
+# Cheche (2026-10-08): right under the price in every post, short
+COMMENT = "💬 Comment «LINK» to get the link"
+BEST = "🏆 Best prices · 🎟 Coupons · 🔒 100% Buyer Protection"
