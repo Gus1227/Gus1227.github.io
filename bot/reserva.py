@@ -38,7 +38,7 @@ def contar(st):
         quedan[red] = len(pend) + sum(1 for n, r in publ if not g(r, col))
     falta = {
         "sin foto": [n for n, r in pend + elegidos if not g(r, IMG)],
-        "Reel sin video": [n for n, r in elegidos if not g(r, VIDEO)],
+        "sin video": [n for n, r in elegidos if not g(r, VIDEO)],
     }
     return quedan, falta, len([1 for v in rev if v and v[0].strip()]), len(auto)
 
@@ -55,7 +55,7 @@ def problemas(quedan, falta, revisar):
     for que, filas in falta.items():
         if filas:
             fs = ", ".join(str(n) for n in sorted(set(filas))[:10])
-            out.append(f"{len(set(filas))} {'relojes' if que == 'sin foto' else 'Reels elegidos'} {que} (fila {fs}). "
+            out.append(f"{len(set(filas))} {'relojes sin foto' if que == 'sin foto' else 'Reels elegidos sin video'} (fila {fs}). "
                        + ("Ponle una foto en la columna D." if que == "sin foto" else "Saldrá solo con fotos; si quieres video, ponlo en la columna V."))
     if quedan["Telegram"] / POR_DIA["Telegram"] < DIAS and revisar == 0:
         out.append("La pestaña Revisar está vacía: Gus busca más relojes en el próximo turno.")
