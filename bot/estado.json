@@ -1,6 +1,6 @@
 {
  "hecho": "2026-10-10T22",
- "pin": 131,
+ "pin": 132,
  "tiktok": "2026-10-10T18",
  "carrusel": "automatic",
  "historia": "2026-10-10T20",
@@ -17,5 +17,6 @@
  "faltan": {},
  "copia": null,
  "aviso_fallo": "",
- "carrusel_dia": "2026-10-09"
+ "carrusel_dia": "2026-10-09",
+ "reserva_aviso": "Reels \ud83c\udfac: quedan  (menos de  d\u00edas) |  Reels elegidos sin video (fila )"
 }
