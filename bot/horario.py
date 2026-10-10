@@ -4,6 +4,7 @@
 #   every 2 h: AliExpress data + Revisar tab; Telegram 2 a day (08, 18 UTC); Pinterest 8 a day; TikTok 3 a day (06, 12, 18 UTC)
 #   1 Reel a day (16 UTC) on Instagram, Facebook, TikTok and Pinterest
 #   Instagram: 3 Stories a day (10, 14, 20 UTC) and a themed carousel Mon/Wed/Fri/Sun (12 UTC)
+#   every turn: bot/reserva.py warns Cheche before the material runs out (summary at 06 UTC)
 #   with estado.json "meta": true also Facebook (16, 22 UTC) and Instagram (18, 00 UTC)
 import collections, datetime, html, json, os, subprocess, sys, time, traceback, urllib.request
 
@@ -130,6 +131,11 @@ def turn(slot):
         st["copia"] = day
         run("aviso.py", AVISO="copia")
     st = {**load(), "pin": st["pin"], "copia": st.get("copia"), **({"tiktok": key} if tiktok else {})}
+    try:  # how much material is left: daily summary at 06 UTC, a warning before anything runs dry (bot/reserva.py)
+        import reserva
+        reserva.revisar(st, slot.hour)
+    except Exception as e:
+        FAILS.append(("reserva.py", str(e)[:200]))
     report(st, key)
     save(st, f"bot: turno {key} hecho")
 

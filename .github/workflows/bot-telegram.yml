@@ -139,6 +139,8 @@ jobs:
               aviso) AVISO=buscar python3 bot/aviso.py ;;
               aviso-prueba) AVISO=prueba python3 bot/aviso.py ;;
               copia) AVISO=copia python3 bot/aviso.py ;;
+              reserva) python3 bot/reserva.py ;;
+              reserva-si) RESERVA=si python3 bot/reserva.py ;;
               rendimiento) python3 bot/rendimiento.py ;;
               rendimiento-si) RENDIMIENTO=si python3 bot/rendimiento.py ;;
               revisar) python3 bot/revisar.py ;;
