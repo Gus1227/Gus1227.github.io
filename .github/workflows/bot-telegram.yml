@@ -108,6 +108,7 @@ jobs:
               meta-prueba) META=facebook python3 bot/meta.py; META=instagram python3 bot/meta.py ;;
               meta-musica) META=musica python3 bot/meta.py ;;
               tendencias) python3 bot/tendencias.py ;;
+              zernio-post-*) python3 -c "import sys,json;sys.path.insert(0,'bot');from zernio import zernio;print(json.dumps(zernio('/posts/${FILA#zernio-post-}'))[:3000])" ;;
               ig-reels) python3 -c "import sys,json;sys.path.insert(0,'bot');from meta import IG,graph;[print(m.get('timestamp'),m.get('media_product_type'),m.get('permalink'),(m.get('caption') or '')[:60].replace(chr(10),' ')) for m in graph(f'/{IG}/media',{'fields':'id,timestamp,media_product_type,permalink,caption','limit':'30'}).get('data',[])]" ;;
               reel-ig-si) REDES=instagram PUBLICAR=si python3 bot/reel_publicar.py ;;
               tiktok-fila-*) SOLO_FOTOS=si FILA_PUB="${FILA#tiktok-fila-}" REDES=tiktok PUBLICAR=si python3 bot/zernio.py ;;
