@@ -1,13 +1,13 @@
 {
- "actualizado": "2026-10-12T06:05+00:00",
+ "actualizado": "2026-10-12T08:05+00:00",
  "telegram": {
   "seguidores": 3
  },
  "tiktok": {
   "seguidores": 6,
   "usuario": "kabuzio_deal",
-  "likes": 73,
-  "videos": 35
+  "likes": 74,
+  "videos": 39
  },
  "pinterest": {
   "seguidores": 0,
@@ -16,7 +16,7 @@
   "videos": null
  },
  "instagram": {
-  "seguidores": 14,
+  "seguidores": 13,
   "usuario": "kabuzio_deal",
   "videos": 47
  },
@@ -80,7 +80,7 @@
    "telegram": 3,
    "tiktok": 6,
    "pinterest": 0,
-   "instagram": 14,
+   "instagram": 13,
    "facebook": 1
   }
  }
