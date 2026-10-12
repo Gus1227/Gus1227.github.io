@@ -105,14 +105,22 @@ def instagram_audio():
     from meta import IG, graph
     try:
         chart = hits()
+        if os.environ.get("ZERNIO_KEY"):  # TikTok's trending library songs are often in Instagram's library too
+            from zernio import zernio
+            accs = zernio("/accounts")
+            accs = accs.get("accounts", accs) if isinstance(accs, dict) else accs
+            acc = next(a["_id"] for a in accs if str(a.get("platform", "")).lower() == "tiktok")
+            chart = tiktok_chart(acc) + chart
     except Exception as e:
         print("Música Instagram: sin lista de tendencias:", e)
         return ""
     used = set(_used())
     simple = lambda s: re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
-    tries = [t for t in chart if "ig:" + simple(t.get("name")) not in used][:30]
-    random.shuffle(tries)
-    for t in tries[:8]:
+    tries = [t for t in chart if "ig:" + simple(t.get("name")) not in used]
+    if not os.environ.get("DEBUG"):
+        tries = tries[:30]
+        random.shuffle(tries)
+    for t in tries[:8 if not os.environ.get("DEBUG") else 40]:
         name, artist = simple(t.get("name")), simple(t.get("artist")).split(" ")[0]
         try:
             res = graph("/ig_audio", {"audio_type": "music", "user_id": IG, "search_query": f"{t.get('name')} {t.get('artist')}"})
