@@ -1,6 +1,7 @@
 # Kabuzio bot: trending songs (Cheche, 2026-10-12: "the same generic music every time; use trending music, never Hebrew").
 # TikTok: the 100 trending tracks of TikTok's Commercial Music Library (licensed for business accounts), US/UK charts,
-#   through Zernio. Instagram: the same global hits searched in Instagram's own music (Audio API), artist must match.
+#   through Zernio. Instagram: the US/UK top songs (Apple Music charts) searched in Instagram's own music (Audio API),
+#   title and artist must match.
 # Never the Israeli charts (Hebrew). Only titles/artists in plain English letters. Rotates: a song is not repeated
 # until the last USADAS songs have been used (bot/musica_usada.json).
 # If anything fails, the callers keep our own music (musica_libre.py), so a post never goes out silent.
@@ -12,6 +13,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 USED = os.path.join(HERE, "musica_usada.json")
 COUNTRIES = ("US", "GB")
 USADAS = 25
+# library tracks that do not fit a watch ("quiet luxury"): funny, kids, horror, karaoke…
+NO = re.compile(r"comic|karaoke|cute|funny|kids|child|horror|scary|christmas|halloween|cartoon|meme|game|baby|"
+                r"strange|silly|anime|countdown|alarm|\(\d{5,}\)", re.I)
 
 
 def ingles(*texts):
@@ -49,7 +53,8 @@ def tiktok_chart(acc):
             continue
         for t in res.get("tracks") or res.get("data") or []:
             sid = (t.get("clip") or {}).get("id") or t.get("id")
-            if sid and sid not in seen and ingles(t.get("name"), t.get("artist")):
+            words = " ".join([str(t.get("name")), str(t.get("artist"))] + [str(x) for x in t.get("genres") or []])
+            if sid and sid not in seen and ingles(t.get("name"), t.get("artist")) and not NO.search(words):
                 seen.add(sid)
                 out.append(t)
     out.sort(key=lambda t: t.get("rank") or 999)
@@ -68,23 +73,33 @@ def tiktok_music(acc):
     return {"musicSoundInfo": {"musicSoundId": str(sid), "musicSoundVolume": 100}, "videoOriginalSoundVolume": 0}
 
 
+def hits():
+    """The most played songs right now in the US and UK (Apple Music charts, free public feed): real global hits."""
+    import urllib.request
+    seen, out = set(), []
+    for cc in ("us", "gb"):
+        url = f"https://rss.applemarketingtools.com/api/v2/{cc}/music/most-played/50/songs.json"
+        for r in json.load(urllib.request.urlopen(url, timeout=30))["feed"]["results"]:
+            k = r["name"].lower()
+            if k not in seen and ingles(r["name"], r["artistName"]):
+                seen.add(k)
+                out.append({"name": r["name"], "artist": r["artistName"]})
+    return out
+
+
 def instagram_audio():
     """audio_configuration (JSON string) with a global hit found in Instagram's music, or "" if none matched."""
     from meta import IG, graph
-    from zernio import zernio
     try:
-        accs = zernio("/accounts")
-        accs = accs.get("accounts", accs) if isinstance(accs, dict) else accs
-        acc = next(a["_id"] for a in accs if str(a.get("platform", "")).lower() == "tiktok")
-        chart = tiktok_chart(acc)
+        chart = hits()
     except Exception as e:
         print("Música Instagram: sin lista de tendencias:", e)
         return ""
     used = set(_used())
     simple = lambda s: re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
-    tries = [t for t in chart if "ig:" + simple(t.get("name")) not in used][:12]
+    tries = [t for t in chart if "ig:" + simple(t.get("name")) not in used][:30]
     random.shuffle(tries)
-    for t in tries[:6]:
+    for t in tries[:8]:
         name, artist = simple(t.get("name")), simple(t.get("artist")).split(" ")[0]
         try:
             res = graph("/ig_audio", {"audio_type": "music", "user_id": IG, "search_query": f"{t.get('name')} {t.get('artist')}"})
@@ -111,6 +126,8 @@ if __name__ == "__main__":
     chart = tiktok_chart(acc)
     print(f"TikTok: {len(chart)} canciones en tendencia (US/GB, sin hebreo)")
     for t in chart[:25]:
-        print(f"  {t.get('rank')}. {t.get('name')} · {t.get('artist')} clip={(t.get('clip') or {}).get('id')}")
+        print(f"  {t.get('rank')}. {t.get('name')} · {t.get('artist')} {t.get('genres')}")
+    print("Éxitos US/UK:", ", ".join(f"{h['name']} · {h['artist']}" for h in hits()[:15]))
     if os.environ.get("META_TOKEN"):
-        print("Instagram:", instagram_audio() or "nada")
+        for _ in range(3):
+            print("Instagram:", instagram_audio() or "nada")
