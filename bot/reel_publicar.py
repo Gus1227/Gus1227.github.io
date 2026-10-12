@@ -78,12 +78,8 @@ def tiktok(url, cap):
     accs = zernio("/accounts")
     accs = accs.get("accounts", accs) if isinstance(accs, dict) else accs
     acc = next(a["_id"] for a in accs if str(a.get("platform", "")).lower() == "tiktok")
-    return zernio("/posts", {"content": cap, "mediaItems": [{"type": "video", "url": url}],
-                             "platforms": [{"platform": "tiktok", "accountId": acc}],
-                             "tiktokSettings": {"privacy_level": "PUBLIC_TO_EVERYONE", "allow_comment": True,
-                                                "allow_duet": False, "allow_stitch": False,
-                                                "content_preview_confirmed": True, "express_consent_given": True},
-                             "publishNow": True}).get("_id", "ok")
+    from zernio import tiktok_post
+    return tiktok_post(acc, cap, url, shift=2).get("_id", "ok")  # trending song (bot/tendencias.py)
 
 
 def pinterest(url, cap, title, link):

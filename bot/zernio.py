@@ -80,6 +80,24 @@ def slideshow(pics, name):
     raise SystemExit("TikTok: el video de fotos no llegó a la web")
 
 
+def tiktok_post(acc, desc, url, shift=0):
+    """One TikTok video post with a trending song (bot/tendencias.py, Cheche 2026-10-12).
+    If TikTok refuses the song, the same post goes out with the music inside the video (ours, or the original)."""
+    from tendencias import tiktok_music
+    settings = {"privacy_level": "PUBLIC_TO_EVERYONE", "allow_comment": True, "allow_duet": False,
+                "allow_stitch": False, "content_preview_confirmed": True, "express_consent_given": True}
+    body = lambda extra: {"content": desc, "mediaItems": [{"type": "video", "url": url}],
+                          "platforms": [{"platform": "tiktok", "accountId": acc}],
+                          "tiktokSettings": {**settings, **extra}, "publishNow": True}
+    music = tiktok_music(acc, shift)
+    if music:
+        try:
+            return zernio("/posts", body(music))
+        except SystemExit as e:
+            print("TikTok no aceptó la canción, va con nuestra música:", e)
+    return zernio("/posts", body({}))
+
+
 def tiktok():
     token = google_token()
     rows = sheets(token, f"values/{TAB}!A1:CZ?valueRenderOption=FORMATTED_VALUE").get("values", [])
@@ -118,21 +136,11 @@ def tiktok():
     acc = next(a["_id"] for a in accs if str(a.get("platform", "")).lower() == "tiktok")
     if pics:
         # photos as a video with our own music (TikTok's automatic music was Hebrew; without it, no music at all)
-        res = zernio("/posts", {"content": desc, "mediaItems": [{"type": "video", "url": slideshow(pics, f"fila{n}")}],
-                                "platforms": [{"platform": "tiktok", "accountId": acc}],
-                                "tiktokSettings": {"privacy_level": "PUBLIC_TO_EVERYONE", "allow_comment": True,
-                                                   "allow_duet": False, "allow_stitch": False,
-                                                   "content_preview_confirmed": True, "express_consent_given": True},
-                                "publishNow": True})
+        res = tiktok_post(acc, desc, slideshow(pics, f"fila{n}"))
         print("TikTok fotos (video con música):", json.dumps(res)[:300])
     if video and not os.environ.get("SOLO_FOTOS"):  # SOLO_FOTOS=si: re-post only the photo video
         try:
-            res = zernio("/posts", {"content": desc, "mediaItems": [{"type": "video", "url": video}],
-                                    "platforms": [{"platform": "tiktok", "accountId": acc}],
-                                    "tiktokSettings": {"privacy_level": "PUBLIC_TO_EVERYONE", "allow_comment": True,
-                                                       "allow_duet": False, "allow_stitch": False,
-                                                       "content_preview_confirmed": True, "express_consent_given": True},
-                                    "publishNow": True})
+            res = tiktok_post(acc, desc, video, shift=1)  # another trending song than the photos
             print("TikTok video:", json.dumps(res)[:300])
         except SystemExit as e:  # Make ignores video errors too
             print("Video falló:", e)
