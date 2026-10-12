@@ -15,7 +15,7 @@ COUNTRIES = ("US", "GB")
 USADAS = 25
 # library tracks that do not fit a watch ("quiet luxury"): funny, kids, horror, karaoke…
 NO = re.compile(r"comic|karaoke|cute|funny|kids|child|horror|scary|christmas|halloween|cartoon|meme|game|baby|"
-                r"strange|silly|anime|countdown|alarm|\(\d{5,}\)", re.I)
+                r"strange|silly|anime|countdown|alarm|santa|latin|\(\d{5,}\)", re.I)
 
 
 def ingles(*texts):
@@ -73,17 +73,30 @@ def tiktok_music(acc):
     return {"musicSoundInfo": {"musicSoundId": str(sid), "musicSoundVolume": 100}, "videoOriginalSoundVolume": 0}
 
 
+_HITS = []
+
+
 def hits():
     """The most played songs right now in the US and UK (Apple Music charts, free public feed): real global hits."""
     import urllib.request
+    if _HITS:
+        return _HITS
     seen, out = set(), []
     for cc in ("us", "gb"):
         url = f"https://rss.applemarketingtools.com/api/v2/{cc}/music/most-played/50/songs.json"
-        for r in json.load(urllib.request.urlopen(url, timeout=30))["feed"]["results"]:
+        for _ in range(3):
+            try:
+                feed = json.load(urllib.request.urlopen(url, timeout=60))["feed"]["results"]
+                break
+            except Exception as e:
+                print("Éxitos", cc, e)
+                feed = []
+        for r in feed:
             k = r["name"].lower()
             if k not in seen and ingles(r["name"], r["artistName"]):
                 seen.add(k)
                 out.append({"name": r["name"], "artist": r["artistName"]})
+    _HITS.extend(out)
     return out
 
 
@@ -106,6 +119,9 @@ def instagram_audio():
         except SystemExit as e:
             print("Audio API:", e)
             return ""
+        if os.environ.get("DEBUG"):
+            print(f"  buscar «{t.get('name')} {t.get('artist')}» →",
+                  [(a.get("title"), a.get("display_artist")) for a in (res.get("audio") or res.get("data") or [])][:5])
         for a in res.get("audio") or res.get("data") or []:
             aid = a.get("audio_id") or a.get("id")
             title, by = a.get("title"), a.get("display_artist") or ""
@@ -129,5 +145,5 @@ if __name__ == "__main__":
         print(f"  {t.get('rank')}. {t.get('name')} · {t.get('artist')} {t.get('genres')}")
     print("Éxitos US/UK:", ", ".join(f"{h['name']} · {h['artist']}" for h in hits()[:15]))
     if os.environ.get("META_TOKEN"):
-        for _ in range(3):
-            print("Instagram:", instagram_audio() or "nada")
+        os.environ["DEBUG"] = "1"
+        print("Instagram:", instagram_audio() or "nada")
