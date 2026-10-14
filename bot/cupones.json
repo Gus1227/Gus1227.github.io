@@ -11,6 +11,12 @@
   "minimo": "90.1",
   "fin": "2026-10-30 23:59:59"
  },
+ "1005005490146490": {
+  "codigo": "YCOED39CH473",
+  "valor": "On order over USD 80.6 , get USD 7.06 off",
+  "minimo": "80.6",
+  "fin": "2026-10-25 23:59:59"
+ },
  "1005006412902605": {
   "codigo": "PAGANI828",
   "valor": "On order over USD 90.1 , get USD 9.01 off",
@@ -28,6 +34,12 @@
   "valor": "On order over USD 90.1 , get USD 9.01 off",
   "minimo": "90.1",
   "fin": "2026-10-30 23:59:59"
+ },
+ "1005008550253390": {
+  "codigo": "YCOED39CH473",
+  "valor": "On order over USD 80.6 , get USD 7.06 off",
+  "minimo": "80.6",
+  "fin": "2026-10-25 23:59:59"
  },
  "1005008569163157": {
   "codigo": "PAGANI828",
@@ -52,5 +64,17 @@
   "valor": "On order over USD 90.1 , get USD 9.01 off",
   "minimo": "90.1",
   "fin": "2026-10-30 23:59:59"
+ },
+ "1005011836942185": {
+  "codigo": "YCOED39CH473",
+  "valor": "On order over USD 80.6 , get USD 7.06 off",
+  "minimo": "80.6",
+  "fin": "2026-10-25 23:59:59"
+ },
+ "1005012308659497": {
+  "codigo": "UMUWXDFKEZIK",
+  "valor": "On order over USD 89.7 , get USD 10.08 off",
+  "minimo": "89.7",
+  "fin": "2026-10-25 23:59:59"
  }
 }
