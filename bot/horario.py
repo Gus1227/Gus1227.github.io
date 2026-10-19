@@ -50,6 +50,21 @@ def run(script, **env):
     return p.returncode == 0
 
 
+REEL_REDES = "instagram,facebook,tiktok,pinterest"
+
+
+def reel_out(st, pid, ok, again=False):
+    """GitHub Pages can take more than 20 minutes to put the video online: then nothing was published,
+    so the Reel waits for the next turn instead of being lost (Cheche, 2026-10-19). Warn only if it fails twice."""
+    slow = not ok and FAILS and "todavía no está en la web" in FAILS[-1][1]
+    if slow and not again:
+        FAILS.pop()
+    pend = pid if slow and not again else None
+    if st.get("reel_pend") != pend:
+        st["reel_pend"] = pend
+        save(st, f"bot: reel pendiente {pid}" if pend else f"bot: reel {pid} ya no está pendiente")
+
+
 def report(st, key):
     """One private message per problem: when a turn fails, and once more when it works again."""
     import aviso
@@ -118,7 +133,9 @@ def turn(slot):
         last = os.path.join(HERE, "..", "r", "ultimo.json")
         before = os.path.getmtime(last) if os.path.exists(last) else 0
         if run("reel.py", REEL="si", REEL_AUTO="si") and os.path.exists(last) and os.path.getmtime(last) > before:
-            run("reel_publicar.py", REDES="instagram,facebook,tiktok,pinterest")
+            reel_out(st, json.load(open(last))["pid"], run("reel_publicar.py", REDES=REEL_REDES))
+    elif st.get("reel_pend"):  # GitHub Pages was slow last turn: publish that Reel now
+        reel_out(st, st["reel_pend"], run("reel_publicar.py", REDES=REEL_REDES, REEL_PID=st["reel_pend"]), again=True)
     if st.get("meta"):  # Facebook and Instagram by the Meta API (replaces Make 7725903 and 7728023)
         if slot.hour in (16, 22):  # 17:00 and 23:00 London: Europe evening, Americas afternoon
             run("meta.py", META="facebook")
