@@ -5,7 +5,7 @@
 #   1 Reel a day (16 UTC) on Instagram, Facebook, TikTok and Pinterest
 #   Instagram: 3 Stories a day (10, 14, 20 UTC) and a themed carousel Mon/Wed/Fri/Sun (12 UTC)
 #   every turn: bot/reserva.py warns Cheche before the material runs out (summary at 06 UTC)
-#   with estado.json "meta": true also Facebook (16, 22 UTC) and Instagram (18, 00 UTC)
+#   with estado.json "meta": true also Facebook (16, 22 UTC) and Instagram (18, 00 UTC); Threads 1 a day (18 UTC, bot/threads.py)
 import collections, datetime, html, json, os, subprocess, sys, time, traceback, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +26,7 @@ def load():
 
 def save(st, msg):
     json.dump(st, open(STATE, "w"), indent=1)
-    git("add", *[f for f in (STATE, os.path.join(HERE, "..", "stats.json"), os.path.join(HERE, "..", "catalogo.csv"), os.path.join(HERE, "fotos.json"), os.path.join(HERE, "respondidos.json"), os.path.join(HERE, "cupones.json")) if os.path.exists(f)])
+    git("add", *[f for f in (STATE, os.path.join(HERE, "..", "stats.json"), os.path.join(HERE, "..", "catalogo.csv"), os.path.join(HERE, "fotos.json"), os.path.join(HERE, "respondidos.json"), os.path.join(HERE, "cupones.json"), os.path.join(HERE, "threads.tok")) if os.path.exists(f)])
     git("commit", "-qm", msg)
     for _ in range(4):
         if git("push", "-q", "origin", "HEAD:main").returncode == 0:
@@ -141,6 +141,10 @@ def turn(slot):
             run("meta.py", META="facebook")
         if slot.hour in (18, 0):  # 21:00 and 03:00 Israel: Israel evening, Americas evening
             run("meta.py", META="instagram")
+        if slot.hour == 18 and st.get("threads") != day and os.environ.get("THREADS_TOKEN"):  # 1 a day: the watch IG just got
+            st["threads"] = day
+            save(st, f"bot: threads {day}")
+            run("threads.py", THREADS="post")
     tiktok = slot.hour in (6, 12, 18) and st.get("tiktok") != key
     if tiktok:
         run("zernio.py", REDES="tiktok")

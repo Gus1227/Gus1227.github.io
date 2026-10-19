@@ -54,6 +54,7 @@ jobs:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
           META_TOKEN: ${{ secrets.META_TOKEN }}
+          THREADS_TOKEN: ${{ secrets.THREADS_TOKEN }}
           REDES: ${{ inputs.red }}
           PUBLICAR: ${{ inputs.publicar }}
           FILA_PUB: ${{ inputs.reloj }}
@@ -65,6 +66,7 @@ jobs:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
           META_TOKEN: ${{ secrets.META_TOKEN }}
+          THREADS_TOKEN: ${{ secrets.THREADS_TOKEN }}
           PUBLICAR: ${{ inputs.publicar }}
           PEDIDO: ${{ inputs.reloj }}
         run: |
@@ -85,6 +87,7 @@ jobs:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           ZERNIO_KEY: ${{ secrets.ZERNIO_KEY }}
           META_TOKEN: ${{ secrets.META_TOKEN }}
+          THREADS_TOKEN: ${{ secrets.THREADS_TOKEN }}
           ALI_APP_KEY: ${{ secrets.ALI_APP_KEY }}
           ALI_SECRET: ${{ secrets.ALI_SECRET }}
         run: |
@@ -114,6 +117,8 @@ jobs:
               tiktok-fila-*) SOLO_FOTOS=si FILA_PUB="${FILA#tiktok-fila-}" REDES=tiktok PUBLICAR=si python3 bot/zernio.py ;;
               reel-ig-pid-*) REEL_PID="${FILA#reel-ig-pid-}" REDES=instagram PUBLICAR=si python3 bot/reel_publicar.py ;;
               ig-borrar-*) python3 -c "import sys;sys.path.insert(0,'bot');from meta import graph;print(graph('/${FILA#ig-borrar-}',{'method':'delete'},post=True))" ;;
+              threads) THREADS=check python3 bot/threads.py && THREADS=post python3 bot/threads.py ;;
+              threads-si) THREADS=post PUBLICAR=si python3 bot/threads.py && if [ -n "$(git status --porcelain bot/threads.tok)" ]; then git add bot/threads.tok && git commit -qm "bot: token de Threads" && git pull -q --rebase origin main && git push -q origin HEAD:main; fi ;;
               meta-fb) META=facebook python3 bot/meta.py ;;
               meta-ig) META=instagram python3 bot/meta.py ;;
               meta-fb-si) META=facebook PUBLICAR=si python3 bot/meta.py ;;

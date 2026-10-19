@@ -170,6 +170,7 @@ def instagram():
         return
     print("Instagram post:", res.get("id"))
     mark(tok, n, IG_DONE, "Sí")
+    json.dump({"fila": n}, open("/tmp/kabuzio_ultimo_ig.json", "w"))  # bot/threads.py posts this same watch
 
 
 
