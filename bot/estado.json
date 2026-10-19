@@ -1,7 +1,7 @@
 {
  "hecho": "2026-10-19T18",
  "pin": 202,
- "tiktok": "2026-10-19T12",
+ "tiktok": "2026-10-19T18",
  "carrusel": "automatic",
  "historia": "2026-10-19T14",
  "reel": "2026-10-19",
@@ -25,7 +25,7 @@
  "aviso_chat": 950723602,
  "faltan": {},
  "copia": "2026-10-19",
- "aviso_fallo": "reel_publicar.py",
+ "aviso_fallo": "",
  "carrusel_dia": "2026-10-19",
  "reserva_aviso": " Reels elegidos sin video (fila , , , , )",
  "reel_pend": "1005011808114113"
