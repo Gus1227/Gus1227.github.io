@@ -94,13 +94,16 @@ def pick():
 
 
 def text(r, g):
-    from meta import PRICE, headline
+    from meta import BRAND, PRICE, headline
     from reel_publicar import page_of
     from textos import BEST
     head, feats = headline(r, g)
+    brand = "".join(c for c in g(r, BRAND) if c.isalnum()).lower()
+    # Threads makes only ONE tag clickable (topic_tag «Watches»); the rest stay as plain text for search (Cheche)
+    tags = f"#watches #aliexpress #aliexpressfinds #watchcollector #menswatch{(' #' + brand) if brand else ''}"
     t = (f"{head}\n{feats + chr(10) if feats else ''}\n💰 Now {g(r, PRICE)}\n{BEST}\n\n"
          f"👉 {page_of(r)}\nNew watches every day · Ad, affiliate link")
-    return t[:500]  # Threads limit
+    return (t[:499 - len(tags)] + "\n" + tags)[:500]  # Threads limit
 
 
 def wait(cid):
