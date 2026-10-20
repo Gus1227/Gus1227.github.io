@@ -150,7 +150,15 @@ def post():
     else:
         box = call(f"/{uid}/threads", {**base, "media_type": "TEXT"}, post=True)["id"]
     wait(box)
-    res = call(f"/{uid}/threads_publish", {"creation_id": box}, post=True)
+    for i in range(6):  # Threads asks to wait ~30 s; "Media Not Found" (code 24) just means not ready yet
+        time.sleep(30)
+        try:
+            res = call(f"/{uid}/threads_publish", {"creation_id": box}, post=True)
+            break
+        except SystemExit as e:
+            if '"code":24' not in str(e) or i == 5:
+                raise
+            print("Threads todavía no lo tiene listo, espero…")
     print("Threads post:", res.get("id"))
 
 

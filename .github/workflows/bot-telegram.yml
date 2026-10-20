@@ -118,7 +118,7 @@ jobs:
               reel-ig-pid-*) REEL_PID="${FILA#reel-ig-pid-}" REDES=instagram PUBLICAR=si python3 bot/reel_publicar.py ;;
               ig-borrar-*) python3 -c "import sys;sys.path.insert(0,'bot');from meta import graph;print(graph('/${FILA#ig-borrar-}',{'method':'delete'},post=True))" ;;
               threads) THREADS=check python3 bot/threads.py && THREADS=post python3 bot/threads.py ;;
-              threads-si) THREADS=post PUBLICAR=si python3 bot/threads.py && if [ -n "$(git status --porcelain bot/threads.tok)" ]; then git add bot/threads.tok && git commit -qm "bot: token de Threads" && git pull -q --rebase origin main && git push -q origin HEAD:main; fi ;;
+              threads-si) THREADS=post PUBLICAR=si python3 bot/threads.py; ok=$?; if [ -n "$(git status --porcelain bot/threads.tok)" ]; then git add bot/threads.tok && git commit -qm "bot: token de Threads" && git pull -q --rebase origin main && git push -q origin HEAD:main; fi; exit $ok ;;
               meta-fb) META=facebook python3 bot/meta.py ;;
               meta-ig) META=instagram python3 bot/meta.py ;;
               meta-fb-si) META=facebook PUBLICAR=si python3 bot/meta.py ;;
