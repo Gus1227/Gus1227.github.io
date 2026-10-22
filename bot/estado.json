@@ -1,7 +1,7 @@
 {
  "hecho": "2026-10-22T18",
  "pin": 226,
- "tiktok": "2026-10-22T12",
+ "tiktok": "2026-10-22T18",
  "carrusel": "chrono",
  "historia": "2026-10-22T14",
  "reel": "2026-10-22",
@@ -28,7 +28,7 @@
  "aviso_chat": 950723602,
  "faltan": {},
  "copia": "2026-10-19",
- "aviso_fallo": "",
+ "aviso_fallo": "zernio.py",
  "carrusel_dia": "2026-10-21",
  "reserva_aviso": "Reels \ud83c\udfac: quedan  (menos de  d\u00edas) |  Reels elegidos sin video (fila )",
  "reel_pend": null,
