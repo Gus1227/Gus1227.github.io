@@ -1,7 +1,7 @@
 {
  "hecho": "2026-10-26T12",
  "pin": 256,
- "tiktok": "2026-10-26T06",
+ "tiktok": "2026-10-26T12",
  "carrusel": "automatic",
  "historia": "2026-10-26T10",
  "reel": "2026-10-25",
@@ -31,7 +31,7 @@
  "aviso_chat": 950723602,
  "faltan": {},
  "copia": "2026-10-26",
- "aviso_fallo": "",
+ "aviso_fallo": "ig_extra.py",
  "carrusel_dia": "2026-10-26",
  "reserva_aviso": "Reels \ud83c\udfac: no queda nada",
  "reel_pend": null,
