@@ -1,7 +1,7 @@
 {
  "hecho": "2026-11-06T18",
  "pin": 346,
- "tiktok": "2026-11-06T12",
+ "tiktok": "2026-11-06T18",
  "carrusel": "sapphire",
  "historia": "2026-11-06T14",
  "reel": "2026-11-06",
@@ -42,7 +42,7 @@
  "aviso_chat": 950723602,
  "faltan": {},
  "copia": "2026-11-02",
- "aviso_fallo": "",
+ "aviso_fallo": "zernio.py",
  "carrusel_dia": "2026-11-06",
  "reserva_aviso": " Reels elegidos sin video (fila , , , , , , )",
  "reel_pend": null,
