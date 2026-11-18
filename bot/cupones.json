@@ -1,7 +1,7 @@
 {
  "1005003081834694": {
   "codigo": "PAGANI828",
-  "valor": "On order over USD 90.4 , get USD 9.05 off",
+  "valor": "On order over USD 90.4 , get USD 9.04 off",
   "minimo": "90.4",
   "fin": "2026-11-29 22:59:59"
  },
@@ -13,13 +13,13 @@
  },
  "1005006412902605": {
   "codigo": "PAGANI828",
-  "valor": "On order over USD 90.4 , get USD 9.05 off",
+  "valor": "On order over USD 90.4 , get USD 9.04 off",
   "minimo": "90.4",
   "fin": "2026-11-29 22:59:59"
  },
  "1005008403899431": {
   "codigo": "PAGANI828",
-  "valor": "On order over USD 90.4 , get USD 9.05 off",
+  "valor": "On order over USD 90.4 , get USD 9.04 off",
   "minimo": "90.4",
   "fin": "2026-11-29 22:59:59"
  },
@@ -67,8 +67,8 @@
  },
  "1005012514569536": {
   "codigo": "MUNDO50",
-  "valor": "On order over USD 527.8 , get USD 52.78 off",
-  "minimo": "527.8",
+  "valor": "On order over USD 527.4 , get USD 52.74 off",
+  "minimo": "527.4",
   "fin": "2027-09-29 23:59:59"
  }
 }
