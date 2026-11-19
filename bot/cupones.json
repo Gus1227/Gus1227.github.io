@@ -7,7 +7,7 @@
  },
  "1005003423023760": {
   "codigo": "PAGANI828",
-  "valor": "On order over USD 90.4 , get USD 9.05 off",
+  "valor": "On order over USD 90.4 , get USD 9.04 off",
   "minimo": "90.4",
   "fin": "2026-11-29 22:59:59"
  },
@@ -31,13 +31,13 @@
  },
  "1005008569163157": {
   "codigo": "PAGANI828",
-  "valor": "On order over USD 90.4 , get USD 9.05 off",
+  "valor": "On order over USD 90.4 , get USD 9.04 off",
   "minimo": "90.4",
   "fin": "2026-11-29 22:59:59"
  },
  "1005008906311591": {
   "codigo": "PAGANI828",
-  "valor": "On order over USD 90.4 , get USD 9.05 off",
+  "valor": "On order over USD 90.4 , get USD 9.04 off",
   "minimo": "90.4",
   "fin": "2026-11-29 22:59:59"
  },
@@ -49,13 +49,13 @@
  },
  "1005011605718643": {
   "codigo": "5PRO2IZEB436",
-  "valor": "On order over USD 102.5 , get USD 6.33 off",
-  "minimo": "102.5",
+  "valor": "On order over USD 102.4 , get USD 6.33 off",
+  "minimo": "102.4",
   "fin": "2026-11-30 23:59:59"
  },
  "1005011763127333": {
   "codigo": "PAGANI828",
-  "valor": "On order over USD 90.4 , get USD 9.05 off",
+  "valor": "On order over USD 90.4 , get USD 9.04 off",
   "minimo": "90.4",
   "fin": "2026-11-29 22:59:59"
  },
@@ -65,10 +65,58 @@
   "minimo": "99.0",
   "fin": "2026-11-30 23:59:59"
  },
+ "1005012345082271": {
+  "codigo": "VW53IGUVT033",
+  "valor": "On order over USD 210.9 , get USD 28.63 off",
+  "minimo": "210.9",
+  "fin": "2026-11-30 23:59:59"
+ },
+ "1005012346864804": {
+  "codigo": "VW53IGUVT033",
+  "valor": "On order over USD 210.9 , get USD 28.63 off",
+  "minimo": "210.9",
+  "fin": "2026-11-30 23:59:59"
+ },
+ "1005012348891853": {
+  "codigo": "VW53IGUVT033",
+  "valor": "On order over USD 210.9 , get USD 28.63 off",
+  "minimo": "210.9",
+  "fin": "2026-11-30 23:59:59"
+ },
+ "1005012351369195": {
+  "codigo": "VW53IGUVT033",
+  "valor": "On order over USD 210.9 , get USD 28.63 off",
+  "minimo": "210.9",
+  "fin": "2026-11-30 23:59:59"
+ },
+ "1005012365441574": {
+  "codigo": "VW53IGUVT033",
+  "valor": "On order over USD 210.9 , get USD 28.63 off",
+  "minimo": "210.9",
+  "fin": "2026-11-30 23:59:59"
+ },
+ "1005012374663298": {
+  "codigo": "VW53IGUVT033",
+  "valor": "On order over USD 210.9 , get USD 28.63 off",
+  "minimo": "210.9",
+  "fin": "2026-11-30 23:59:59"
+ },
  "1005012514569536": {
   "codigo": "MUNDO50",
-  "valor": "On order over USD 527.4 , get USD 52.74 off",
-  "minimo": "527.4",
+  "valor": "On order over USD 527.8 , get USD 52.78 off",
+  "minimo": "527.8",
   "fin": "2027-09-29 23:59:59"
+ },
+ "1005012682720403": {
+  "codigo": "VW53IGUVT033",
+  "valor": "On order over USD 210.9 , get USD 28.63 off",
+  "minimo": "210.9",
+  "fin": "2026-11-30 23:59:59"
+ },
+ "1005013036044778": {
+  "codigo": "VW53IGUVT033",
+  "valor": "On order over USD 211.1 , get USD 28.65 off",
+  "minimo": "211.1",
+  "fin": "2026-11-30 23:59:59"
  }
 }
