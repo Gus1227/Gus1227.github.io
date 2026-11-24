@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-23T22:06+00:00",
+ "actualizado": "2026-11-24T00:05+00:00",
  "telegram": {
   "seguidores": 4
  },
@@ -16,7 +16,7 @@
   "videos": null
  },
  "instagram": {
-  "seguidores": 26,
+  "seguidores": 25,
   "usuario": "kabuzio_deal",
   "videos": 197
  },
@@ -375,6 +375,13 @@
    "tiktok": 8,
    "pinterest": 0,
    "instagram": 26,
+   "facebook": 1
+  },
+  "2026-11-24": {
+   "telegram": 4,
+   "tiktok": 8,
+   "pinterest": 0,
+   "instagram": 25,
    "facebook": 1
   }
  }
